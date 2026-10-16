@@ -34,9 +34,10 @@ function gradeText(grade: StudentGrade | undefined, maxScore: number) {
   return published ? `Hiện tại: ${published}${grade.publicationStatus === "DRAFT" ? ` · Nháp: ${current}` : ""}` : `Nháp: ${current}`;
 }
 
-export function UnifiedGradeItems({ view, disabled, onChanged, onError, internal = false }: {
+export function UnifiedGradeItems({ view, disabled, onChanged, onError, internal = false, allowPlanning = false }: {
   view: GradebookView;
   internal?: boolean;
+ allowPlanning?: boolean;
   disabled: boolean;
   onChanged: (notice: string) => void;
   onError: (message: string) => void;
@@ -52,7 +53,7 @@ export function UnifiedGradeItems({ view, disabled, onChanged, onError, internal
   const [score, setScore] = useState("");
   const [assessment, setAssessment] = useState<"PASS" | "FAIL" | "">("");
   const [reason, setReason] = useState("");
-  const canCreate = !disabled && ['ACTIVE', 'UPCOMING'].includes(view.term.status);
+  const canCreate = (!disabled || allowPlanning) && ['ACTIVE', 'UPCOMING'].includes(view.term.status);
   const book = view.book;
   if (!book) return null;
   const slots = [
@@ -117,10 +118,10 @@ export function UnifiedGradeItems({ view, disabled, onChanged, onError, internal
       <p className="text-xs text-slate-500">Điểm bài tập/kiểm tra được sửa ở hoạt động gốc. Điểm nháp được giữ riêng với kết quả đã công bố cho học sinh và phụ huynh.</p>
     </div>
     <div className="flex flex-wrap items-end gap-2">
-      <label className="grid gap-1 text-xs">Tên điểm thủ công<input className={field} value={title} maxLength={160} disabled={disabled || busy} onChange={(event) => setTitle(event.target.value)} /></label>
-      <label className="grid gap-1 text-xs">Điểm tối đa<input className={`${field} w-24`} type="number" min="0.01" max="1000" step="0.01" value={maxScore} disabled={disabled || busy} onChange={(event) => setMaxScore(event.target.value)} /></label>
+      <label className="grid gap-1 text-xs">Tên điểm thủ công<input className={field} value={title} maxLength={160} disabled={!canCreate || busy} onChange={(event) => setTitle(event.target.value)} /></label>
+      <label className="grid gap-1 text-xs">Điểm tối đa<input className={`${field} w-24`} type="number" min="0.01" max="1000" step="0.01" value={maxScore} disabled={!canCreate || busy} onChange={(event) => setMaxScore(event.target.value)} /></label>
       <button className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" type="button" disabled={!canCreate || busy || title.trim().length < 2} onClick={() => void createItem()}>Tạo hoạt động</button>
-      <label className="grid gap-1 text-xs">Mục đích<select className={field} value={purpose} disabled={disabled || busy} onChange={(e) => setPurpose(e.target.value as AssessmentPurpose)}>{Object.entries(assessmentPurposeLabels).filter(([id]) => id !== 'LEGACY_REVIEW').map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
+      <label className="grid gap-1 text-xs">Mục đích<select className={field} value={purpose} disabled={!canCreate || busy} onChange={(e) => setPurpose(e.target.value as AssessmentPurpose)}>{Object.entries(assessmentPurposeLabels).filter(([id]) => id !== 'LEGACY_REVIEW').map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
       {!internal ? <label className="grid min-w-56 flex-1 gap-1 text-xs">Lý do ánh xạ cột<input className={field} value={mappingReason} maxLength={500} disabled={disabled || busy} onChange={(event) => setMappingReason(event.target.value)} placeholder="Bắt buộc khi thay đổi TX/GK/CK" /></label> : null}
     </div>
     {view.items.length ? <div className="overflow-x-auto"><table className="min-w-full border-collapse text-left text-xs">

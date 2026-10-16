@@ -201,7 +201,7 @@ export function LegacyGradebookPanel({
     saving ||
     !view ||
     historicalReadOnly ||
-    ["COMPLETED", "LOCKED"].includes(view.term.status);
+    ["LOCKED"].includes(view.term.status);
   const legacyManualLocked = (view?.items ?? []).some((item) => item.officialSlot && item.sourceType !== "MANUAL");
   const locked = baseLocked || legacyManualLocked;
   const requiredRegular = view?.requiredRegular ?? 0;
@@ -443,7 +443,7 @@ export function LegacyGradebookPanel({
                       <TableCell className="text-center">{isEditing ? markInput(current.final, `${student.fullName} cuối kỳ`, (value) => setMarks((previous) => ({ ...previous, final: value }))) : markText(current.final)}</TableCell>
                       <TableCell className="text-center font-bold text-slate-800">{outcomeText(student.outcome)}</TableCell>
                       <TableCell className="max-w-40 truncate text-xs text-slate-500" title={student.record?.comment ?? ""}>{student.record?.comment || "—"}</TableCell>
-                      <TableCell className="text-right">{isEditing ? <div className="flex justify-end gap-2"><button type="button" className="font-bold text-brand-700 disabled:opacity-50" disabled={locked} onClick={() => void save()}>{saving ? "Đang lưu..." : "Lưu"}</button><button type="button" className="text-slate-500 disabled:opacity-50" disabled={saving} onClick={() => setEditing("")}>Hủy</button></div> : canWrite && !historicalReadOnly && !legacyManualLocked && !["COMPLETED", "LOCKED"].includes(view.term.status) ? <button type="button" className="font-bold text-brand-700 hover:underline disabled:text-slate-400" disabled={Boolean(editing) || saving} onClick={() => { setEditing(student.id); setMarks(emptyMarks(requiredRegular, student.record?.marks)); setComment(student.record?.comment ?? ""); setNotice(""); setError(""); }}>{student.record ? "Sửa điểm" : "Nhập điểm"}</button> : null}</TableCell>
+                      <TableCell className="text-right">{isEditing ? <div className="flex justify-end gap-2"><button type="button" className="font-bold text-brand-700 disabled:opacity-50" disabled={locked} onClick={() => void save()}>{saving ? "Đang lưu..." : "Lưu"}</button><button type="button" className="text-slate-500 disabled:opacity-50" disabled={saving} onClick={() => setEditing("")}>Hủy</button></div> : canWrite && !historicalReadOnly && !legacyManualLocked && !["LOCKED"].includes(view.term.status) ? <button type="button" className="font-bold text-brand-700 hover:underline disabled:text-slate-400" disabled={Boolean(editing) || saving} onClick={() => { setEditing(student.id); setMarks(emptyMarks(requiredRegular, student.record?.marks)); setComment(student.record?.comment ?? ""); setNotice(""); setError(""); }}>{student.record ? "Sửa điểm" : "Nhập điểm"}</button> : null}</TableCell>
                     </tr>;
                   })}
                 </TableBody>

@@ -188,7 +188,7 @@ function loadAuthApi() {
   loaded.filename = filename;
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = loaded.require.bind(loaded);
-  loaded.require = (id) => id === '@/lib/portal' ? { getCurrentPortal: () => 'teacher' } : originalRequire(id);
+  loaded.require = (id) => id === '@/lib/portal' ? { getCurrentPortal: () => 'teacher' } : id === '@/lib/auth-coordination' ? require('./helpers/load-typescript.cjs').loadTypeScript('lib/auth-coordination.ts') : originalRequire(id);
   loaded._compile(ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, filename);
   return loaded.exports;
 }

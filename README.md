@@ -2,6 +2,31 @@
 
 Frontend Next.js cho luồng đăng ký, đăng nhập và trang tổng quan EStude.
 
+## Chạy SaaS với backend Go
+
+Backend Go phải chạy ở port `8090`, đã migrate và tạo tenant. Dừng dev server Next cũ trước khi chạy:
+
+```bash
+npm run dev:saas
+```
+
+Lệnh này chạy Next.js ở port `3000` và proxy local ở `127.0.0.1:8091`, tự đặt `NEXT_PUBLIC_BACKEND=go`, `NEXT_PUBLIC_API_URL=/api/v1` và bỏ cấu hình ép portal. Mở `http://admin.demo-school.localhost:8091/login`; thay `admin` bằng `teacher`, `student` hoặc `parent` để chọn portal, thay `demo-school` bằng tenant đã tạo.
+
+Nếu Nginx Docker đang chiếm port `8091`, dừng riêng Nginx trước:
+
+```bash
+cd ../estude-backend-go
+docker compose --profile app --profile edge stop nginx
+cd ../estude-frontend
+npm run dev:saas
+```
+
+Proxy này chỉ dùng cho local development, giữ hostname tenant và chuyển `/api/v1` tới Go; các đường dẫn còn lại và HMR chuyển tới Next.js. Nó tránh kết nối từ Docker tới dev server trên host bị firewall chặn. Các route chưa port sang Go vẫn theo lộ trình migration. Không dùng proxy dev làm ingress production.
+
+## Source quản trị SaaS riêng
+
+Quản trị toàn nền tảng nằm ở project [estude-saas-admin](../estude-saas-admin/README.md), chạy riêng bằng `npm run dev` tại **http://platform.localhost:3005**. Project này chỉ phục vụ bốn portal của trường học; lệnh `dev:saas` ở đây kết nối portal trường với backend Go.
+
 ## Chạy dự án
 
 1. Sao chép `.env.example` thành `.env.local` nếu API không chạy tại địa chỉ mặc định.
@@ -53,3 +78,11 @@ Route `/dashboard` được giữ để tự chuyển người dùng về đúng
 `serve:all` dùng một Next.js dev server và ba proxy nhẹ để tiết kiệm RAM nhưng vẫn giữ đủ HMR trên cả bốn cổng. Khi chạy riêng, mỗi vai trò sử dụng thư mục cache Next.js độc lập.
 
 Middleware nhận diện portal từ hostname production (`admin.estude.io.vn`, `teacher.estude.io.vn`, `student.estude.io.vn`, `parent.estude.io.vn`) hoặc cổng local. Mỗi origin gọi endpoint auth tương ứng và dùng refresh cookie riêng, nên có thể mở đồng thời nhiều portal mà không ghi đè phiên.
+
+### Nội dung G04 trên Go SaaS
+
+Giữ `npm run dev:saas` và URL portal tại cổng 8091. Không gian lớp giáo viên, thư viện và môn học sinh dùng Go `/api/v1`. File gửi trực tiếp S3 bằng URL ký; cần cấu hình private bucket/CORS và STORAGE_* ở backend. Trên trang nội dung dùng Go, thao tác assignment/exam/progress/grade/chat được mở lại theo phase sở hữu G05–G09. Xem [G04](../estude-backend-go/docs/g04/README.md).
+
+G05 đã bật TeacherAssignmentPanel trong bài học và trang `/student/assignments`, `/student/assignments/[id]` trên Go. Có giao bài, nộp file/văn bản, lịch sử, chấm nháp/trả điểm và gia hạn; giữ progress/exam/gradebook/chat theo phase sở hữu. Xem [G05](../estude-backend-go/docs/g05/README.md).
+
+G07 đã nối giao diện tạo/sửa/công bố đề, defaults giáo viên, làm bài/autosave/submit, chấm tự luận/finalize, báo cáo lớp, công bố kết quả, thi bù và lịch riêng với Go. Teacher: `/teacher/exams`, student: `/student/exams`. Lệnh chạy giữ `npm run dev:saas`; API same-origin `/api/v1`. Trang G07 không gọi AI/intervention chưa chuyển ở G10/G11; sổ điểm đầy đủ/tiến độ tiếp tục G08. Xem [hồ sơ G07](../estude-backend-go/docs/g07/README.md).

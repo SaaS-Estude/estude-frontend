@@ -52,8 +52,11 @@ export function getPortalFromHost(host: string | null): AuthPortal | null {
       return LOCAL_PORTALS[url.port];
     }
 
+    // SaaS portals use <role>.<school>.<configured base domain>. Backend Go
+    // resolves the registered Host and enforces role/tenant authorization;
+    // this parser only selects the UI and must not hard-code one deployment.
     if (
-      url.hostname.endsWith(".estude.io.vn") ||
+      (url.hostname.split(".").length >= 3 && !/^[0-9.]+$/.test(url.hostname)) ||
       (process.env.NODE_ENV === "development" && url.hostname.endsWith(".localhost"))
     ) {
       const subdomain = url.hostname.split(".", 1)[0];

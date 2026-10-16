@@ -452,12 +452,12 @@ export function QuestionBankPage() {
                   </Button>
                 </>
               ) : null}
-              <Link href={selectedFolder === "all" || selectedFolder === "unfiled" ? "/teacher/question-bank/generate" : `/teacher/question-bank/generate?folderId=${encodeURIComponent(selectedFolder)}`}>
+              {process.env.NEXT_PUBLIC_BACKEND !== "go" ? <Link href={selectedFolder === "all" || selectedFolder === "unfiled" ? "/teacher/question-bank/generate" : `/teacher/question-bank/generate?folderId=${encodeURIComponent(selectedFolder)}`}>
                 <Button permission="ai_questions.create" variant="secondary" className="!h-[42px] !rounded-lg whitespace-nowrap">
                   <Sparkles className="size-4" />
                   Tạo bằng AI
                 </Button>
-              </Link>
+              </Link> : null}
               <Link href={selectedFolder === "all" || selectedFolder === "unfiled" ? "/teacher/question-bank/new" : `/teacher/question-bank/new?folderId=${encodeURIComponent(selectedFolder)}`}>
                 <Button permission="questions.create" className="!h-[42px] !rounded-lg whitespace-nowrap">
                   <Plus className="size-4" />

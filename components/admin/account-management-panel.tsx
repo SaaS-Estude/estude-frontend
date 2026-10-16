@@ -926,6 +926,9 @@ export function AccountManagementPanel() {
                 Đã tạo {importResult.createdCount}/{importResult.totalRows} tài
                 khoản
               </p>
+              {process.env.NEXT_PUBLIC_BACKEND === "go" && importResult.failedCount > 0 && importResult.createdCount === 0 ? (
+                <p className="mt-2 text-rose-700">Tệp có lỗi nên chưa tạo tài khoản nào. Hãy sửa các dòng bên dưới và tải lại toàn bộ tệp.</p>
+              ) : null}
               {importResult.errors.length > 0 ? (
                 <div className="mt-3 max-h-36 space-y-1 overflow-y-auto border-t border-slate-100 pt-3 text-xs text-rose-600">
                   {importResult.errors.map((error) => (

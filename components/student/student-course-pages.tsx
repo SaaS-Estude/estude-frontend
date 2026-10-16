@@ -281,7 +281,7 @@ export function StudentCourseDetailPage() {
   }, [course, materials, searchParams]);
   const completedExams = exams.filter((exam) => exam.hasFinalizedAttempt === true).length;
   const availableExams = exams.filter((exam) => exam.studentStatus === "AVAILABLE" || exam.studentStatus === "IN_PROGRESS").length;
-  const canReadClassChat = can("class_chat.read");
+  const canReadClassChat = process.env.NEXT_PUBLIC_BACKEND !== "go" && can("class_chat.read");
   const visibleSection = activeSection === "chat" && !canReadClassChat ? "overview" : activeSection;
 
   async function openPreview(material: StudentCourseMaterial) {
@@ -354,7 +354,7 @@ export function StudentCourseDetailPage() {
               <CourseTab active={visibleSection === "overview"} icon={BookOpen} label="Tổng quan" onClick={() => setActiveSection("overview")} />
               <CourseTab active={visibleSection === "materials"} icon={FileText} label="Tài liệu" count={materials.length} onClick={() => setActiveSection("materials")} />
               <CourseTab active={visibleSection === "exams"} icon={ClipboardCheck} label="Bài kiểm tra" count={exams.length} onClick={() => setActiveSection("exams")} />
-              <CourseTab active={visibleSection === "review"} icon={BrainCircuit} label="Ôn tập" onClick={() => setActiveSection("review")} />
+              {process.env.NEXT_PUBLIC_BACKEND !== "go" ? <CourseTab active={visibleSection === "review"} icon={BrainCircuit} label="Ôn tập" onClick={() => setActiveSection("review")} /> : null}
               {canReadClassChat ? <CourseTab active={visibleSection === "chat"} icon={MessagesSquare} label="Trao đổi lớp" onClick={() => setActiveSection("chat")} /> : null}
             </nav>
           </section>
@@ -403,7 +403,7 @@ function CourseOverview({ course, examCount, completedExamCount, availableExamCo
         <StatCard icon={Layers3} label="Chủ đề" value={course.topics.length} tone="blue" />
         <StatCard icon={FileText} label="Tài liệu" value={materialCount} tone="violet" />
         <StatCard icon={ClipboardCheck} label="Bài kiểm tra" value={examCount} tone="amber" detail={availableExamCount ? `${availableExamCount} bài đang mở` : undefined} />
-        <StatCard icon={CheckCircle2} label="Đã hoàn thành" value={completedExamCount} tone="emerald" />
+        {process.env.NEXT_PUBLIC_BACKEND !== "go" ? <StatCard icon={CheckCircle2} label="Đã hoàn thành" value={completedExamCount} tone="emerald" /> : null}
       </div>
       <CourseProgressSummary progress={progress} error={progressError} onRefresh={onRefreshProgress} />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.8fr)]">

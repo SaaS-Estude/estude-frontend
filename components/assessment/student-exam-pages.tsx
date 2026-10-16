@@ -1173,6 +1173,7 @@ export function StudentResultPage() {
           return;
         }
         setAttempt(loadedAttempt);
+        if (process.env.NEXT_PUBLIC_BACKEND === "go") { setAnalysisLoading(false); return; }
         try {
           const loadedAnalysis = await loadOrCreateStudentStudyAnalysis(
             params.id,
@@ -1373,7 +1374,7 @@ export function StudentResultPage() {
             <div>
               <p className="font-black">Cảnh báo kết quả dưới trung bình</p>
               <p className="mt-1 leading-6">
-                {assessmentOnly
+                {process.env.NEXT_PUBLIC_BACKEND === "go" ? "Điểm của bạn đang dưới 5/10. Hãy xem lại bài làm và trao đổi với giáo viên để ôn tập." : assessmentOnly
                   ? "Điểm của bạn đang dưới 5/10. Đây là chỉ báo nguy cơ từ bài kiểm tra; môn học chưa có tài liệu để tạo lộ trình ôn tập."
                   : "Điểm của bạn đang dưới 5/10. AI đã ưu tiên các chủ đề còn yếu để tạo lộ trình ôn tập phù hợp."}
               </p>
@@ -1381,6 +1382,7 @@ export function StudentResultPage() {
           </div>
         ) : null}
 
+        {process.env.NEXT_PUBLIC_BACKEND !== "go" ? (
         <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-left">
           <div className="flex items-start gap-3">
             <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-violet-700">
@@ -1440,6 +1442,7 @@ export function StudentResultPage() {
             </Button>
           )}
         </div>
+        ) : null}
       </div>
     </AssessmentShell>
   );

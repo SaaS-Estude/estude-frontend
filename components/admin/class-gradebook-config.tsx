@@ -109,6 +109,11 @@ export function ClassGradebookConfig({ schoolClass }: { schoolClass: SchoolClass
         {bookLoading ? <p className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" />Đang tải sổ điểm...</p> : null}
         {view && !bookLoading ? <>
           <div className="flex flex-wrap items-end gap-3 rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+            <label className="grid gap-1 text-xs font-semibold text-slate-600">Loại sổ điểm
+              <select className={field} value={policy.resultMode ?? "INTERNAL"} disabled={saving || hasMarks || readOnly} onChange={(event) => setPolicy({ ...policy, resultMode: event.target.value as "INTERNAL" | "LEGACY" })}>
+                <option value="INTERNAL">Kết quả nội bộ theo hoạt động</option><option value="LEGACY">Kết quả học kỳ (TX/GK/CK)</option>
+              </select>
+            </label>
             <label className="grid gap-1 text-xs font-semibold text-slate-600">Hình thức đánh giá
               <select className={field} value={policy.assessmentMode} disabled={saving || hasMarks || readOnly} onChange={(event) => setPolicy({ ...policy, assessmentMode: event.target.value as GradePolicy["assessmentMode"], specialized: false })}>
                 <option value="NUMERIC">Điểm số</option><option value="COMMENT">Đạt / Chưa đạt</option>

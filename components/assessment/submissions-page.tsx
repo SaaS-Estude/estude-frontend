@@ -335,9 +335,10 @@ export function SubmissionsPage() {
               <Download className="size-4" />
               Xuất CSV
             </Button>
-            {exam.termId && exam.status === "ENDED" ? <Button permission="exams.publish" disabled={publishingResults} onClick={() => void publishResults()}>
+            {exam.termId && (exam.status === "ENDED" || process.env.NEXT_PUBLIC_BACKEND === "go" && exam.status === "ONGOING") ? <Button permission="exams.publish" disabled={publishingResults} onClick={() => void publishResults()}>
               {publishingResults ? "Đang công bố..." : exam.resultStatus === "PUBLISHED" ? "Cập nhật điểm đã công bố" : "Công bố điểm vào sổ"}
             </Button> : null}
+            {process.env.NEXT_PUBLIC_BACKEND !== "go" ? <>
             <Button permission="exams.submissions" variant="outline" onClick={() => router.push(`/teacher/exams/${exam.id}/improvement`)}>
               Theo dõi cải thiện
             </Button>
@@ -345,6 +346,7 @@ export function SubmissionsPage() {
               <Sparkles className="size-4" />
               Phân tích AI
             </Button>
+            </> : null}
           </div>
         }
       />
@@ -1504,7 +1506,7 @@ function StudentReportTable({
                         Xem bài
                       </Button>
                     ) : null}
-                    <Button
+                    {process.env.NEXT_PUBLIC_BACKEND !== "go" ?                     <Button
                       size="sm"
                       variant="secondary"
                       className="w-[116px] shrink-0 whitespace-nowrap"
@@ -1512,7 +1514,7 @@ function StudentReportTable({
                     >
                       <MessageSquareText className="size-4" />
                       Nhận xét
-                    </Button>
+                    </Button> : null}
                   </div>
                 </TableCell>
               </tr>
@@ -1898,7 +1900,7 @@ export function SubmissionDetailPage() {
   const orderedQuestions = [...data.exam.questions].sort(
     (left, right) => left.order - right.order,
   );
-  const canViewAiAnalysis = data.status === "SUBMITTED";
+  const canViewAiAnalysis = process.env.NEXT_PUBLIC_BACKEND !== "go" && data.status === "SUBMITTED";
   const submittedAt = data.submittedAt ? new Date(data.submittedAt) : null;
   const submittedDate = submittedAt
     ? submittedAt.toLocaleDateString("vi-VN")
@@ -1931,7 +1933,7 @@ export function SubmissionDetailPage() {
             <FileText className="size-4" />
             Bài làm và kết quả
           </button>
-          <button
+          {process.env.NEXT_PUBLIC_BACKEND !== "go" ?           <button
             type="button"
             role="tab"
             id="submission-analysis-tab"
@@ -1957,7 +1959,7 @@ export function SubmissionDetailPage() {
                 · Chưa nộp bài
               </span>
             ) : null}
-          </button>
+          </button> : null}
         </div>
 
         {canViewAiAnalysis && hasOpenedAnalysis ? (

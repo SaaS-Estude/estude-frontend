@@ -46,6 +46,7 @@ export function QuestionEditorForm({
   embedded?: boolean;
 }) {
   const [form, setForm] = useState<QuestionInput>({
+    defaultPoints: 1,
     folderId: null,
     subjectId: "",
     subjectName: "",
@@ -64,6 +65,7 @@ export function QuestionEditorForm({
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(Boolean(questionId));
   const [saving, setSaving] = useState(false);
+  const [savedDraftId, setSavedDraftId] = useState(questionId);
   const [error, setError] = useState("");
   const [pendingImage, setPendingImage] = useState<Blob | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
@@ -120,6 +122,7 @@ export function QuestionEditorForm({
       .getQuestionById(questionId)
       .then((question) => {
         setForm({
+          defaultPoints: question.defaultPoints,
           folderId: question.folderId ?? null,
           subjectId: question.subjectId,
           subjectName: question.subjectName,
@@ -184,6 +187,7 @@ export function QuestionEditorForm({
 
   function changeType(type: QuestionType) {
     update("type", type);
+    update("correctOptionIds", []);
     if (type === "ESSAY") update("correctOptionIds", []);
     if (type === "TRUE_FALSE")
       update("options", [
@@ -235,10 +239,14 @@ export function QuestionEditorForm({
         throw new Error("Vui lòng nhập nội dung câu hỏi");
       if (payload.type !== "ESSAY" && payload.correctOptionIds.length === 0)
         throw new Error("Vui lòng chọn đáp án đúng");
-      let savedQuestion = questionId
-        ? await questionBankService.updateQuestion(questionId, payload)
+      let savedQuestion = savedDraftId
+        ? await questionBankService.updateQuestion(savedDraftId, payload)
         : await questionBankService.createQuestion(payload);
-      if (removeImage && questionId) await questionBankService.removeQuestionImage(questionId);
+      setSavedDraftId(savedQuestion.id);
+      if (removeImage && savedDraftId) {
+        await questionBankService.removeQuestionImage(savedDraftId);
+        savedQuestion = { ...savedQuestion, imageEnabled: false, imageUrl: null };
+      }
       if (pendingImage) savedQuestion = await questionBankService.uploadQuestionImage(savedQuestion.id, pendingImage);
       onSaved(savedQuestion);
     } catch (cause) {
@@ -339,6 +347,7 @@ export function QuestionEditorForm({
               </div>
             </div>
 
+            <Input label="Điểm mặc định" type="number" min={0} max={1000000} step="0.000001" required value={form.defaultPoints ?? 1} onChange={(event) => update("defaultPoints", Number(event.target.value))} />
             <div className="grid gap-4 sm:grid-cols-3">
               <CustomSelect
                 label="Loại câu hỏi"
@@ -437,6 +446,7 @@ export function QuestionEditorForm({
               />
             )}
 
+            {form.type !== "ESSAY" ? <Textarea label="Giải thích đáp án" value={form.explanation} onChange={(event) => update("explanation", event.target.value)} rows={3} /> : null}
             <div
               className={`flex justify-end gap-2 border-t border-slate-100 ${embedded ? "pt-3" : "pt-4"}`}
             >

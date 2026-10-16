@@ -34,7 +34,7 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
         : "sinh viên";
 
   useEffect(() => {
-    if (!isInitializing && user) {
+    if (!isInitializing && user && !user.requiresFirstLoginSetup) {
       router.replace(getRoleHome(user.role));
     }
   }, [isInitializing, router, user]);
@@ -59,8 +59,8 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
 
     setIsSubmitting(true);
     try {
-      await signIn({ accountName, password });
-      router.replace(getRoleHome(role));
+      const signedInUser = await signIn({ accountName, password });
+      if (!signedInUser.requiresFirstLoginSetup) router.replace(getRoleHome(role));
     } catch (error) {
       setApiError(
         error instanceof ApiError && error.status === 403

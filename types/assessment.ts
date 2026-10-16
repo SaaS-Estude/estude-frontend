@@ -155,6 +155,7 @@ export interface QuestionFilters {
 }
 
 export interface QuestionInput {
+  defaultPoints?: number;
   folderId?: string | null;
   subjectId: string;
   subjectName: string;

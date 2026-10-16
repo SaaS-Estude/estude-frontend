@@ -225,7 +225,7 @@ export const academicDataService = {
   ): Promise<Subject> {
     return authenticatedRequest<Subject>("/subjects", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ code: payload.code, name: payload.name, vietnameseName: payload.vietnameseName, description: payload.description }),
     });
   },
   updateSubject(
@@ -866,6 +866,13 @@ export const teacherSettingsService = {
   },
 };
 
+// Go resolves definition and taxonomy from the owned bank; submitted snapshots
+// from the editor are display data and must never be accepted as authority.
+function examWriteInput<T extends ExamInput>(payload: T): T {
+  if (process.env.NEXT_PUBLIC_BACKEND !== "go") return payload;
+  return { ...payload, questions: payload.questions.map(({ questionId, points, order }) => ({ questionId, points, order })) };
+}
+
 export const examService = {
   getLearningSupportOverview(
     options: boolean | { fresh?: boolean; from?: string; to?: string } = false,
@@ -908,13 +915,13 @@ export const examService = {
   createExam(payload: ExamInput): Promise<Exam> {
     return authenticatedRequest<Exam>("/exams", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(examWriteInput(payload)),
     });
   },
   updateExam(id: string, payload: ExamInput): Promise<Exam> {
     return authenticatedRequest<Exam>(`/exams/${encodeURIComponent(id)}`, {
       method: "PATCH",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(examWriteInput(payload)),
     });
   },
   publishExam(id: string): Promise<Exam> {
@@ -932,7 +939,7 @@ export const examService = {
     });
   },
   createMakeup(id: string, payload: ExamInput & { studentIds: string[]; reason: string; requestKey: string }): Promise<Exam> {
-    return authenticatedRequest<Exam>(`/exams/${encodeURIComponent(id)}/makeup`, { method: 'POST', body: JSON.stringify(payload) });
+    return authenticatedRequest<Exam>(`/exams/${encodeURIComponent(id)}/makeup`, { method: 'POST', body: JSON.stringify(examWriteInput(payload)) });
   },
   resolveQuestion(id: string, payload: { questionId: string; mode: 'CORRECT_KEY' | 'FULL_CREDIT' | 'EXCLUDE';
     correctOptionIds?: string[]; expectedUpdatedAt: string; reason: string }): Promise<{ regradedAttempts: number; changedGrades: number }> {

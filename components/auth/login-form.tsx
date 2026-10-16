@@ -25,7 +25,7 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isInitializing && user) {
+    if (!isInitializing && user && !user.requiresFirstLoginSetup) {
       router.replace(getRoleHome(user.role));
     }
   }, [isInitializing, router, user]);
@@ -51,7 +51,7 @@ export function LoginForm() {
     setIsSubmitting(true);
     try {
       const signedInUser = await signIn({ accountName, password });
-      router.replace(getRoleHome(signedInUser.role));
+      if (!signedInUser.requiresFirstLoginSetup) router.replace(getRoleHome(signedInUser.role));
     } catch (error) {
       setApiError(
         error instanceof ApiError

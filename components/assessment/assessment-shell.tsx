@@ -78,7 +78,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || process.env.NEXT_PUBLIC_BACKEND === "go") return;
     let active = true;
     const refreshSupportCount = () => {
       void learningSupportService

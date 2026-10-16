@@ -156,9 +156,12 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  function Textarea({ className, label, hint, error, ...props }, ref) {
+  function Textarea({ className, label, hint, error, id, ...props }, ref) {
+    const generatedId = useId();
+    const textareaId = id ?? generatedId;
     const control = (
       <textarea
+        id={textareaId}
         ref={ref}
         className={cn(
           "min-h-24 w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-400 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400",
@@ -171,11 +174,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     if (!label && !hint && !error) return control;
     return (
-      <label className="block">
+      <div className="block">
         {label ? (
-          <span className="mb-2 block text-sm font-bold text-slate-700">
+          <label htmlFor={textareaId} className="mb-2 block text-sm font-bold text-slate-700">
             {label}
-          </span>
+          </label>
         ) : null}
         {control}
         {error || hint ? (
@@ -188,7 +191,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             {error ?? hint}
           </span>
         ) : null}
-      </label>
+      </div>
     );
   },
 );

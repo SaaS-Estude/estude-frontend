@@ -12,9 +12,10 @@ import type {
   User,
 } from "@/types/auth";
 import { getCurrentPortal } from "@/lib/portal";
+import { publishAuthLogout, watchAuthLogout, withAuthLock } from "@/lib/auth-coordination";
 
 const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1"
+  process.env.NEXT_PUBLIC_API_URL ?? (process.env.NEXT_PUBLIC_BACKEND === "go" ? "/api/v1" : "http://localhost:5000/api/v1")
 ).replace(/\/$/, "");
 
 let accessToken: string | null = null;
@@ -36,6 +37,49 @@ export function subscribeAccessToken(
 }
 let refreshPromise: Promise<AccessTokenResponse> | null = null;
 let unauthorizedHandler: (() => void) | null = null;
+let authGeneration = 0;
+let refreshBlocked = false;
+let watchedScope: string | null = null;
+let stopWatching: (() => void) | null = null;
+
+function authScope(): string {
+  const scope = `${API_URL}:${getCurrentPortal()}`;
+  if (typeof window !== "undefined" && scope !== watchedScope) {
+    stopWatching?.();
+    watchedScope = scope;
+    stopWatching = watchAuthLogout(scope, () => {
+      authGeneration++;
+      refreshBlocked = true;
+      setAccessToken(null);
+      unauthorizedHandler?.();
+    });
+  }
+  return scope;
+}
+
+function invalidateSession(broadcast = true): void {
+  authGeneration++;
+  refreshBlocked = true;
+  setAccessToken(null);
+  if (broadcast) publishAuthLogout(authScope());
+}
+
+async function endSession(action: "logout" | "logout-all"): Promise<Record<string, never>> {
+  const scope = authScope();
+  // An expired access token must not prevent revoking its still-live session.
+  const token = await getRealtimeAccessToken().catch(() => accessToken);
+  invalidateSession();
+  const generation = authGeneration;
+  try {
+    return await withAuthLock(scope, () => request<Record<string, never>>(
+      portalAuthPath(action),
+      { method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {} },
+      { retryOnUnauthorized: false },
+    ));
+  } finally {
+    if (generation === authGeneration) setAccessToken(null);
+  }
+}
 
 function portalAuthPath(action: string): string {
   return `/auth/${getCurrentPortal()}/${action}`;
@@ -122,19 +166,28 @@ async function request<T>(
 }
 
 async function refreshAccessToken(): Promise<AccessTokenResponse> {
+  const scope = authScope();
+  if (refreshBlocked) throw new ApiError("Vui lòng đăng nhập lại", 401);
   if (!refreshPromise) {
-    refreshPromise = request<AccessTokenResponse>(
+    const generation = authGeneration;
+    refreshPromise = withAuthLock(scope, () => {
+      if (refreshBlocked || generation !== authGeneration) throw new ApiError("Vui lòng đăng nhập lại", 401);
+      return request<AccessTokenResponse>(
       portalAuthPath("refresh-token"),
       { method: "POST" },
       { retryOnUnauthorized: false },
-    )
+      );
+    })
       .then((tokens) => {
+        if (refreshBlocked || generation !== authGeneration) throw new ApiError("Phiên đã kết thúc", 401);
         setAccessToken(tokens.accessToken);
         return tokens;
       })
       .catch((error: unknown) => {
-        setAccessToken(null);
-        unauthorizedHandler?.();
+        if (generation === authGeneration) {
+          setAccessToken(null);
+          unauthorizedHandler?.();
+        }
         throw error;
       })
       .finally(() => {
@@ -325,10 +378,14 @@ export const authApi = {
     );
   },
   async login(payload: LoginPayload): Promise<AuthSession> {
-    const session = await request<AuthSession>(portalAuthPath("login"), {
+    const scope = authScope();
+    const generation = ++authGeneration;
+    refreshBlocked = false;
+    const session = await withAuthLock(scope, () => request<AuthSession>(portalAuthPath("login"), {
       method: "POST",
       body: JSON.stringify(payload),
-    });
+    }));
+    if (generation !== authGeneration || refreshBlocked) throw new ApiError("Phiên đã kết thúc", 401);
     setAccessToken(session.accessToken);
     return session;
   },
@@ -374,27 +431,11 @@ export const authApi = {
   },
 
   async logout(): Promise<Record<string, never>> {
-    try {
-      return await authenticatedRequest<Record<string, never>>(
-        portalAuthPath("logout"),
-        { method: "POST" },
-      );
-    } finally {
-      setAccessToken(null);
-    }
+    return endSession("logout");
   },
 
   async logoutAll(): Promise<Record<string, never>> {
-    try {
-      return await authenticatedRequest<Record<string, never>>(
-        portalAuthPath("logout-all"),
-        {
-          method: "POST",
-        },
-      );
-    } finally {
-      setAccessToken(null);
-    }
+    return endSession("logout-all");
   },
 
   sessions(): Promise<LoginSessionInfo[]> {
@@ -409,7 +450,7 @@ export const authApi = {
   },
 
   clearAccessToken(): void {
-    setAccessToken(null);
+    invalidateSession(false);
   },
 
   setUnauthorizedHandler(handler: (() => void) | null): void {

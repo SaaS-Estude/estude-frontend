@@ -174,7 +174,8 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
         <nav className="overflow-x-auto border-b border-slate-100 px-3" aria-label="Nội dung lớp học">
           <div className="flex min-w-max gap-1">
             {classTabs.filter((tab) =>
-              (tab.id !== "chat" || canReadChat)
+              (process.env.NEXT_PUBLIC_BACKEND !== "go" || ["topics", "students", "exams", "grades"].includes(tab.id))
+              && (tab.id !== "chat" || canReadChat)
               && (tab.id !== "exams" || canReadExams)
               && (Boolean(schoolClass?.subjects.length) || !(["topics", "exams", "grades"] as ClassTab[]).includes(tab.id)),
             ).map((tab) => (

@@ -85,15 +85,15 @@ export function TeacherSettingsPage() {
     let cancelled = false;
     void Promise.all([
       teacherSettingsService.getExamDefaults(),
-      aiQuestionSettingsService.getMine(),
+      process.env.NEXT_PUBLIC_BACKEND === "go" ? Promise.resolve(null) : aiQuestionSettingsService.getMine(),
     ])
       .then(([result, aiSettings]) => {
         if (cancelled) return;
         setForm(result.examDefaults);
         setConfigured(result.configured);
         setUpdatedAt(result.updatedAt);
-        setAiDefaultQuantity(aiSettings.defaultQuantity);
-        setMaxAiQuestionQuantity(aiSettings.maxQuestionsPerGeneration);
+        if (aiSettings) { setAiDefaultQuantity(aiSettings.defaultQuantity);
+        setMaxAiQuestionQuantity(aiSettings.maxQuestionsPerGeneration); }
       })
       .catch((cause) => {
         if (!cancelled) {
@@ -115,15 +115,15 @@ export function TeacherSettingsPage() {
     try {
       const [result, aiSettings] = await Promise.all([
         teacherSettingsService.updateExamDefaults(form),
-        aiQuestionSettingsService.updateMine({
+        process.env.NEXT_PUBLIC_BACKEND === "go" ? Promise.resolve(null) : aiQuestionSettingsService.updateMine({
           defaultQuantity: aiDefaultQuantity,
         }),
       ]);
       setForm(result.examDefaults);
       setConfigured(result.configured);
       setUpdatedAt(result.updatedAt);
-      setAiDefaultQuantity(aiSettings.defaultQuantity);
-      setMaxAiQuestionQuantity(aiSettings.maxQuestionsPerGeneration);
+      if (aiSettings) { setAiDefaultQuantity(aiSettings.defaultQuantity);
+      setMaxAiQuestionQuantity(aiSettings.maxQuestionsPerGeneration); }
       notify("Đã lưu cấu hình mặc định của giáo viên", {
         key: "teacher-exam-defaults-saved",
       });
@@ -151,7 +151,7 @@ export function TeacherSettingsPage() {
                   Cấu hình mặc định của giáo viên
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Tự động điền khi tạo bài kiểm tra hoặc câu hỏi bằng AI.
+                  Tự động điền khi tạo bài kiểm tra.
                 </p>
                 <p className="mt-1 text-xs font-semibold text-slate-400">
                   {configured
@@ -275,7 +275,7 @@ export function TeacherSettingsPage() {
             </section>
           </div>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+          {process.env.NEXT_PUBLIC_BACKEND !== "go" ?           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
             <div className="flex items-start gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-600">
                 <BrainCircuit className="size-5" />
@@ -303,7 +303,7 @@ export function TeacherSettingsPage() {
                 </div>
               </div>
             </div>
-          </section>
+          </section> : null}
 
         </form>
       )}

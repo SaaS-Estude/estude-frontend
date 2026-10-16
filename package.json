@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "npm run dev:student",
+    "dev:saas": "concurrently --kill-others --names NEXT,PROXY \"npm:dev:saas:next\" \"npm:dev:saas:proxy\"",
+    "dev:saas:next": "cross-env NEXT_PUBLIC_BACKEND=go NEXT_PUBLIC_API_URL=/api/v1 NEXT_PUBLIC_AUTH_PORTAL= ESTUDE_APP_ROLE= NEXT_DIST_DIR=.next-go-local next dev --hostname 0.0.0.0 --port 3000",
+    "dev:saas:proxy": "node scripts/dev-saas-proxy.mjs",
     "dev:home": "cross-env NEXT_PUBLIC_AUTH_PORTAL=home NEXT_DIST_DIR=.next-home next dev -p 3004",
     "dev:admin": "cross-env NEXT_PUBLIC_AUTH_PORTAL=admin NEXT_DIST_DIR=.next-admin next dev",
     "dev:teacher": "cross-env NEXT_PUBLIC_AUTH_PORTAL=teacher NEXT_DIST_DIR=.next-teacher next dev",

@@ -95,7 +95,7 @@ export function ExamResultsOverview({ examId, totalPoints }: { examId: string; t
       </dl>
       {summary.ungradedSubmittedAttemptCount > 0 ? <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">{summary.ungradedSubmittedAttemptCount} bài nộp còn câu tự luận chưa chấm nên chưa được đưa vào thống kê điểm.</p> : null}
       <ReportOverviewDashboard report={report} compact />
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-card" aria-labelledby="exam-ai-title">
+      {process.env.NEXT_PUBLIC_BACKEND !== "go" ? <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-card" aria-labelledby="exam-ai-title">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h2 id="exam-ai-title" className="flex items-center gap-2 text-sm font-bold text-slate-900">
@@ -109,7 +109,7 @@ export function ExamResultsOverview({ examId, totalPoints }: { examId: string; t
             Mở phân tích AI
           </Button>
         </div>
-      </section>
+      </section> : null}
     </div>
   );
 }

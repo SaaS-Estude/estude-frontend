@@ -10,7 +10,7 @@ export function ExamDetailTabs({ examId, active }: { examId: string; active: "ov
     <nav aria-label="Nội dung bài kiểm tra" className="mb-3 flex gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 shadow-card">
       {[
         { key: "overview", href: `/teacher/exams/${examId}`, label: "Tổng quan & bài nộp", icon: BarChart3 },
-        ...(can("exams.submissions") ? [
+        ...(process.env.NEXT_PUBLIC_BACKEND !== "go" && can("exams.submissions") ? [
           { key: "analysis", href: `/teacher/exams/${examId}/analysis`, label: "Phân tích AI", icon: Sparkles },
           { key: "support", href: `/teacher/exams/${examId}/subject-support`, label: "Theo dõi học tập theo môn", icon: UsersRound },
         ] : []),
