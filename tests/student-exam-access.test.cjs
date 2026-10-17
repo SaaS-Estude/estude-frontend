@@ -21,6 +21,8 @@ async function render(t, exam, catalog = false) {
   const original = loaded.require.bind(loaded);
   const Box = (props) => React.createElement('div', {}, props.children);
   loaded.require = (id) => {
+    // Exercise this isolated screen with future module rollout enabled.
+    if (id === '@/lib/features') return { FEATURES: { aiQuestions: true, classAnalysis: true, examAnalysis: true, studyCoach: true, learningSupport: true } };
     if (id === 'next/navigation') return { useParams: () => ({ id: 'exam' }), useRouter: () => ({ push: (route) => calls.push(['route', route]) }) };
     if (id === '@/lib/assessment-api') return { examService: { getExamById: async () => exam, getExams: async () => [exam] },
       examAttemptService: { startExam: async (id) => { calls.push(['start', id]); return { id: 'attempt' }; } } };

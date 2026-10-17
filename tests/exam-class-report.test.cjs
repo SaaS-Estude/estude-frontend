@@ -203,6 +203,8 @@ test("teacher class report separates students from attempts and supports reviewe
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    // Exercise this isolated screen with future module rollout enabled.
+    if (id === '@/lib/features') return { FEATURES: { aiQuestions: true, classAnalysis: true, examAnalysis: true, studyCoach: true, learningSupport: true } };
     if (id === "./student-evidence-panel") return { StudentEvidencePanel: () => null };
     if (id === "@/lib/search-keyword") {
       const searchFile = path.resolve("lib/search-keyword.ts");

@@ -1,4 +1,10 @@
-export type AttendanceStatus = "NOT_MARKED" | "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "LEAVE";
+export type AttendanceStatus =
+  | "NOT_MARKED"
+  | "PRESENT"
+  | "ABSENT"
+  | "LATE"
+  | "EXCUSED"
+  | "LEAVE";
 export type AttendanceSessionStatus = "DRAFT" | "OPEN" | "FINALIZED";
 
 export interface AttendanceVersion {
@@ -29,27 +35,57 @@ export interface AttendanceRecord {
 }
 
 export interface AttendanceSession {
-  id: string; classId: string; subjectId: string; termId: string;
-  sessionDate: string; slotKey: string; startTime: string | null; endTime: string | null;
-  period: string | null; label: string | null; status: AttendanceSessionStatus;
-  createdBy: string; createdAt: string; updatedAt: string; finalizedAt: string | null;
-  reopenedCount: number; _count?: { recipients: number; records: number };
+  id: string;
+  classId: string;
+  subjectId: string;
+  termId: string;
+  sessionDate: string;
+  slotKey: string;
+  startTime: string | null;
+  endTime: string | null;
+  period: string | null;
+  label: string | null;
+  status: AttendanceSessionStatus;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  finalizedAt: string | null;
+  reopenedCount: number;
+  _count?: { recipients: number; records: number };
 }
-export type AttendanceHistoryRecord = Omit<AttendanceRecord, 'status'> & { status: AttendanceStatus | 'UNDER_REVIEW' };
+export type AttendanceHistoryRecord = Omit<AttendanceRecord, "status"> & {
+  status: AttendanceStatus | "UNDER_REVIEW";
+};
 
 export interface AttendanceSessionDetail {
   session: AttendanceSession;
-  students: Array<{ id: string; fullName: string; accountName: string;
-    assignedAt: string; status: AttendanceStatus;
-    attendance: (AttendanceRecord & { note: string }) | null }>;
+  students: Array<{
+    id: string;
+    fullName: string;
+    accountName: string;
+    assignedAt: string;
+    status: AttendanceStatus;
+    attendance: (AttendanceRecord & { note: string }) | null;
+  }>;
   summary: Record<AttendanceStatus, number>;
 }
 
 export interface AttendanceAudit {
-  id: string; sessionId: string; studentId: string | null;
-  action: 'MARK_CREATED' | 'MARK_UPDATED' | 'SESSION_OPENED' | 'SESSION_FINALIZED' | 'SESSION_REOPENED';
-  oldStatus: AttendanceStatus | null; newStatus: AttendanceStatus | null;
-  oldNote: string | null; newNote: string | null; actorId: string; reason: string;
+  id: string;
+  sessionId: string;
+  studentId: string | null;
+  action:
+    | "MARK_CREATED"
+    | "MARK_UPDATED"
+    | "SESSION_OPENED"
+    | "SESSION_FINALIZED"
+    | "SESSION_REOPENED";
+  oldStatus: AttendanceStatus | null;
+  newStatus: AttendanceStatus | null;
+  oldNote: string | null;
+  newNote: string | null;
+  actorId: string;
+  reason: string;
   createdAt: string;
 }
 
@@ -85,9 +121,23 @@ export interface PortalNotification {
 }
 
 export interface ParentOverview {
-  children: Array<{ id: string; fullName: string; accountName: string; avatarUrl: string | null }>;
-  attendance: Array<AttendanceRecord & { studentName: string }>;
-  upcomingExams: Array<{ id: string; title: string; subjectName: string; classId: string; className: string; startsAt: string; endsAt: string }>;
+  studentReports?: import("@/types/student-overview").StudentOverview[];
+  children: Array<{
+    id: string;
+    fullName: string;
+    accountName: string;
+    avatarUrl: string | null;
+  }>;
+  attendance: Array<AttendanceHistoryRecord & { studentName: string }>;
+  upcomingExams: Array<{
+    id: string;
+    title: string;
+    subjectName: string;
+    classId: string;
+    className: string;
+    startsAt: string;
+    endsAt: string;
+  }>;
   notifications: PortalNotification[];
   learningAlerts?: PortalNotification[];
 }

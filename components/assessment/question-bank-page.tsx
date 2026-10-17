@@ -1,5 +1,7 @@
 "use client";
 
+import { FEATURES } from "@/lib/features";
+
 import Link from "next/link";
 import {
   FileQuestion,
@@ -452,7 +454,7 @@ export function QuestionBankPage() {
                   </Button>
                 </>
               ) : null}
-              {process.env.NEXT_PUBLIC_BACKEND !== "go" ? <Link href={selectedFolder === "all" || selectedFolder === "unfiled" ? "/teacher/question-bank/generate" : `/teacher/question-bank/generate?folderId=${encodeURIComponent(selectedFolder)}`}>
+              {FEATURES.aiQuestions ? <Link href={selectedFolder === "all" || selectedFolder === "unfiled" ? "/teacher/question-bank/generate" : `/teacher/question-bank/generate?folderId=${encodeURIComponent(selectedFolder)}`}>
                 <Button permission="ai_questions.create" variant="secondary" className="!h-[42px] !rounded-lg whitespace-nowrap">
                   <Sparkles className="size-4" />
                   Tạo bằng AI

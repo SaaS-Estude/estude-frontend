@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { io, type Socket } from "socket.io-client";
+import { createGoChatSocket, type ChatSocket } from "@/lib/go-chat-socket";
 import { FileImage, FileText, LoaderCircle, Paperclip, Send, Wifi, WifiOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePermissions } from "@/context/permissions-context";
@@ -34,7 +34,7 @@ type ChatAck = { ok: true; message?: ChatMessage } | { ok: false; code: string; 
 type PendingMessage = { id: string; content: string; files: PendingAttachment[]; uploaded: UploadedAttachment[]; attempted: boolean };
 
 function randomId(): string {
-  return Array.from(crypto.getRandomValues(new Uint8Array(12)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return crypto.randomUUID();
 }
 
 function mergeMessages(current: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
@@ -43,10 +43,10 @@ function mergeMessages(current: ChatMessage[], incoming: ChatMessage[]): ChatMes
   return [...unique.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
 }
 
-function emitWithAck(socket: Socket, event: string, payload: unknown): Promise<ChatAck> {
+function emitWithAck(socket: ChatSocket, event: string, payload: unknown): Promise<ChatAck> {
   if (!socket.connected) return Promise.reject(new Error('Kênh chat đang mất kết nối'));
   return new Promise((resolve, reject) => {
-    // Volatile avoids Socket.IO buffering a timed-out send for a later connection.
+    // Commands are sent only on the current connection; retries keep their message ID.
     socket.volatile.timeout(15_000).emit(event, payload, (error: Error | null, result: ChatAck) => {
       if (error || !result) reject(new Error('Chưa nhận được xác nhận từ máy chủ. Vui lòng thử lại.'));
       else resolve(result);
@@ -57,10 +57,6 @@ function emitWithAck(socket: Socket, event: string, payload: unknown): Promise<C
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_FILES = 5;
 
-function socketUrl(): string {
-  const apiUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1").replace(/\/$/, "");
-  return apiUrl.replace(/\/api\/v1$/, "");
-}
 
 function formatTime(value: string): string {
   return new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }).format(new Date(value));
@@ -90,7 +86,7 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
   const [sending, setSending] = useState(false);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState("");
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<ChatSocket | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
@@ -129,21 +125,18 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
     mountedRef.current = true;
     const controller = new AbortController();
     abortRef.current = controller;
-    const socket = io(`${socketUrl()}/class-chat`, {
-      autoConnect: false,
-      transports: ["websocket", "polling"],
-      auth: (callback) => {
-        void getRealtimeAccessToken(forceRefresh).then((token) => {
-          forceRefresh = false;
-          if (active) { usedToken = token; callback({ token }); }
-        }).catch((cause: unknown) => {
-          if (!active) return;
-          setError(errorMessage(cause, "Không thể làm mới phiên chat"));
-          setLoading(false);
-          socket.disconnect();
-        });
-      },
-    });
+    const authenticateChatSocket = (callback: (value: { token: string }) => void) => {
+      void getRealtimeAccessToken(forceRefresh).then((token) => {
+        forceRefresh = false;
+        if (active) { usedToken = token; callback({ token }); }
+      }).catch((cause: unknown) => {
+        if (!active) return;
+        setError(errorMessage(cause, "Không thể làm mới phiên chat"));
+        setLoading(false);
+        socket.disconnect();
+      });
+    };
+    const socket = createGoChatSocket(authenticateChatSocket);
     socketRef.current = socket;
     const unsubscribeToken = subscribeAccessToken((token) => {
       if (!active) return;

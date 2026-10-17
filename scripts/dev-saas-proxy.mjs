@@ -10,7 +10,7 @@ const portalHost =
 const proxy = httpProxy.createProxyServer({
   changeOrigin: false,
   ws: true,
-  proxyTimeout: 120_000,
+  proxyTimeout: 150_000,
 });
 
 function prepare(request) {
@@ -65,11 +65,11 @@ const server = http.createServer((request, response) => {
 });
 
 server.on("upgrade", (request, socket, head) => {
-  if (!prepare(request) || target(request) !== frontend) {
+  if (!prepare(request) || (target(request) !== frontend && request.url?.split("?", 1)[0] !== "/api/v1/class-chat/ws")) {
     socket.destroy();
     return;
   }
-  proxy.ws(request, socket, head, { target: frontend });
+  proxy.ws(request, socket, head, { target: target(request) });
 });
 
 server.on("error", (error) => {

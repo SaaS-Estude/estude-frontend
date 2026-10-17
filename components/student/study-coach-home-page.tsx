@@ -1,5 +1,7 @@
 "use client";
 
+import { FEATURES } from "@/lib/features";
+
 import { ArrowRight, BookOpenCheck, BrainCircuit, Layers, Lightbulb, LoaderCircle, Map as MapIcon, RotateCcw, Sparkles, Target } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -52,7 +54,7 @@ export function StudyCoachHomePage() {
   useEffect(() => {
     const syncMenuWithHash = () =>
       setActiveMenu(
-        window.location.hash === "#exam-review" ? "exam-review" : "self-study",
+        FEATURES.examAnalysis && window.location.hash === "#exam-review" ? "exam-review" : "self-study",
       );
     syncMenuWithHash();
     window.addEventListener("hashchange", syncMenuWithHash);
@@ -99,14 +101,14 @@ export function StudyCoachHomePage() {
       >
         <Layers className="size-4" /> Tự học
       </button>
-      <button
+      {FEATURES.examAnalysis ? <button
         type="button"
         onClick={() => selectMenu("exam-review")}
         className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition ${activeMenu === "exam-review" ? "bg-brand-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}
         aria-current={activeMenu === "exam-review" ? "page" : undefined}
       >
         <BookOpenCheck className="size-4" /> Ôn tập bài kiểm tra
-      </button>
+      </button> : null}
     </nav>
 
     {activeMenu === "exam-review" ? (

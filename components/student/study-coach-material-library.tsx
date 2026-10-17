@@ -19,7 +19,7 @@ import type { Subject } from "@/types/assessment";
 import type { StudyCoachCapabilities, StudyCoachMaterial, StudyCoachMaterialPage } from "@/types/study-coach";
 
 const PAGE_SIZE = 6;
-const MAX_PDF_SIZE = 50 * 1024 * 1024;
+const MAX_PDF_SIZE = 10 * 1024 * 1024;
 
 export function StudyCoachMaterialLibrary({ capabilities }: { capabilities: StudyCoachCapabilities }) {
   const processingEnabled = capabilities.processing.enabled;
@@ -90,7 +90,7 @@ export function StudyCoachMaterialLibrary({ capabilities }: { capabilities: Stud
       return;
     }
     if (next.size < 1 || next.size > MAX_PDF_SIZE) {
-      setFileError("Tệp PDF phải có kích thước từ 1 byte đến 50 MB.");
+      setFileError("Tệp PDF phải có kích thước từ 1 byte đến 10 MB.");
       return;
     }
     setFile(next);
@@ -207,7 +207,7 @@ export function StudyCoachMaterialLibrary({ capabilities }: { capabilities: Stud
         <div id="study-coach-upload-form" className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 sm:p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-bold text-slate-700" htmlFor="study-material-file">
-              Tệp PDF (tối đa 50 MB)
+              Tệp PDF (tối đa 10 MB)
               <input ref={fileInputRef} id="study-material-file" type="file" accept="application/pdf,.pdf" disabled={busy} aria-describedby="study-material-file-help study-material-file-error" onChange={(event) => selectFile(event.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:font-bold file:text-brand-700" />
               <span id="study-material-file-help" className="mt-1 block text-xs font-normal text-slate-500">Hiện hỗ trợ tài liệu PDF.</span>
               {fileError ? <span id="study-material-file-error" role="alert" className="mt-1 block text-xs font-semibold text-rose-700">{fileError}</span> : null}

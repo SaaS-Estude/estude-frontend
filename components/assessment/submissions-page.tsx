@@ -1,5 +1,7 @@
 "use client";
 
+import { FEATURES } from "@/lib/features";
+
 import {
   BarChart3,
   BookOpenCheck,
@@ -335,10 +337,10 @@ export function SubmissionsPage() {
               <Download className="size-4" />
               Xuất CSV
             </Button>
-            {exam.termId && (exam.status === "ENDED" || process.env.NEXT_PUBLIC_BACKEND === "go" && exam.status === "ONGOING") ? <Button permission="exams.publish" disabled={publishingResults} onClick={() => void publishResults()}>
+            {exam.termId && (exam.status === "ENDED" || exam.status === "ONGOING") ? <Button permission="exams.publish" disabled={publishingResults} onClick={() => void publishResults()}>
               {publishingResults ? "Đang công bố..." : exam.resultStatus === "PUBLISHED" ? "Cập nhật điểm đã công bố" : "Công bố điểm vào sổ"}
             </Button> : null}
-            {process.env.NEXT_PUBLIC_BACKEND !== "go" ? <>
+            {FEATURES.learningSupport ? <>
             <Button permission="exams.submissions" variant="outline" onClick={() => router.push(`/teacher/exams/${exam.id}/improvement`)}>
               Theo dõi cải thiện
             </Button>
@@ -1506,7 +1508,7 @@ function StudentReportTable({
                         Xem bài
                       </Button>
                     ) : null}
-                    {process.env.NEXT_PUBLIC_BACKEND !== "go" ?                     <Button
+                    {FEATURES.learningSupport ?                     <Button
                       size="sm"
                       variant="secondary"
                       className="w-[116px] shrink-0 whitespace-nowrap"
@@ -1900,7 +1902,7 @@ export function SubmissionDetailPage() {
   const orderedQuestions = [...data.exam.questions].sort(
     (left, right) => left.order - right.order,
   );
-  const canViewAiAnalysis = process.env.NEXT_PUBLIC_BACKEND !== "go" && data.status === "SUBMITTED";
+  const canViewAiAnalysis = FEATURES.examAnalysis && data.status === "SUBMITTED";
   const submittedAt = data.submittedAt ? new Date(data.submittedAt) : null;
   const submittedDate = submittedAt
     ? submittedAt.toLocaleDateString("vi-VN")
@@ -1933,7 +1935,7 @@ export function SubmissionDetailPage() {
             <FileText className="size-4" />
             Bài làm và kết quả
           </button>
-          {process.env.NEXT_PUBLIC_BACKEND !== "go" ?           <button
+          {FEATURES.examAnalysis ?           <button
             type="button"
             role="tab"
             id="submission-analysis-tab"

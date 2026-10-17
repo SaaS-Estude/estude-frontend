@@ -356,7 +356,7 @@ test("teacher receives the effective student report without loading planning dat
   assert.match(shown, /Phân tích đã được lưu lúc/);
   assert.match(shown, /Giáo viên và học sinh đang xem cùng dữ liệu này/);
   assert.match(shown, /Tổng quan đã chỉnh sửa/);
-  assert.doesNotMatch(shown, /Tổng quan AI gốc/);
+  assert.match(shown, /Kiểm duyệt nhận định và câu luyện/);
   assert.doesNotMatch(shown, /Kết quả theo chủ đề/);
   assert.doesNotMatch(shown, /Môn học chưa có tài liệu được gắn/);
 });
@@ -383,7 +383,7 @@ test("teacher can request a fresh analysis for the opened submission", async (t)
     button.props.onClick();
     await flush();
   });
-  assert.deepEqual(calls, [["exam", "student", "attempt"]]);
+  assert.deepEqual(calls, [["exam", "student", "attempt", true]]);
   assert.match(textOf(renderer.toJSON()), /15:30:00 30\/9\/2026/);
 });
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { FEATURES } from "@/lib/features";
+
 import { useEffect, useState, type FormEvent } from "react";
 import {
   BrainCircuit,
@@ -85,7 +87,7 @@ export function TeacherSettingsPage() {
     let cancelled = false;
     void Promise.all([
       teacherSettingsService.getExamDefaults(),
-      process.env.NEXT_PUBLIC_BACKEND === "go" ? Promise.resolve(null) : aiQuestionSettingsService.getMine(),
+      !FEATURES.aiQuestions ? Promise.resolve(null) : aiQuestionSettingsService.getMine(),
     ])
       .then(([result, aiSettings]) => {
         if (cancelled) return;
@@ -115,7 +117,7 @@ export function TeacherSettingsPage() {
     try {
       const [result, aiSettings] = await Promise.all([
         teacherSettingsService.updateExamDefaults(form),
-        process.env.NEXT_PUBLIC_BACKEND === "go" ? Promise.resolve(null) : aiQuestionSettingsService.updateMine({
+        !FEATURES.aiQuestions ? Promise.resolve(null) : aiQuestionSettingsService.updateMine({
           defaultQuantity: aiDefaultQuantity,
         }),
       ]);
@@ -275,7 +277,7 @@ export function TeacherSettingsPage() {
             </section>
           </div>
 
-          {process.env.NEXT_PUBLIC_BACKEND !== "go" ?           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+          {FEATURES.aiQuestions ?           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
             <div className="flex items-start gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-600">
                 <BrainCircuit className="size-5" />

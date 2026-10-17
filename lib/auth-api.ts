@@ -15,7 +15,7 @@ import { getCurrentPortal } from "@/lib/portal";
 import { publishAuthLogout, watchAuthLogout, withAuthLock } from "@/lib/auth-coordination";
 
 const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL ?? (process.env.NEXT_PUBLIC_BACKEND === "go" ? "/api/v1" : "http://localhost:5000/api/v1")
+  process.env.NEXT_PUBLIC_API_URL ?? "/api/v1"
 ).replace(/\/$/, "");
 
 let accessToken: string | null = null;

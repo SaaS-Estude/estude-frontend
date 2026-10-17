@@ -32,6 +32,8 @@ async function render(t, expired = false) {
   const original = loaded.require.bind(loaded); const Box = (props) => React.createElement('div', {}, props.children);
   const router = { push: (route) => calls.push(['route', route]), replace: () => {} };
   loaded.require = (id) => {
+    // Exercise this isolated screen with future module rollout enabled.
+    if (id === '@/lib/features') return { FEATURES: { aiQuestions: true, classAnalysis: true, examAnalysis: true, studyCoach: true, learningSupport: true } };
     if (id === '@/lib/study-analysis-loader') return loadTypeScript('lib/study-analysis-loader.ts', loaded.require);
     if (id === '@/lib/auth-api') return { ApiError: class ApiError extends Error {} };
     if (id === 'next/navigation') return { useParams: () => ({ id: 'attempt' }), useRouter: () => router };

@@ -109,7 +109,7 @@ interface StudentOverview {
   warnings: Array<{
     id: string;
     level: "HIGH" | "MEDIUM";
-    type: "LOW_SCORE" | "MISSED_EXAM";
+    type: "LOW_SCORE" | "MISSED_EXAM" | "ABSENCE";
     title: string;
     description: string;
     subjectId: string;

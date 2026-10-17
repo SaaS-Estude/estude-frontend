@@ -59,6 +59,10 @@ export function uploadToAuthorizedUrl(
 }
 
 export const studyCoachService = {
+  getGenerationJob(jobId: string): Promise<StudyCoachGenerationJob> {
+    return authenticatedRequest(`/study-coach/jobs/${encodeURIComponent(jobId)}`, { cache: "no-store" });
+  },
+
   getCapabilities(): Promise<StudyCoachCapabilities> {
     return authenticatedRequest("/study-coach/capabilities");
   },

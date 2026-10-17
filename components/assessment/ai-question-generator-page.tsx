@@ -273,6 +273,7 @@ export function AiQuestionGeneratorPage() {
       setError(`Số lượng câu hỏi phải từ 1 đến ${maxQuantity}.`);
       return;
     }
+    if (!form.subjectId) { setError("Chọn môn học được phân công trước khi tạo câu hỏi."); return; }
     setGenerating(true);
     setQuestions([]);
     setEditDrafts({});
@@ -481,15 +482,15 @@ export function AiQuestionGeneratorPage() {
                 rows={2}
                 placeholder="Ví dụ: Sinh viên phân biệt các dạng chuẩn và áp dụng chuẩn hóa vào một bảng dữ liệu thực tế."
               />
-              <p className="mt-1 text-xs leading-5 text-slate-500">AI kiểm tra dẫn chứng, đáp án và câu trùng trước khi trả kết quả. Giáo viên duyệt trước khi đưa vào ngân hàng.</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">Hệ thống kiểm tra cấu trúc, đáp án và trích dẫn. Giáo viên đối chiếu trước khi đưa vào ngân hàng.</p>
             </Field>
             <div className="grid gap-4">
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Môn học (không bắt buộc)">
+                <Field label="Môn học">
                   <CustomSelect
                     value={form.subjectId ?? ""}
                     options={[
-                      { value: "", label: "Không phân loại môn học" },
+                      { value: "", label: "Chọn môn được phân công" },
                       ...subjects.map((subject) => ({
                         value: subject.id,
                         label: getVietnameseSubjectName(subject),
@@ -749,6 +750,7 @@ function ChoiceButton({
     <Button
       variant="outline"
       size="sm"
+      aria-label={typeof children === "string" ? children : undefined}
       onClick={onClick}
       className={`w-full ${active ? "border-brand-500 !bg-blue-50 text-brand-700" : "border-slate-200 text-slate-500"}`}
     >
@@ -988,7 +990,7 @@ function GeneratedQuestionCard({
       </header>
       {question.source.excerpt ? (
         <details className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 p-3 text-sm">
-          <summary className="cursor-pointer font-semibold text-blue-800">Căn cứ trong tài liệu · {question.source.verification === "TEACHER_EDITED" ? "Đã chỉnh sửa, cần đối chiếu lại" : "Đã qua kiểm tra AI"}</summary>
+          <summary className="cursor-pointer font-semibold text-blue-800">Căn cứ trong tài liệu · {question.source.verification === "TEACHER_EDITED" ? "Đã chỉnh sửa, cần đối chiếu lại" : "Đã kiểm tra cấu trúc và trích dẫn"}</summary>
           {question.source.learningObjective ? <p className="mt-2 text-slate-700">Mục tiêu: {question.source.learningObjective}</p> : null}
           <blockquote className="mt-2 border-l-2 border-blue-300 pl-3 leading-6 text-slate-600">{question.source.excerpt}</blockquote>
           <p className="mt-2 text-xs text-slate-500">Kiểm tra AI hỗ trợ rà soát; giáo viên vẫn cần xác nhận tính chính xác và sự phù hợp.</p>

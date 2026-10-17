@@ -10,7 +10,7 @@ Backend Go phải chạy ở port `8090`, đã migrate và tạo tenant. Dừng 
 npm run dev:saas
 ```
 
-Lệnh này chạy Next.js ở port `3000` và proxy local ở `127.0.0.1:8091`, tự đặt `NEXT_PUBLIC_BACKEND=go`, `NEXT_PUBLIC_API_URL=/api/v1` và bỏ cấu hình ép portal. Mở `http://admin.demo-school.localhost:8091/login`; thay `admin` bằng `teacher`, `student` hoặc `parent` để chọn portal, thay `demo-school` bằng tenant đã tạo.
+Lệnh này chạy Next.js ở port `3000` và proxy local ở `127.0.0.1:8091`, tự đặt `NEXT_PUBLIC_API_URL=/api/v1` và bỏ cấu hình ép portal. Mở `http://admin.demo-school.localhost:8091/login`; thay `admin` bằng `teacher`, `student` hoặc `parent` để chọn portal, thay `demo-school` bằng tenant đã tạo.
 
 Nếu Nginx Docker đang chiếm port `8091`, dừng riêng Nginx trước:
 
@@ -29,16 +29,11 @@ Quản trị toàn nền tảng nằm ở project [estude-saas-admin](../estude-
 
 ## Chạy dự án
 
-1. Sao chép `.env.example` thành `.env.local` nếu API không chạy tại địa chỉ mặc định.
-2. Chạy `npm install`.
-3. Chạy portal cần phát triển:
-   - Sinh viên: `npm run dev:student` (cũng là mặc định của `npm run dev`).
-   - Giảng viên: `npm run dev:teacher`.
-   - Quản trị: `npm run dev:admin`.
-   - Phụ huynh: `npm run dev:parent`.
-4. Mở `http://localhost:3000/login`. Mỗi lần chỉ chạy một portal trên cổng `3000`.
+1. Chạy `npm ci`.
+2. Chạy `npm run dev` (tương đương `npm run dev:saas`).
+3. Mở `http://admin.demo-school.localhost:8091/login`; dùng `teacher`, `student` hoặc `parent` cho các portal còn lại.
 
-Backend mặc định được gọi tại `http://localhost:5000/api/v1`. Khi production, đặt `NEXT_PUBLIC_API_URL=https://api.estude.io.vn/api/v1`.
+Backend duy nhất là Go. API mặc định `/api/v1` qua proxy cùng origin, gồm cả WebSocket chat. Production cũng định tuyến `/api/v1` tới Go theo hostname tenant. Các module chưa nghiệm thu được kiểm soát trong `lib/features.ts`; không chọn backend bằng biến môi trường.
 
 ## Chạy riêng trang giới thiệu
 
@@ -86,3 +81,16 @@ Giữ `npm run dev:saas` và URL portal tại cổng 8091. Không gian lớp gi�
 G05 đã bật TeacherAssignmentPanel trong bài học và trang `/student/assignments`, `/student/assignments/[id]` trên Go. Có giao bài, nộp file/văn bản, lịch sử, chấm nháp/trả điểm và gia hạn; giữ progress/exam/gradebook/chat theo phase sở hữu. Xem [G05](../estude-backend-go/docs/g05/README.md).
 
 G07 đã nối giao diện tạo/sửa/công bố đề, defaults giáo viên, làm bài/autosave/submit, chấm tự luận/finalize, báo cáo lớp, công bố kết quả, thi bù và lịch riêng với Go. Teacher: `/teacher/exams`, student: `/student/exams`. Lệnh chạy giữ `npm run dev:saas`; API same-origin `/api/v1`. Trang G07 không gọi AI/intervention chưa chuyển ở G10/G11; sổ điểm đầy đủ/tiến độ tiếp tục G08. Xem [hồ sơ G07](../estude-backend-go/docs/g07/README.md).
+
+
+G10 mở tạo câu hỏi AI/cấu hình giáo viên, phân tích lớp và Study Coach (tài liệu, knowledge map, flashcard, quiz, mastery). API vẫn `/api/v1`, không cần thêm biến AI vào frontend. PDF Study Coach tối đa 10 MiB, cần backend S3/Gemini/Poppler/pgvector. Insight hiển thị theo capability `STUDY_COACH_INSIGHTS_ENABLED` phía Go. Các màn phân tích cá nhân và can thiệp được mở trong G11.
+
+G10 đã nghiệm thu 15 route trên Chrome và 265 test frontend; giữ `npm run dev:saas`. Khởi động lại dev proxy để nhận timeout 150 giây cho AI. [Vận hành G10](../estude-backend-go/docs/g10/README.md#van-hanh) mô tả cấu hình server và giới hạn.
+
+G11 mở phân tích bài làm, luyện tập/kết quả, evidence/baseline, kế hoạch cá nhân/nhóm, đánh giá lại và inbox hỗ trợ học tập. Giữ `npm run dev:saas`, không thêm biến API/provider vào frontend. Review/phản hồi gửi phiên bản analysis để tránh duyệt nhầm dữ liệu cũ; backend vẫn quyết định quyền và lịch công bố đáp án. [Hồ sơ G11](../estude-backend-go/docs/g11/README.md) gồm 13 trang Chrome và 62 API đã đối soát.
+
+### G12 — Tổng quan, phụ huynh và branding
+
+Dashboard admin/teacher, tổng quan kết quả học sinh, trang chi tiết con của phụ huynh và ngưỡng cảnh báo đã nối Go. Trang phụ huynh nhận UUID PostgreSQL; điểm nháp không xuất hiện, revoked link ngăn đọc lại dữ liệu. Root tenant provider lấy tên/màu qua `/api/v1/tenant` cùng origin và áp dụng cho 104 route shells. Không thêm env hoặc giữ cache/token của trường trong browser storage. Khởi động lại dev Next để nhận thay đổi root provider/Tailwind; lệnh vẫn `npm run dev:saas`.
+
+[Hồ sơ G12](../estude-backend-go/docs/g12/README.md) có 9 trang G12, hồi quy 101 route identity/nghiệp vụ, 104 tenant shells và tenant thứ hai. SaaS job operations nằm trong project `estude-saas-admin` riêng. G13 tiếp tục nghiệm thu production.

@@ -2,6 +2,8 @@ import type { User } from "@/types/auth";
 
 export interface StudentOverview {
   student: User;
+  warnings?: Array<{id:string;level:"HIGH"|"MEDIUM";type:string;title:string;description:string;subjectId:string}>;
+  progress?: Array<{classId:string;subjectId:string;percent:number;completedLessons:number;requiredLessons:number}>;
   summary: {
     classCount: number;
     subjectCount: number;

@@ -35,12 +35,12 @@ async function render(t, options = {}) {
     if (id === '@/components/ui/button') return { Button: ({ permission, children, ...props }) =>
       permission === 'ai_questions.approve' && options.allowed === false ? null : React.createElement('button', props, children) };
     if (id === '@/components/ui/form-control') return {
-      CustomSelect: () => null, Input: (props) => React.createElement('input', props), Textarea: (props) => React.createElement('textarea', props),
+      CustomSelect: ({ options, onValueChange }) => React.createElement("select", { "data-subject-select": options.some((item) => item.value === "subject"), onChange: (event) => onValueChange(event.target.value) }), Input: (props) => React.createElement('input', props), Textarea: (props) => React.createElement('textarea', props),
     };
     if (id === '@/components/ui/toggle-switch') return { ToggleSwitch: () => null };
-    if (id === '@/lib/subject-localization') return { getVietnameseSubjectName: (value) => value };
+    if (id === '@/lib/subject-localization') return { getVietnameseSubjectName: (value) => value.name };
     if (id === '@/lib/assessment-api') return {
-      academicDataService: { getMaterialLibrary: async () => [{ id: 'material', originalName: 'Toán.pdf', mimeType: 'application/pdf' }], getSubjects: async () => [] },
+      academicDataService: { getMaterialLibrary: async () => [{ id: 'material', originalName: 'Toán.pdf', mimeType: 'application/pdf' }], getSubjects: async () => [{ id: "subject", name: "Toán học" }], getTopics: async () => [] },
       questionBankService: { getFolders: async () => [{ id: 'folder', name: 'Lịch sử' }] },
       aiQuestionSettingsService: { getMine: async () => ({ effectiveLevels: [{ code: 'MEDIUM', label: 'Trung bình', description: 'Vận dụng' }], defaultQuantity: questions.length }) },
       aiQuestionService: {
@@ -65,6 +65,7 @@ async function render(t, options = {}) {
   let renderer;
   await act(async () => { const page = React.createElement(loaded.exports.AiQuestionGeneratorPage); renderer = create(options.strict ? React.createElement(React.StrictMode, null, page) : page); await flush(); });
   t.after(async () => { await act(async () => renderer.unmount()); });
+  if (options.generate !== false && options.selectSubject !== false) await act(async () => { renderer.root.findByProps({ "data-subject-select": true }).props.onChange({ target: { value: "subject" } }); await flush(); });
   if (options.generate !== false) await act(async () => { renderer.root.findByType('form').props.onSubmit({ preventDefault() {} }); await flush(); });
   const button = (label) => renderer.root.findAllByType('button').find((b) => childText(b.props.children).includes(label));
   const approveAll = async () => { await act(async () => { button('Duyệt tất cả').props.onClick(); await flush(); }); };
@@ -190,3 +191,5 @@ test('failed question updates retain the editor, and failed draft saves keep uns
   assert.match(page.text(), /Có thay đổi chưa lưu/);
   assert.equal(page.button('Lưu bản nháp').props.disabled, false);
 });
+
+ test("requires an assigned subject before AI generation", async (t) => { const page = await render(t, { selectSubject: false }); assert.match(page.text(), /Chọn môn học được phân công trước khi tạo câu hỏi/); assert.equal(page.button("Duyệt tất cả"), undefined); });

@@ -1311,6 +1311,7 @@ export interface StudyEvidenceBundle {
 
 export interface StudyAnalysis {
   id: string;
+  version: number;
   attemptId: string;
   examId: string;
   studentId: string;

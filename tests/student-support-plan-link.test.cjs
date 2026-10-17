@@ -17,6 +17,8 @@ function load(analysis, plans, onList) {
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    // Exercise this isolated screen with future module rollout enabled.
+    if (id === '@/lib/features') return { FEATURES: { aiQuestions: true, classAnalysis: true, examAnalysis: true, studyCoach: true, learningSupport: true } };
     if (id === "next/navigation") return {
       useParams: () => ({ id: "attempt" }),
       useRouter: () => ({ push() {}, back() {} }),

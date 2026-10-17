@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/auth-context";
 import { PermissionsProvider } from "@/context/permissions-context";
 import { ActionNotificationProvider } from "@/components/ui/action-notification";
 import "./globals.css";
+import { TenantProvider } from "@/context/tenant-context";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -23,11 +24,15 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className={inter.variable} suppressHydrationWarning>
-        <AuthProvider>
-          <PermissionsProvider>
-            <ActionNotificationProvider>{children}</ActionNotificationProvider>
-          </PermissionsProvider>
-        </AuthProvider>
+        <TenantProvider>
+          <AuthProvider>
+            <PermissionsProvider>
+              <ActionNotificationProvider>
+                {children}
+              </ActionNotificationProvider>
+            </PermissionsProvider>
+          </AuthProvider>
+        </TenantProvider>
       </body>
     </html>
   );

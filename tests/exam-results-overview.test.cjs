@@ -18,6 +18,8 @@ async function renderOverview(t, { count = 1, allowed = true } = {}) {
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    // Exercise this isolated screen with future module rollout enabled.
+    if (id === '@/lib/features') return { FEATURES: { aiQuestions: true, classAnalysis: true, examAnalysis: true, studyCoach: true, learningSupport: true } };
     if (id === "next/navigation") return { useRouter: () => ({ push: (route) => calls.push(["route", route]) }) };
     if (id === "lucide-react") return new Proxy({}, { get: () => () => React.createElement("svg") });
     if (id === "@/context/permissions-context") return { usePermissions: () => ({ can: () => allowed, loading: false }) };

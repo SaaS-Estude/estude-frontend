@@ -69,6 +69,8 @@ async function renderPage(t, initial, allowed = true, reportFixture = null) {
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    // Exercise this isolated screen with future module rollout enabled.
+    if (id === '@/lib/features') return { FEATURES: { aiQuestions: true, classAnalysis: true, examAnalysis: true, studyCoach: true, learningSupport: true } };
     if (id === "next/navigation") return { useParams: () => ({ id: "exam" }) };
     if (id === "lucide-react")
       return new Proxy({}, { get: () => () => React.createElement("svg") });
@@ -191,7 +193,7 @@ test("shows exam-risk only and hides learning guidance when no course material i
   });
 
   assert.match(page.text(), /42,9%/);
-  assert.match(page.text(), /không gọi AI và không tạo lộ trình/);
+  assert.match(page.text(), /chưa đối chiếu tài liệu hay tạo hoạt động ôn tập/);
   assert.doesNotMatch(page.text(), /Kế hoạch hỗ trợ/);
   assert.doesNotMatch(page.text(), /Giao bài ôn tập/);
 });
@@ -294,3 +296,10 @@ test("turns a weak-topic insight into an assignment for the suggested student gr
   assert.equal(page.store.actions[0].payload.kind, "ASSIGNMENT");
   assert.match(page.store.actions[0].payload.message, /Kết quả|ngưỡng hỗ trợ/);
 });
+
+ test("aggregate AI report states uncertainty without claiming no AI was used", async (t) => {
+ const page = await renderPage(t, { ...saved, analysis: { ...analysis, analysisScope: "ASSESSMENT_ONLY" } });
+ assert.match(page.text(), /Phân tích AI chỉ dựa trên thống kê bài thi/);
+ assert.match(page.text(), /Kết quả có độ bất định/);
+ assert.doesNotMatch(page.text(), /hệ thống không gọi AI/);
+ });

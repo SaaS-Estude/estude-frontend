@@ -13,7 +13,7 @@ export default async function ParentStudentPage({
   params: Promise<{ studentId: string }>;
 }) {
   const { studentId } = await params;
-  if (!/^[a-f\d]{24}$/i.test(studentId)) notFound();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studentId)) notFound();
   return (
     <RoleGate allowedRole="PARENT">
       <ParentDashboard key={studentId} studentId={studentId} />

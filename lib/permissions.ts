@@ -1,6 +1,7 @@
 import type { UserRole } from "@/types/auth";
 
 export const MODULE_LINKS = [
+  { href: "/student/calendar", label: "Lịch học tập", permission: "learning.read" },
   {
     href: "/admin/dashboard",
     label: "Tổng quan quản lý",

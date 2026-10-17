@@ -926,7 +926,7 @@ export function AccountManagementPanel() {
                 Đã tạo {importResult.createdCount}/{importResult.totalRows} tài
                 khoản
               </p>
-              {process.env.NEXT_PUBLIC_BACKEND === "go" && importResult.failedCount > 0 && importResult.createdCount === 0 ? (
+              {importResult.failedCount > 0 && importResult.createdCount === 0 ? (
                 <p className="mt-2 text-rose-700">Tệp có lỗi nên chưa tạo tài khoản nào. Hãy sửa các dòng bên dưới và tải lại toàn bộ tệp.</p>
               ) : null}
               {importResult.errors.length > 0 ? (

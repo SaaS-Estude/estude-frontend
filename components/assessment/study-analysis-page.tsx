@@ -302,6 +302,7 @@ export function StudentStudyAnalysisPage() {
   ) {
     setFeedbackMessage("");
     await examAttemptService.submitStudyAiFeedback(params.id, {
+      expectedAnalysisVersion: analysis!.version,
       targetKey,
       reason,
       comment,

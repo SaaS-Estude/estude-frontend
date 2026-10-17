@@ -12,8 +12,11 @@ import type { CalendarResponse } from "@/types/calendar";
 const labels: Record<string, string> = {
   UPCOMING: "Sắp mở", OPEN: "Đang mở", OVERDUE: "Quá hạn · còn nhận nộp",
   CLOSED: "Đã khóa", SUBMITTED: "Đã nộp", EXCUSED: "Được miễn",
+  PRESENT: "Có mặt", ABSENT: "Vắng", LATE: "Đi trễ", LEAVE: "Nghỉ có phép", UNDER_REVIEW: "Đang rà soát",
   IN_PROGRESS: "Đang làm", FINALIZED: "Đã hoàn tất", ENDED: "Đã kết thúc",
 };
+
+const typeLabels = { EXAM: "Bài kiểm tra", ASSIGNMENT_DEADLINE: "Hạn bài tập", LESSON_AVAILABLE: "Mở bài học", ATTENDANCE: "Điểm danh" };
 
 export function StudentCalendarPanel({ showDetails = true }: { showDetails?: boolean }) {
   const router = useRouter();
@@ -59,15 +62,15 @@ export function StudentCalendarPanel({ showDetails = true }: { showDetails?: boo
         {!showDetails ? <button onClick={() => router.push('/student/calendar')} className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-bold text-brand-700">Mở lịch học tập</button> : null}</>}
       renderDay={(day) => events.filter((event) => calendarEventTime(event, day, zone) !== null).map((event) => <button key={`${event.type}:${event.sourceId}`} onClick={() => router.push(event.sourceUrl)} className={`block w-full rounded-lg border p-2 text-left ${event.type === 'EXAM' ? 'border-violet-200 bg-violet-50 text-violet-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
         <span className="block text-xs font-bold">{event.title}</span><span className="mt-1 block text-[11px] opacity-80">{event.subject.name} · {event.schoolClass.code}</span>
-        <span className="mt-1 block text-[10px]">{event.type === 'EXAM' ? 'Bài kiểm tra' : 'Hạn bài tập'} · {calendarTime(event.startAt, zone)}</span>
+        <span className="mt-1 block text-[10px]">{typeLabels[event.type]} · {calendarTime(event.startAt, zone)}</span>
         <span className="mt-1 block text-[10px] font-semibold">{labels[event.status] ?? event.status}</span>
       </button>)} />
     {loading ? <p className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" />Đang tải lịch...</p> : null}
     {error ? <div role="alert" className="text-sm text-rose-700">{error}<button onClick={() => setRetry((value) => value + 1)} className="ml-3 underline">Thử lại</button></div> : null}
-    {!loading && !error && !events.length ? <p className="text-sm text-slate-500">Tháng này không có hạn bài tập hoặc bài kiểm tra{subjectId ? ' cho môn học đã chọn' : ''}.</p> : null}
+    {!loading && !error && !events.length ? <p className="text-sm text-slate-500">Tháng này không có hoạt động học tập{subjectId ? ' cho môn học đã chọn' : ''}.</p> : null}
     {showDetails ? <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
       <h2 className="font-extrabold">{selectedDay.split('-').reverse().join('/')}</h2>
-      {!loading && !error && !daily.length ? <p className="mt-3 text-sm text-slate-500">Ngày này không có hạn bài tập hoặc bài kiểm tra.</p> : null}
+      {!loading && !error && !daily.length ? <p className="mt-3 text-sm text-slate-500">Ngày này không có hoạt động học tập.</p> : null}
       {daily.map((event) => <button key={`${event.type}:${event.sourceId}`} onClick={() => router.push(event.sourceUrl)} className="mt-3 block w-full rounded-xl border border-slate-200 p-3 text-left hover:bg-blue-50/30">
         <span className="block text-xs text-slate-500">{event.subject.name} · {event.schoolClass.code}</span>
         <span className="mt-1 block font-bold">{event.title}</span>

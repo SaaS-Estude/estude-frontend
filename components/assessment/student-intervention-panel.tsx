@@ -1,5 +1,6 @@
 "use client";
 
+import { StudyAiReviewEditor } from "@/components/assessment/study-ai-review-editor";
 import { useEffect, useState } from "react";
 import { ChevronDown, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ export function StudentInterventionPanel({
           examId,
           studentId,
           attemptId,
+          true,
         ),
       );
     } catch (cause) {
@@ -302,6 +304,7 @@ export function StudentInterventionPanel({
             </details>
           ) : null}
           <StudyAnalysisDetails report={analysis.report} />
+{!assessmentOnly && <StudyAiReviewEditor analysis={analysis} examId={examId} studentId={studentId} attemptId={attemptId} onChanged={reloadAnalysis} />}
           <TeacherStudyProgress
             examId={examId}
             studentId={studentId}

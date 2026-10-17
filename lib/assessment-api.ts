@@ -750,6 +750,7 @@ export const aiQuestionService = {
       {
         method: "POST",
         body: JSON.stringify(payload),
+        headers: { "Idempotency-Key": crypto.randomUUID() },
       },
     );
   },
@@ -770,6 +771,7 @@ export const aiQuestionService = {
       `/ai-questions/${encodeURIComponent(id)}/regenerate`,
       {
         method: "POST",
+        headers: { "Idempotency-Key": crypto.randomUUID() },
       },
     );
   },
@@ -869,7 +871,6 @@ export const teacherSettingsService = {
 // Go resolves definition and taxonomy from the owned bank; submitted snapshots
 // from the editor are display data and must never be accepted as authority.
 function examWriteInput<T extends ExamInput>(payload: T): T {
-  if (process.env.NEXT_PUBLIC_BACKEND !== "go") return payload;
   return { ...payload, questions: payload.questions.map(({ questionId, points, order }) => ({ questionId, points, order })) };
 }
 
@@ -1011,9 +1012,10 @@ export const examService = {
     examId: string,
     studentId: string,
     attemptId: string,
+    refresh = false,
   ): Promise<TeacherStudyAnalysis> {
     return authenticatedRequest(
-      `/exams/${examId}/students/${studentId}/attempts/${attemptId}/study-analysis`,
+      `/exams/${examId}/students/${studentId}/attempts/${attemptId}/study-analysis${refresh ? "?refresh=true" : ""}`,
       { method: "POST" },
     );
   },
@@ -1033,6 +1035,7 @@ export const examService = {
     attemptId: string,
     input: {
       targetKey: string;
+      expectedAnalysisVersion: number;
       reason: StudyAiFeedback["reason"];
       comment?: string;
     },
@@ -1048,6 +1051,7 @@ export const examService = {
     attemptId: string,
     input: {
       targetKey: string;
+      expectedAnalysisVersion: number;
       decision: StudyAiReview["decision"];
       effectiveText?: string;
       reason: string;
@@ -1249,6 +1253,7 @@ export const examAttemptService = {
     id: string,
     input: {
       targetKey: string;
+      expectedAnalysisVersion: number;
       reason: StudyAiFeedback["reason"];
       comment?: string;
     },

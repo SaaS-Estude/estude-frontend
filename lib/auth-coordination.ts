@@ -5,7 +5,7 @@ export async function withAuthLock<T>(scope: string, action: () => Promise<T>): 
   if (typeof navigator !== "undefined" && navigator.locks) {
     return navigator.locks.request(`estude:auth:${scope}`, action);
   }
-  if (process.env.NEXT_PUBLIC_BACKEND === "go" && typeof window !== "undefined") {
+  if (typeof window !== "undefined") {
     throw new Error("Trình duyệt cần hỗ trợ Web Locks và kết nối HTTPS để đăng nhập.");
   }
   return action();

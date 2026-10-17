@@ -1,3 +1,5 @@
+"use client";
+import { useTenant } from "@/context/tenant-context";
 import { GraduationCap } from "lucide-react";
 
 export function BrandLogo({
@@ -7,8 +9,13 @@ export function BrandLogo({
   inverse?: boolean;
   withShadow?: boolean;
 }) {
+  const tenant = useTenant();
+  const name = tenant?.branding.displayName || tenant?.name;
   return (
-    <div className="inline-flex items-center gap-3" aria-label="EStude">
+    <div
+      className="inline-flex items-center gap-3"
+      aria-label={name ? `EStude · ${name}` : "EStude"}
+    >
       <span
         className={`grid size-11 shrink-0 place-items-center rounded-2xl ${
           inverse ? "bg-white text-brand-700" : "bg-brand-600 text-white"
@@ -29,10 +36,20 @@ export function BrandLogo({
       <span
         className={`text-2xl font-extrabold tracking-[-0.04em] ${inverse ? "text-white" : "text-ink"}`}
       >
-        E
-        <span className={inverse ? "text-brand-200" : "text-brand-600"}>
-          Stude
+        <span className="block">
+          E
+          <span className={inverse ? "text-brand-200" : "text-brand-600"}>
+            Stude
+          </span>
         </span>
+        {name ? (
+          <span
+            className="block max-w-48 truncate text-xs font-medium tracking-normal"
+            title={name}
+          >
+            {name}
+          </span>
+        ) : null}
       </span>
     </div>
   );

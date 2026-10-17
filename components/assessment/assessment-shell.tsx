@@ -1,5 +1,7 @@
 "use client";
 
+import { FEATURES } from "@/lib/features";
+
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -78,7 +80,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user || process.env.NEXT_PUBLIC_BACKEND === "go") return;
+    if (!user || !FEATURES.learningSupport) return;
     let active = true;
     const refreshSupportCount = () => {
       void learningSupportService

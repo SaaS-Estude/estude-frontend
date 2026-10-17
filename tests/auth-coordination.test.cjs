@@ -22,6 +22,7 @@ function fixture() {
   }
   const response = (status, data) => new Response(JSON.stringify({ success: status < 400, data, message: 'fixture' }), { status, headers: { 'Content-Type': 'application/json' } });
   async function fetch(url, init) {
+    assert.ok(url.startsWith("/api/v1/"), "default API must stay on the tenant portal origin");
     if (url.endsWith('/refresh-token')) {
       const observed = cookie; refreshes++; active++; maxActive = Math.max(maxActive, active);
       try {
@@ -38,7 +39,7 @@ function fixture() {
   }
   function tab(portal = 'admin', options = {}) {
     const context = vm.createContext({
-      process: { env: { NEXT_PUBLIC_BACKEND: options.backend ?? 'go' } },
+      process: { env: {} },
       window: { location: { host: `${portal}.school.localhost`, pathname: '/' } },
       navigator: options.noLocks ? {} : navigator,
       BroadcastChannel: Channel, fetch, Headers, FormData, Response, Blob, atob,
@@ -99,14 +100,14 @@ test('logout scope does not clear another portal', async () => {
   assert.equal(teacher.token(), before);
 });
 
-test('Go mode fails safely when cross-tab locks are unavailable', async () => {
+test('authentication fails safely when cross-tab locks are unavailable', async () => {
   const f = fixture(), a = f.tab('admin', { noLocks: true });
   await assert.rejects(a.authApi.refresh(), /Web Locks/);
   assert.equal(f.stats().refreshes, 0);
 });
 
-test('existing backend configuration keeps its fallback and login reopens a logged-out tab', async () => {
-  const f = fixture(), a = f.tab('admin', { noLocks: true, backend: 'nest' });
+test('login reopens a logged-out tab with coordinated cookie rotation', async () => {
+  const f = fixture(), a = f.tab('admin');
   await a.authApi.login({}); await a.authApi.logout();
   await a.authApi.login({}); await a.authApi.refresh();
   assert.ok(a.token());

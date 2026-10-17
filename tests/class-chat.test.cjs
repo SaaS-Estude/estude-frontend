@@ -47,7 +47,7 @@ async function setup(t, { history = () => [], ack = () => ({ ok: true }), canRea
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = loaded.require.bind(loaded);
   loaded.require = (id) => {
-    if (id === 'socket.io-client') return { io: (_url, options) => { const socket = new MockSocket(options); sockets.push(socket); return socket; } };
+    if (id === '@/lib/go-chat-socket') return { createGoChatSocket: (auth) => { const socket = new MockSocket({ auth }); sockets.push(socket); return socket; } };
     if (id === '@/components/ui/button') return { Button: (props) => React.createElement('button', props) };
     if (id === '@/context/permissions-context') return { usePermissions: () => ({ can: (key) => key === 'class_chat.read' && canRead }) };
     if (id === '@/lib/auth-api') return {

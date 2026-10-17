@@ -76,6 +76,7 @@ async function renderComponent(t, file, exportName, api, options = {}) {
   const compiled = ts.transpileModule(fs.readFileSync(filename, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   const loaded = new Module(filename, module); loaded.filename = filename; loaded.paths = Module._nodeModulePaths(path.dirname(filename)); const originalRequire = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    if (id === "@/lib/features") return { FEATURES: { aiQuestions:true,classAnalysis:true,studyCoach:true,examAnalysis:true,learningSupport:true } };
     if (id === "next/navigation") return { useRouter: () => ({ push() {} }), useParams: () => ({ materialId: options.materialId }) };
     if (id === "lucide-react") return new Proxy({}, { get: (_target, name) => (props) => React.createElement("svg", { ...props, "data-icon": String(name) }) });
     if (id === "@/components/student/student-shell") return { StudentShell: ({ children }) => React.createElement("main", null, children) };

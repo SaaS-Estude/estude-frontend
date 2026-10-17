@@ -269,6 +269,7 @@ export function StudyTopicSuggestionsPanel({
                                     reason:
                                       "Giáo viên đã đối chiếu câu hỏi với tài liệu nguồn và xác nhận chủ đề",
                                     expectedVersion: 0,
+                                    expectedAnalysisVersion: analysis.version,
                                   },
                                 ),
                               "Đã xác nhận chủ đề và cập nhật nhóm kết quả.",
@@ -306,6 +307,7 @@ export function StudyTopicSuggestionsPanel({
                                   decision: "REJECTED",
                                   reason: rejectionNote.trim(),
                                   expectedVersion: 0,
+                                    expectedAnalysisVersion: analysis.version,
                                 },
                               ),
                             "Đã bác bỏ đề xuất và lưu nhận xét của giáo viên.",

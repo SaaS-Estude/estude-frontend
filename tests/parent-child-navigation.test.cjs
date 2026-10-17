@@ -37,6 +37,7 @@ function setup() {
       return { useAuth: () => ({ user: { fullName: "Phụ huynh" } }) };
     if (id === "@/lib/auth-api")
       return { authenticatedRequest: async () => children };
+    if (id === "@/components/dashboard/student-overview-summary") return {LearningSummary:({report})=>React.createElement("div",{"data-summary-student":report.student.id})};
     if (id === "@/components/assessment/internal-grade-report")
       return {
         InternalGradeReport: ({ studentId }) =>

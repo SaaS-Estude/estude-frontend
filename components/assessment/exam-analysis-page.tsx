@@ -607,12 +607,12 @@ function SavedAnalysisReport({
           role="status"
           className="rounded-lg border border-amber-200 bg-amber-50 p-3 leading-6 text-amber-800"
         >
-          Môn học chưa có tài liệu đã gắn và xử lý sẵn sàng. Báo cáo này chỉ ước
-          lượng nguy cơ học lực yếu từ kết quả bài kiểm tra; hệ thống không gọi
-          AI và không tạo lộ trình hay hoạt động ôn tập.
+          {analysis.source === "AI"
+            ? "Phân tích AI chỉ dựa trên thống kê bài thi, chưa đối chiếu tài liệu. Kết quả có độ bất định; giáo viên cần kiểm tra trước khi sử dụng."
+            : "Báo cáo dựa trên kết quả bài kiểm tra, chưa đối chiếu tài liệu hay tạo hoạt động ôn tập."}
         </p>
       ) : null}
-      {!assessmentOnly ? (
+      {!assessmentOnly || analysis.source === "AI" ? (
         <>
           <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
             <header className="border-b border-slate-100 px-4 py-3">

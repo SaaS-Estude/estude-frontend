@@ -60,3 +60,18 @@ test("teacher evidence selection sends the selected evidence and expected versio
     { url: "/exams/exam/students/student/attempts/exam-attempt/study-practice-attempts/practice-attempt", method: "GET", body: null },
   ]);
 });
+
+
+test("Go exam writes send bank references instead of editor answer snapshots", async () => {
+  const { examService, calls } = loadApi();
+  const payload = { title: "Go exam", questions: [{ questionId: "bank-question", points: 5, order: 0,
+    content: "editor-only text", correctOptionIds: ["forged-answer"], explanation: "editor-only explanation" }] };
+  await examService.createExam(payload);
+  await examService.updateExam("exam", payload);
+  await examService.createMakeup("exam", { ...payload, studentIds: ["student"], reason: "Thi bù", requestKey: "request" });
+  for (const call of calls) {
+    assert.deepEqual(call.body.questions, [{ questionId: "bank-question", points: 5, order: 0 }]);
+    assert.equal(call.body.title, "Go exam");
+  }
+  assert.deepEqual(calls[2].body.studentIds, ["student"]);
+});

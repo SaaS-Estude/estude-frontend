@@ -1,13 +1,15 @@
 "use client";
+import {
+  AttendancePolicyPanel,
+  SystemNotificationComposer,
+} from "@/components/admin/engagement-settings";
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BarChart3,
   Bell,
   BellRing,
   BookOpenCheck,
-  CalendarClock,
   ChartNoAxesCombined,
   CheckCircle2,
   ChevronDown,
@@ -22,10 +24,8 @@ import {
   LoaderCircle,
   LogOut,
   Menu,
-  MessageSquareText,
   Settings,
   School,
-  Sparkles,
   UserRoundPlus,
   UsersRound,
   X,
@@ -61,7 +61,11 @@ import { useAuth } from "@/context/auth-context";
 import { getRoleLogin, getRoleSessionSettings } from "@/lib/role-routes";
 
 const staffNavItems = [
-  { icon: BookOpenCheck, label: "Môn học được phân công", href: "/teacher/courses" },
+  {
+    icon: BookOpenCheck,
+    label: "Môn học được phân công",
+    href: "/teacher/courses",
+  },
   { icon: School, label: "Lớp học được phân công", href: "/teacher/classes" },
   { icon: UsersRound, label: "Học sinh", href: "/teacher/students" },
   { icon: Library, label: "Thư viện tài liệu", href: "/teacher/materials" },
@@ -86,7 +90,11 @@ const staffNavItems = [
 ];
 
 const settingsSubItems = [
-  { label: "Phân quyền động", href: "/admin/settings/permissions", section: "permissions" },
+  {
+    label: "Phân quyền động",
+    href: "/admin/settings/permissions",
+    section: "permissions",
+  },
   {
     label: "Điểm danh GPS/QR",
     href: "/admin/settings/attendance",
@@ -128,80 +136,11 @@ const settingsSubItems = [
   section: SystemSettingsSection | "permissions";
 }>;
 
-const managedCourses = [
-  {
-    code: "DHKTPM18A",
-    name: "Phát triển ứng dụng Web",
-    students: 46,
-    completion: 82,
-    nextSession: "Thứ 2, 07:00 · H3.01",
-    tone: "from-blue-600 to-cyan-500",
-  },
-  {
-    code: "DHTH19B",
-    name: "Cơ sở dữ liệu nâng cao",
-    students: 42,
-    completion: 74,
-    nextSession: "Thứ 3, 09:30 · A2.04",
-    tone: "from-violet-600 to-fuchsia-500",
-  },
-  {
-    code: "DHHTTT18C",
-    name: "Lập trình hướng đối tượng",
-    students: 48,
-    completion: 88,
-    nextSession: "Thứ 4, 13:00 · H5.02",
-    tone: "from-emerald-600 to-teal-500",
-  },
-];
-
 const userSubItems = [
   { label: "Giáo viên", href: "/admin/users/teachers", role: "TEACHER" },
   { label: "Học sinh", href: "/admin/users/students", role: "STUDENT" },
   { label: "Phụ huynh", href: "/admin/users/parents", role: "PARENT" },
 ] as const;
-
-const upcomingWork = [
-  {
-    title: "Chấm bài thực hành React",
-    detail: "DHKTPM18A · 18 bài chưa chấm",
-    due: "Hạn hôm nay",
-    urgent: true,
-  },
-  {
-    title: "Đăng tài liệu tuần 6",
-    detail: "DHTH19B · Chương giao dịch",
-    due: "Ngày mai",
-    urgent: false,
-  },
-  {
-    title: "Duyệt câu hỏi thảo luận",
-    detail: "DHHTTT18C · 7 câu hỏi mới",
-    due: "18/08",
-    urgent: false,
-  },
-];
-
-const activityItems = [
-  {
-    icon: CheckCircle2,
-    title: "Đã công bố điểm giữa kỳ",
-    detail: "Lớp DHKTPM18A · 10 phút trước",
-    tone: "bg-emerald-50 text-emerald-600",
-  },
-  {
-    icon: MessageSquareText,
-    title: "12 phản hồi mới từ học viên",
-    detail: "Chủ đề “Thiết kế REST API” · 35 phút trước",
-    tone: "bg-blue-50 text-blue-600",
-  },
-  {
-    icon: UserRoundPlus,
-    title: "3 học viên vừa tham gia lớp",
-    detail: "Lớp DHTH19B · 1 giờ trước",
-    tone: "bg-violet-50 text-violet-600",
-  },
-];
 
 export function StaffDashboardView() {
   const router = useRouter();
@@ -220,7 +159,10 @@ export function StaffDashboardView() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [studentDetailName, setStudentDetailName] = useState("");
-  const [teacherClassDetail, setTeacherClassDetail] = useState<{ id: string; name: string } | null>(null);
+  const [teacherClassDetail, setTeacherClassDetail] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -267,7 +209,6 @@ export function StaffDashboardView() {
   }
 
   const roleLabel = user.role === "ADMIN" ? "Quản trị viên" : "Giáo viên";
-  const firstName = user.fullName.trim().split(/\s+/).at(-1) ?? user.fullName;
   const initials = user.fullName
     .trim()
     .split(/\s+/)
@@ -368,15 +309,15 @@ export function StaffDashboardView() {
     : isTeacherStudentDetailPage
       ? "Chi tiết học sinh"
       : pathname.startsWith("/admin/users")
-      ? studentDetailId
-        ? "Chi tiết học sinh"
-        : (userSubItems.find((item) => item.href === pathname)?.label ??
-          "Giáo viên")
-      : (navItems.find(
-          (item) =>
-            item.href === pathname ||
-            (item.href === "/teacher/classes" && isTeacherClassDetailPage),
-        )?.label ?? (isTeacherDashboard ? "Lịch học" : "Tổng quan"));
+        ? studentDetailId
+          ? "Chi tiết học sinh"
+          : (userSubItems.find((item) => item.href === pathname)?.label ??
+            "Giáo viên")
+        : (navItems.find(
+            (item) =>
+              item.href === pathname ||
+              (item.href === "/teacher/classes" && isTeacherClassDetailPage),
+          )?.label ?? (isTeacherDashboard ? "Lịch học" : "Tổng quan"));
   const sidebarLabelClass = `max-w-[180px] overflow-hidden whitespace-nowrap opacity-100 transition-[max-width,opacity,transform] duration-300 ease-in-out ${
     isSidebarCollapsed
       ? "lg:max-w-0 lg:-translate-x-1 lg:opacity-0"
@@ -435,10 +376,14 @@ export function StaffDashboardView() {
                 Lớp học
               </button>
               <ChevronRight className="size-4 shrink-0 text-slate-400" />
-              <span className="hidden shrink-0 text-slate-500 sm:inline">Chi tiết lớp học</span>
+              <span className="hidden shrink-0 text-slate-500 sm:inline">
+                Chi tiết lớp học
+              </span>
               <ChevronRight className="hidden size-4 shrink-0 text-slate-400 sm:block" />
               <span className="truncate font-bold text-brand-700">
-                {teacherClassDetail?.id === teacherClassId ? teacherClassDetail.name : "Đang tải..."}
+                {teacherClassDetail?.id === teacherClassId
+                  ? teacherClassDetail.name
+                  : "Đang tải..."}
               </span>
             </nav>
           ) : (
@@ -467,8 +412,13 @@ export function StaffDashboardView() {
               >
                 <span className="relative grid size-10 overflow-hidden place-items-center rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 text-sm font-bold text-white shadow-md shadow-indigo-500/20">
                   {user.avatarUrl ? (
-                    <span className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${user.avatarUrl})` }} />
-                  ) : initials}
+                    <span
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${user.avatarUrl})` }}
+                    />
+                  ) : (
+                    initials
+                  )}
                 </span>
                 <span className="hidden md:block">
                   <span className="block max-w-44 truncate text-sm font-bold text-slate-900">
@@ -504,7 +454,10 @@ export function StaffDashboardView() {
                   <button
                     type="button"
                     role="menuitem"
-                    onClick={() => { setIsAccountMenuOpen(false); router.push("/help"); }}
+                    onClick={() => {
+                      setIsAccountMenuOpen(false);
+                      router.push("/help");
+                    }}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
                   >
                     <CircleHelp className="size-4" /> Trợ giúp
@@ -632,26 +585,28 @@ export function StaffDashboardView() {
                     </button>
                     {isUsersMenuOpen && !isSidebarCollapsed ? (
                       <div className="relative ml-5 mt-1 space-y-1 pl-3 before:absolute before:bottom-3 before:left-0 before:top-0 before:w-px before:rounded-full before:bg-blue-100">
-                        {userSubItems.filter((item) => canVisit(item.href)).map((item) => {
-                          const active = pathname.startsWith(item.href);
-                          return (
-                            <button
-                              type="button"
-                              key={item.href}
-                              onClick={() => {
-                                router.push(item.href);
-                                setIsMenuOpen(false);
-                              }}
-                              className={`relative flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition before:absolute before:-left-3 before:top-1/2 before:h-3 before:w-3 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-blue-100 before:bg-transparent ${
-                                active
-                                  ? "bg-blue-50 text-brand-700 shadow-sm shadow-blue-100/50"
-                                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                              }`}
-                            >
-                              {item.label}
-                            </button>
-                          );
-                        })}
+                        {userSubItems
+                          .filter((item) => canVisit(item.href))
+                          .map((item) => {
+                            const active = pathname.startsWith(item.href);
+                            return (
+                              <button
+                                type="button"
+                                key={item.href}
+                                onClick={() => {
+                                  router.push(item.href);
+                                  setIsMenuOpen(false);
+                                }}
+                                className={`relative flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition before:absolute before:-left-3 before:top-1/2 before:h-3 before:w-3 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-blue-100 before:bg-transparent ${
+                                  active
+                                    ? "bg-blue-50 text-brand-700 shadow-sm shadow-blue-100/50"
+                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                }`}
+                              >
+                                {item.label}
+                              </button>
+                            );
+                          })}
                       </div>
                     ) : null}
                   </div>
@@ -689,7 +644,10 @@ export function StaffDashboardView() {
                   type="button"
                   onClick={() => {
                     if (!isSettingsPage) {
-                      router.push(settingsSubItems.find((item) => canVisit(item.href))!.href);
+                      router.push(
+                        settingsSubItems.find((item) => canVisit(item.href))!
+                          .href,
+                      );
                     } else {
                       setIsSettingsMenuOpen((current) => !current);
                     }
@@ -712,26 +670,28 @@ export function StaffDashboardView() {
                 </button>
                 {isSettingsMenuOpen && !isSidebarCollapsed ? (
                   <div className="relative ml-5 mt-1 space-y-1 pl-3 before:absolute before:bottom-3 before:left-0 before:top-0 before:w-px before:rounded-full before:bg-blue-100">
-                    {settingsSubItems.filter((item) => canVisit(item.href)).map((item) => {
-                      const active = pathname === item.href;
-                      return (
-                        <button
-                          type="button"
-                          key={item.href}
-                          onClick={() => {
-                            router.push(item.href);
-                            setIsMenuOpen(false);
-                          }}
-                          className={`relative flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition before:absolute before:-left-3 before:top-1/2 before:h-3 before:w-3 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-blue-100 before:bg-transparent ${
-                            active && isSettingsPage
-                              ? "bg-blue-50 text-brand-700 shadow-sm shadow-blue-100/50"
-                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      );
-                    })}
+                    {settingsSubItems
+                      .filter((item) => canVisit(item.href))
+                      .map((item) => {
+                        const active = pathname === item.href;
+                        return (
+                          <button
+                            type="button"
+                            key={item.href}
+                            onClick={() => {
+                              router.push(item.href);
+                              setIsMenuOpen(false);
+                            }}
+                            className={`relative flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition before:absolute before:-left-3 before:top-1/2 before:h-3 before:w-3 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-blue-100 before:bg-transparent ${
+                              active && isSettingsPage
+                                ? "bg-blue-50 text-brand-700 shadow-sm shadow-blue-100/50"
+                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      })}
                   </div>
                 ) : null}
               </div>
@@ -775,7 +735,10 @@ export function StaffDashboardView() {
             ) : isTeacherStudentsPage ? (
               <TeacherStudentsPanel />
             ) : isTeacherClassDetailPage ? (
-              <TeacherClassLearningSpace classId={teacherClassId} onClassNameChange={setTeacherClassDetail} />
+              <TeacherClassLearningSpace
+                classId={teacherClassId}
+                onClassNameChange={setTeacherClassDetail}
+              />
             ) : isTeacherClassesPage ? (
               <TeacherAssignedClassesPanel />
             ) : isTeacherCoursesPage ? (
@@ -791,9 +754,16 @@ export function StaffDashboardView() {
             ) : isSettingsPage && settingsSection === "ai-question" ? (
               <AiDifficultySettingsPanel />
             ) : isSettingsPage && settingsSection === "notifications" ? (
-              <AutomaticFeatureNotificationPanel />
+              <>
+                <SystemNotificationComposer />
+                <AutomaticFeatureNotificationPanel />
+              </>
+            ) : isSettingsPage && settingsSection === "attendance" ? (
+              <AttendancePolicyPanel />
             ) : isSettingsPage ? (
-              <SystemSettingsPanel section={settingsSection as SystemSettingsSection} />
+              <SystemSettingsPanel
+                section={settingsSection as SystemSettingsSection}
+              />
             ) : isSubjectsPage ? (
               <SubjectManagementPanel />
             ) : isCourseOfferingsPage ? (
@@ -817,249 +787,27 @@ export function StaffDashboardView() {
               )
             ) : pathname.endsWith("/dashboard") ? (
               pathname === "/teacher/dashboard" ? (
-                <MonthlyTimetable />
+                <div className="space-y-5">
+                  <OverviewDashboard user={user} />
+                  <MonthlyTimetable />
+                </div>
               ) : (
                 <OverviewDashboard user={user} />
               )
             ) : (
-              <>
-                <section className="relative overflow-hidden rounded-[28px] bg-slate-950 px-6 py-7 text-white shadow-xl shadow-slate-900/10 sm:px-9 sm:py-9">
-                  <div className="absolute -right-20 -top-28 size-72 rounded-full bg-indigo-500/30 blur-3xl" />
-                  <div className="absolute -bottom-32 right-40 size-64 rounded-full bg-cyan-400/20 blur-3xl" />
-                  <div className="relative flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
-                    <div>
-                      <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold text-cyan-200">
-                        <Sparkles className="size-3.5" /> Trung tâm điều hành
-                        EStude
-                      </span>
-                      <h1 className="mt-4 text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">
-                        Chào {firstName}, cùng vận hành một ngày hiệu quả.
-                      </h1>
-                      <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-                        Theo dõi lớp học, tiến độ học viên và các công việc cần
-                        xử lý trong một không gian thống nhất.
-                      </p>
-                    </div>
-                    <div className="grid shrink-0 grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-50"
-                      >
-                        <FilePlus2 className="size-4" /> Tạo bài tập
-                      </button>
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/15"
-                      >
-                        <UserRoundPlus className="size-4" /> Thêm học viên
-                      </button>
-                    </div>
-                  </div>
-                </section>
-
-                <section
-                  className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-                  aria-label="Thống kê điều hành"
+              <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                <h2 className="font-bold">Chọn chức năng trong menu</h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  Các số liệu được tổng hợp tại trang tổng quan theo quyền của
+                  tài khoản.
+                </p>
+                <button
+                  className="mt-4 text-sm font-semibold text-brand-700"
+                  onClick={() => router.push(dashboardPath)}
                 >
-                  {[
-                    {
-                      icon: BookOpenCheck,
-                      label: "Lớp đang phụ trách",
-                      value: "08",
-                      note: "3 lớp có lịch hôm nay",
-                      tone: "bg-indigo-50 text-indigo-600",
-                    },
-                    {
-                      icon: UsersRound,
-                      label: "Học viên",
-                      value: "286",
-                      note: "+12 trong tháng này",
-                      tone: "bg-cyan-50 text-cyan-600",
-                    },
-                    {
-                      icon: ClipboardCheck,
-                      label: "Bài cần chấm",
-                      value: "34",
-                      note: "18 bài đến hạn hôm nay",
-                      tone: "bg-amber-50 text-amber-600",
-                    },
-                    {
-                      icon: BarChart3,
-                      label: "Tỷ lệ hoàn thành",
-                      value: "91%",
-                      note: "+4,2% so với kỳ trước",
-                      tone: "bg-emerald-50 text-emerald-600",
-                    },
-                  ].map(({ icon: Icon, label, value, note, tone }) => (
-                    <article
-                      key={label}
-                      className="rounded-2xl border border-slate-100 bg-white p-5 shadow-card"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-slate-500">
-                            {label}
-                          </p>
-                          <p className="mt-1 text-3xl font-extrabold tracking-tight text-slate-950">
-                            {value}
-                          </p>
-                        </div>
-                        <span
-                          className={`grid size-11 place-items-center rounded-xl ${tone}`}
-                        >
-                          <Icon className="size-5" />
-                        </span>
-                      </div>
-                      <p className="mt-3 text-xs text-slate-400">{note}</p>
-                    </article>
-                  ))}
-                </section>
-
-                <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(330px,0.75fr)]">
-                  <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-card sm:p-6">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <h2 className="text-xl font-extrabold tracking-tight">
-                          Lớp học đang hoạt động
-                        </h2>
-                        <p className="mt-1 text-sm text-slate-500">
-                          Tổng quan tiến độ và buổi học kế tiếp
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className="hidden items-center gap-1 text-sm font-bold text-indigo-600 hover:text-indigo-800 sm:flex"
-                      >
-                        Xem tất cả <ChevronRight className="size-4" />
-                      </button>
-                    </div>
-
-                    <div className="mt-5 space-y-3">
-                      {managedCourses.map((course) => (
-                        <article
-                          key={course.code}
-                          className="rounded-2xl border border-slate-100 p-4 transition hover:border-indigo-200 hover:shadow-md"
-                        >
-                          <div className="flex items-start gap-4">
-                            <span
-                              className={`grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br text-white ${course.tone}`}
-                            >
-                              <BookOpenCheck className="size-5" />
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-col justify-between gap-2 md:flex-row md:items-start">
-                                <div>
-                                  <p className="font-bold text-slate-950">
-                                    {course.name}
-                                  </p>
-                                  <p className="mt-1 text-xs text-slate-500">
-                                    {course.code} · {course.students} học viên
-                                  </p>
-                                </div>
-                                <span className="w-fit rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">
-                                  {course.nextSession}
-                                </span>
-                              </div>
-                              <div className="mt-4 flex items-center gap-3">
-                                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
-                                  <div
-                                    className={`h-full rounded-full bg-gradient-to-r ${course.tone}`}
-                                    style={{ width: `${course.completion}%` }}
-                                  />
-                                </div>
-                                <span className="text-xs font-extrabold text-slate-700">
-                                  {course.completion}%
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-card sm:p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-xl font-extrabold tracking-tight">
-                          Việc cần xử lý
-                        </h2>
-                        <p className="mt-1 text-sm text-slate-500">
-                          Ưu tiên trong những ngày tới
-                        </p>
-                      </div>
-                      <CalendarClock className="size-5 text-indigo-600" />
-                    </div>
-                    <div className="mt-5 space-y-3">
-                      {upcomingWork.map((item) => (
-                        <article
-                          key={item.title}
-                          className="rounded-xl border border-slate-100 p-4"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-bold text-slate-900">
-                                {item.title}
-                              </p>
-                              <p className="mt-1 text-xs leading-5 text-slate-500">
-                                {item.detail}
-                              </p>
-                            </div>
-                            <span
-                              className={`shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold ${item.urgent ? "bg-rose-50 text-rose-600" : "bg-slate-100 text-slate-600"}`}
-                            >
-                              {item.due}
-                            </span>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-                </div>
-
-                <section className="mt-6 rounded-2xl border border-slate-100 bg-white p-5 shadow-card sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-extrabold tracking-tight">
-                        Hoạt động gần đây
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-500">
-                        Cập nhật mới nhất trong các lớp phụ trách
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className="text-sm font-bold text-indigo-600 hover:text-indigo-800"
-                    >
-                      Xem lịch sử
-                    </button>
-                  </div>
-                  <div className="mt-5 grid gap-3 lg:grid-cols-3">
-                    {activityItems.map(
-                      ({ icon: Icon, title, detail, tone }) => (
-                        <article
-                          key={title}
-                          className="flex items-start gap-3 rounded-2xl border border-slate-100 p-4"
-                        >
-                          <span
-                            className={`grid size-10 shrink-0 place-items-center rounded-xl ${tone}`}
-                          >
-                            <Icon className="size-5" />
-                          </span>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">
-                              {title}
-                            </p>
-                            <p className="mt-1 text-xs leading-5 text-slate-500">
-                              {detail}
-                            </p>
-                          </div>
-                        </article>
-                      ),
-                    )}
-                  </div>
-                </section>
-              </>
+                  Mở tổng quan
+                </button>
+              </section>
             )}
           </div>
         </main>

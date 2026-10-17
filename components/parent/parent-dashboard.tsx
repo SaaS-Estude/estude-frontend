@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { authenticatedRequest } from "@/lib/auth-api";
+import { LearningSummary } from "@/components/dashboard/student-overview-summary";
 import { InternalGradeReport } from "@/components/assessment/internal-grade-report";
 import {
   ParentOverviewPanels,
@@ -341,6 +342,13 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
           {childrenError}
         </p>
       ) : null}
+      {studentId && selectedStudent && section === "overview" && !error
+        ? overview?.studentReports?.map((report) => (
+            <div key={report.student.id} className="mb-5">
+              <LearningSummary report={report} />
+            </div>
+          ))
+        : null}
       {studentId && selectedStudent && !childrenError ? (
         section === "grades" ? (
           selectedStudent && !loadingChildren && !childrenError ? (

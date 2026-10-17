@@ -113,7 +113,6 @@ function mockApi(role, route, method, body) {
 }
 async function configure(page, role, origin) {
   await page.call('Page.enable'); await page.call('Runtime.enable'); await page.call('Network.enable');
-  await page.call('Network.setBlockedURLs', { urls: ['*socket.io*'] });
   await page.call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   page.on('Runtime.exceptionThrown', (e) => runtimeErrors.push(e.exceptionDetails.exception?.description ?? e.exceptionDetails.text));
   page.on('Fetch.requestPaused', (e) => void (async () => {
