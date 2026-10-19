@@ -35,6 +35,52 @@ Quản trị toàn nền tảng nằm ở project [estude-saas-admin](../estude-
 
 Backend duy nhất là Go. API mặc định `/api/v1` qua proxy cùng origin, gồm cả WebSocket chat. Production cũng định tuyến `/api/v1` tới Go theo hostname tenant. Các module chưa nghiệm thu được kiểm soát trong `lib/features.ts`; không chọn backend bằng biến môi trường.
 
+## Deploy frontend trường học lên Vercel
+
+Tạo project riêng `estude-saas-frontend` từ repo `SaaS-Estude/estude-frontend`.
+Chọn Next.js, Node 22.x, Install Command `npm ci`, Build Command `npm run build`
+và Output Directory mặc định. Đặt biến môi trường Production:
+
+```ini
+NEXT_PUBLIC_API_URL=/api/v1
+GO_API_URL=https://saas-api.estude.io.vn
+```
+
+`GO_API_URL` chỉ dành cho server Next.js, không có hậu tố `/api/v1`. Không đặt
+database/JWT/S3 credential vào frontend. Khi dùng Preview, cấu hình riêng cho
+môi trường đó và gắn hostname portal đã đăng ký trước khi thử đăng nhập.
+
+Route `app/api/v1/[...path]/route.ts` chuyển HTTP tới Go, giữ Host của trường,
+Origin, cookie, Authorization, Idempotency-Key và trạng thái lỗi. Kết nối HTTPS
+xác thực chứng chỉ/SNI theo hostname trong `GO_API_URL`. Backend Go tiếp tục
+quyết định trường nào tồn tại, tài khoản, phiên, quyền và nghiệp vụ. Request không
+được dùng header để chọn tenant hoặc đổi đích backend. Phản hồi không cache chéo
+trường; tải file vẫn dùng URL S3 được backend cấp.
+
+Chat dùng route `app/api/v1/class-chat/ws/route.ts` trên Vercel Functions với
+Fluid Compute bật. Route chuyển tiếp frame tới Go, giữ nguyên việc gửi access
+token trong frame đầu tiên, không đưa token vào URL. Go vẫn xác thực và kiểm tra
+quyền lớp. Đây là chức năng WebSocket Beta của Vercel; mỗi kết nối được đóng trước
+giới hạn 180 giây và client hiện có tự kết nối lại. Local tiếp tục dùng
+`npm run dev:saas`, không cần chạy Vercel CLI. Tham khảo
+[Vercel WebSockets](https://vercel.com/docs/functions/websockets) và
+[API Next.js upgradeWebSocket](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package#upgradewebsocket).
+
+Sau khi tạo trường trong SaaS Admin, lấy đúng các địa chỉ được đăng ký, ví dụ
+`student.nguyen-trai.saas.estude.io.vn`, rồi thêm chúng vào **project FE trường học
+→ Settings → Domains** và tạo DNS theo Vercel hiển thị. Bốn portal của một trường
+cùng trỏ tới project này. Wildcard một cấp không bao phủ hostname portal hai cấp;
+có thể thêm từng hostname khi triển khai những trường đầu tiên. Trang chủ
+`estude.io.vn` và URL `.vercel.app` không đại diện cho một trường để đăng nhập.
+Chuyển domain trên Vercel không tự đăng ký hostname tương ứng trong backend.
+
+Kiểm tra `https://student.<trường>.saas.estude.io.vn/api/v1/tenant` trả JSON đúng
+trường trước khi đăng nhập tại `/login`. `404` với request ID từ Go thường là
+hostname chưa đăng ký hoặc trường không hoạt động; `503` báo thiếu cấu hình
+`GO_API_URL`; `502` là lỗi kết nối tới backend. Test transport/TLS/chat bằng
+`npm run test:proxy`. Các bài test dùng server fixture, không tạo dữ liệu trường
+trên production.
+
 ## Chạy riêng trang giới thiệu
 
 Chạy `npm run dev:home` rồi mở `http://localhost:3004` để xem trang giới thiệu
@@ -52,8 +98,8 @@ chỉ áp dụng khi phát triển, bỏ qua việc nhận diện vai trò từ 
 
 Khi `NODE_ENV=development`, portal đăng nhập được npm script thiết lập bằng
 `NEXT_PUBLIC_AUTH_PORTAL`. Khi `NODE_ENV=production`, ứng dụng bỏ qua cấu hình portal local và
-tự nhận diện hostname `student.estude.io.vn`, `teacher.estude.io.vn`,
-`parent.estude.io.vn` hoặc `admin.estude.io.vn`; tất cả đều dùng path `/login`.
+tự nhận diện hostname bắt đầu bằng `student`, `teacher`, `parent` hoặc `admin`;
+SaaS dùng `<portal>.<trường>.<tên-miền-gốc>`, tất cả đều dùng path `/login`.
 
 - `ADMIN`: `/admin/dashboard`
 - `TEACHER`: `/teacher/dashboard`
@@ -72,7 +118,7 @@ Route `/dashboard` được giữ để tự chuyển người dùng về đúng
 
 `serve:all` dùng một Next.js dev server và ba proxy nhẹ để tiết kiệm RAM nhưng vẫn giữ đủ HMR trên cả bốn cổng. Khi chạy riêng, mỗi vai trò sử dụng thư mục cache Next.js độc lập.
 
-Middleware nhận diện portal từ hostname production (`admin.estude.io.vn`, `teacher.estude.io.vn`, `student.estude.io.vn`, `parent.estude.io.vn`) hoặc cổng local. Mỗi origin gọi endpoint auth tương ứng và dùng refresh cookie riêng, nên có thể mở đồng thời nhiều portal mà không ghi đè phiên.
+Middleware nhận diện portal từ hostname production `<portal>.<trường>.<tên-miền-gốc>` hoặc cổng local. Mỗi origin gọi endpoint auth tương ứng và dùng refresh cookie riêng, nên có thể mở đồng thời nhiều portal mà không ghi đè phiên.
 
 ### Nội dung G04 trên Go SaaS
 

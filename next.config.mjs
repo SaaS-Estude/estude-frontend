@@ -8,6 +8,7 @@ const nextConfig = {
   reactStrictMode: true,
   distDir: process.env.NEXT_DIST_DIR ?? '.next',
   outputFileTracingRoot: projectRoot,
+  serverExternalPackages: ['ws'],
   webpack(config) {
     config.resolve.alias = {
       ...config.resolve.alias,

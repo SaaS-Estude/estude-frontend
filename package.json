@@ -2,6 +2,7 @@
   "name": "estude-frontend",
   "version": "1.0.0",
   "private": true,
+  "engines": { "node": ">=22" },
   "scripts": {
     "dev": "npm run dev:saas",
     "dev:saas": "concurrently --kill-others --names NEXT,PROXY \"npm:dev:saas:next\" \"npm:dev:saas:proxy\"",
@@ -23,6 +24,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:chat": "node tests/class-chat.test.cjs",
+    "test:proxy": "node --test tests/go-api-proxy.test.cjs",
     "test:content": "node --test tests/content.test.cjs",
     "test:assignment": "node --test tests/assignment.test.cjs",
     "test:gradebook": "node --test tests/gradebook.test.cjs",
@@ -35,16 +37,19 @@
     "test:internal-results": "node --test tests/internal-results.test.cjs"
   },
   "dependencies": {
+    "@vercel/functions": "3.10.1",
     "lucide-react": "^0.468.0",
     "next": "^15.5.21",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-icons": "^5.7.0"
+    "react-icons": "^5.7.0",
+    "ws": "8.22.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/ws": "8.18.2",
     "autoprefixer": "^10.4.20",
     "concurrently": "^10.0.5",
     "cross-env": "^10.1.0",
