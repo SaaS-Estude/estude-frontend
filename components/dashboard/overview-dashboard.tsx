@@ -33,10 +33,10 @@ const metricIcons = {
 function MetricCard({ metric }: { metric: DashboardMetric }) {
   const Icon = metricIcons[metric.key as keyof typeof metricIcons] ?? CircleUserRound;
   return (
-    <article className="rounded-2xl border border-blue-400 bg-gradient-to-br from-brand-500 to-brand-600 p-4 text-white shadow-[0_12px_30px_rgba(52,136,251,0.18)] sm:p-5">
+    <article className="rounded-2xl border border-brand-400 bg-gradient-to-br from-brand-500 to-brand-600 p-4 text-white shadow-[0_12px_30px] shadow-brand-500/[0.18] sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-blue-100">{metric.label}</p>
+          <p className="text-sm font-semibold text-brand-100">{metric.label}</p>
           <p className="mt-2 text-3xl font-black tracking-[-0.04em] text-white">
             {metric.value.toLocaleString("vi-VN")}
           </p>
@@ -45,7 +45,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
           <Icon className="size-5" aria-hidden="true" />
         </span>
       </div>
-      <p className="mt-3 truncate text-xs font-medium text-blue-100" title={metric.helper}>
+      <p className="mt-3 truncate text-xs font-medium text-brand-100" title={metric.helper}>
         {metric.helper}
       </p>
     </article>
@@ -142,26 +142,26 @@ export function OverviewDashboard({ user }: { user: User }) {
 function GrowthChart({ data }: { data: DashboardOverview["growth"] }) {
   const max = Math.max(1, ...data.map((item) => item.students + item.teachers));
   return (
-    <section className="h-full rounded-2xl border border-blue-100/80 bg-white p-5 shadow-[0_10px_30px_rgba(37,99,235,0.06)] sm:p-6">
+    <section className="h-full rounded-2xl border border-brand-100/80 bg-white p-5 shadow-[0_10px_30px] shadow-brand-600/[0.06] sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-slate-600">Người dùng mới</h2>
         </div>
         <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
-          <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-blue-600" /> Học viên</span>
-          <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-sky-400" /> Giảng viên</span>
+          <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-brand-600" /> Học viên</span>
+          <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-brand-400" /> Giảng viên</span>
         </div>
       </div>
-      <div className="mt-5 grid h-40 grid-cols-6 items-end gap-3 border-b border-blue-100 bg-[linear-gradient(to_bottom,transparent_32%,#eff6ff_33%,transparent_34%,transparent_65%,#eff6ff_66%,transparent_67%)] px-1 sm:gap-5">
+      <div className="mt-5 grid h-40 grid-cols-6 items-end gap-3 border-b border-brand-100 bg-[linear-gradient(to_bottom,transparent_32%,rgb(var(--brand-50,239_246_255))_33%,transparent_34%,transparent_65%,rgb(var(--brand-50,239_246_255))_66%,transparent_67%)] px-1 sm:gap-5">
         {data.map((item) => {
           const studentHeight = (item.students / max) * 108;
           const teacherHeight = (item.teachers / max) * 108;
           return (
             <div key={item.label} className="flex h-full min-w-0 flex-col items-center justify-end">
-              <div className="mb-1.5 text-[11px] font-black text-blue-700">{item.students + item.teachers}</div>
-              <div className="flex w-full max-w-10 flex-col-reverse overflow-hidden rounded-t-md bg-blue-50" title={`${item.students} học viên, ${item.teachers} giảng viên`}>
-                <div className="bg-blue-600" style={{ height: `${studentHeight}px` }} />
-                <div className="bg-sky-400" style={{ height: `${teacherHeight}px` }} />
+              <div className="mb-1.5 text-[11px] font-black text-brand-700">{item.students + item.teachers}</div>
+              <div className="flex w-full max-w-10 flex-col-reverse overflow-hidden rounded-t-md bg-brand-50" title={`${item.students} học viên, ${item.teachers} giảng viên`}>
+                <div className="bg-brand-600" style={{ height: `${studentHeight}px` }} />
+                <div className="bg-brand-400" style={{ height: `${teacherHeight}px` }} />
               </div>
               <span className="mt-2 w-full truncate text-center text-[11px] font-bold capitalize text-slate-400">{item.label}</span>
             </div>
@@ -175,20 +175,20 @@ function GrowthChart({ data }: { data: DashboardOverview["growth"] }) {
 function AttentionPanel({ items, onOpen }: { items: DashboardOverview["attention"]; onOpen: (href: string) => void }) {
   const highestCount = Math.max(1, ...items.map((item) => item.count));
   return (
-    <section id="dashboard-attention" className="h-full rounded-2xl border border-blue-100/80 bg-white p-5 shadow-[0_10px_30px_rgba(37,99,235,0.06)] sm:p-6">
+    <section id="dashboard-attention" className="h-full rounded-2xl border border-brand-100/80 bg-white p-5 shadow-[0_10px_30px] shadow-brand-600/[0.06] sm:p-6">
       <h2 className="text-lg font-semibold tracking-tight text-slate-600">Tồn đọng</h2>
       <div className="mt-5 space-y-4">
         {items.map((item) => (
           <button key={item.key} type="button" onClick={() => onOpen(item.href)} className="group block w-full text-left">
             <span className="flex items-center justify-between gap-3">
               <span className="truncate text-sm font-bold text-slate-600">{attentionLabel(item.key, item.title)}</span>
-              <span className={`shrink-0 text-sm font-black ${item.count === 0 ? "text-emerald-600" : item.severity === "critical" ? "text-rose-600" : "text-blue-700"}`}>
+              <span className={`shrink-0 text-sm font-black ${item.count === 0 ? "text-emerald-600" : item.severity === "critical" ? "text-rose-600" : "text-brand-700"}`}>
                 {item.count === 0 ? <CheckCircle2 className="size-4" /> : item.count}
               </span>
             </span>
-            <span className="mt-2 flex h-2 overflow-hidden rounded-full bg-blue-50">
+            <span className="mt-2 flex h-2 overflow-hidden rounded-full bg-brand-50">
               <span
-                className={`h-full rounded-full transition-all ${item.count === 0 ? "bg-emerald-400" : item.severity === "critical" ? "bg-rose-500" : "bg-blue-500"}`}
+                className={`h-full rounded-full transition-all ${item.count === 0 ? "bg-emerald-400" : item.severity === "critical" ? "bg-rose-500" : "bg-brand-500"}`}
                 style={{ width: item.count === 0 ? "100%" : `${Math.max(12, (item.count / highestCount) * 100)}%` }}
               />
             </span>
@@ -201,7 +201,7 @@ function AttentionPanel({ items, onOpen }: { items: DashboardOverview["attention
 
 function CoveragePanel({ items, isAdmin, onOpen }: { items: DashboardOverview["coverage"]; isAdmin: boolean; onOpen: () => void }) {
   return (
-    <section className="h-full overflow-hidden rounded-2xl border border-blue-100/80 bg-white shadow-[0_10px_30px_rgba(37,99,235,0.06)]">
+    <section className="h-full overflow-hidden rounded-2xl border border-brand-100/80 bg-white shadow-[0_10px_30px] shadow-brand-600/[0.06]">
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-5 sm:px-6">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-slate-600">{isAdmin ? "Lớp học mới cập nhật" : "Môn học được phân công"}</h2>
@@ -218,7 +218,7 @@ function CoveragePanel({ items, isAdmin, onOpen }: { items: DashboardOverview["c
               {items.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50/70">
                   <td className="px-6 py-3.5"><p className="font-bold text-slate-700">{item.name}</p><p className="mt-0.5 text-xs font-semibold text-brand-600">{item.code}</p></td>
-                  <td className="px-4 py-3.5 text-center text-sm font-black text-blue-900">{item.students}</td>
+                  <td className="px-4 py-3.5 text-center text-sm font-black text-brand-900">{item.students}</td>
                   <td className="px-6 py-3.5 text-right"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${item.assignments ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{isAdmin ? `${item.assignments} bộ môn` : "Đang phụ trách"}</span></td>
                 </tr>
               ))}
@@ -234,13 +234,13 @@ function CoveragePanel({ items, isAdmin, onOpen }: { items: DashboardOverview["c
 
 function RecentActivity({ items, onOpen }: { items: DashboardOverview["recentActivity"]; onOpen: (href: string) => void }) {
   return (
-    <section className="h-full rounded-2xl border border-blue-100/80 bg-white p-5 shadow-[0_10px_30px_rgba(37,99,235,0.06)] sm:p-6">
+    <section className="h-full rounded-2xl border border-brand-100/80 bg-white p-5 shadow-[0_10px_30px] shadow-brand-600/[0.06] sm:p-6">
       <h2 className="text-lg font-semibold tracking-tight text-slate-600">Cập nhật gần đây</h2>
       <div className="mt-5 space-y-1">
         {items.length ? items.map((item, index) => (
           <button key={item.id} type="button" onClick={() => onOpen(item.href)} className="group relative flex w-full gap-3 rounded-xl px-2 py-3 text-left hover:bg-slate-50">
             {index < items.length - 1 ? <span className="absolute bottom-0 left-[21px] top-10 w-px bg-slate-100" /> : null}
-            <span className={`relative grid size-8 shrink-0 place-items-center rounded-lg ${item.category === "user" ? "bg-blue-50 text-blue-600" : "bg-violet-50 text-violet-600"}`}>
+            <span className={`relative grid size-8 shrink-0 place-items-center rounded-lg ${item.category === "user" ? "bg-brand-50 text-brand-600" : "bg-violet-50 text-violet-600"}`}>
               {item.category === "user" ? <UserRoundPlus className="size-4" /> : <BookOpenCheck className="size-4" />}
             </span>
             <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-700">{item.title}</span><span className="mt-0.5 block truncate text-xs text-slate-500">{item.description}</span><span className="mt-1 block text-[11px] font-medium text-slate-500">{formatRelativeTime(item.occurredAt)}</span></span>
@@ -253,13 +253,13 @@ function RecentActivity({ items, onOpen }: { items: DashboardOverview["recentAct
 
 function UpcomingExams({ items, onOpen }: { items: DashboardOverview["upcomingExams"]; onOpen: (id: string) => void }) {
   return (
-    <section className="h-full rounded-2xl border border-blue-100/80 bg-white p-5 shadow-[0_10px_30px_rgba(37,99,235,0.06)] sm:p-6">
+    <section className="h-full rounded-2xl border border-brand-100/80 bg-white p-5 shadow-[0_10px_30px] shadow-brand-600/[0.06] sm:p-6">
       <p className="text-xs font-black uppercase tracking-[0.16em] text-brand-600">Lịch sắp tới</p>
       <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-600">Bài kiểm tra đang mở và sắp mở</h2>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {items.length ? items.map((item) => (
-          <button key={item.id} type="button" onClick={() => onOpen(item.id)} className="rounded-2xl border border-slate-100 p-4 text-left transition hover:border-brand-200 hover:bg-blue-50/30">
-            <div className="flex items-start justify-between gap-3"><span className="grid size-10 place-items-center rounded-xl bg-blue-50 text-brand-600"><Clock3 className="size-5" /></span><span className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500">{formatExamState(item.startsAt, item.endsAt)}</span></div>
+          <button key={item.id} type="button" onClick={() => onOpen(item.id)} className="rounded-2xl border border-slate-100 p-4 text-left transition hover:border-brand-200 hover:bg-brand-50/30">
+            <div className="flex items-start justify-between gap-3"><span className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-600"><Clock3 className="size-5" /></span><span className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500">{formatExamState(item.startsAt, item.endsAt)}</span></div>
             <p className="mt-4 truncate font-bold text-slate-700">{item.title}</p><p className="mt-1 truncate text-xs text-slate-500">{item.subjectName} · {item.className}</p><p className="mt-3 text-xs font-semibold text-brand-700">{new Date(item.startsAt).toLocaleString("vi-VN")}</p>
           </button>
         )) : <div className="col-span-full grid min-h-44 place-items-center text-center text-sm text-slate-400"><div><CalendarDays className="mx-auto size-8 text-slate-300" /><p className="mt-3">Chưa có bài kiểm tra sắp tới</p></div></div>}

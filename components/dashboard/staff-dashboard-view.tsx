@@ -327,7 +327,7 @@ export function StaffDashboardView() {
 
   return (
     <ActionNotificationProvider>
-      <div className="min-h-screen bg-[#f5f9ff] text-slate-950">
+      <div className="min-h-screen bg-brand-50/50 text-slate-950">
         <header
           className={`fixed inset-x-0 top-0 z-40 flex h-16 items-center border-b border-slate-200 bg-white/95 px-4 backdrop-blur transition-[padding] duration-300 lg:pr-8 ${
             isSidebarCollapsed ? "lg:pl-[92px]" : "lg:pl-[286px]"
@@ -410,7 +410,7 @@ export function StaffDashboardView() {
                 aria-haspopup="menu"
                 aria-expanded={isAccountMenuOpen}
               >
-                <span className="relative grid size-10 overflow-hidden place-items-center rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 text-sm font-bold text-white shadow-md shadow-indigo-500/20">
+                <span className="relative grid size-10 overflow-hidden place-items-center rounded-xl bg-gradient-to-br from-brand-700 to-brand-500 text-sm font-bold text-white shadow-md shadow-brand-500/20">
                   {user.avatarUrl ? (
                     <span
                       className="absolute inset-0 bg-cover bg-center"
@@ -424,7 +424,7 @@ export function StaffDashboardView() {
                   <span className="block max-w-44 truncate text-sm font-bold text-slate-900">
                     {user.fullName}
                   </span>
-                  <span className="block text-xs font-medium text-indigo-600">
+                  <span className="block text-xs font-medium text-brand-600">
                     {roleLabel}
                   </span>
                 </span>
@@ -515,7 +515,7 @@ export function StaffDashboardView() {
           <button
             type="button"
             onClick={() => setIsSidebarCollapsed((current) => !current)}
-            className="absolute -right-[18px] bottom-28 hidden size-9 place-items-center rounded-full border border-blue-100 bg-white text-brand-600 shadow-md shadow-slate-950/15 transition hover:scale-105 hover:bg-blue-50 hover:text-brand-700 focus:outline-none lg:grid"
+            className="absolute -right-[18px] bottom-28 hidden size-9 place-items-center rounded-full border border-brand-100 bg-white text-brand-600 shadow-md shadow-slate-950/15 transition hover:scale-105 hover:bg-brand-50 hover:text-brand-700 focus:outline-none lg:grid"
             aria-label={
               isSidebarCollapsed
                 ? "Mở rộng thanh điều hướng"
@@ -584,7 +584,7 @@ export function StaffDashboardView() {
                       />
                     </button>
                     {isUsersMenuOpen && !isSidebarCollapsed ? (
-                      <div className="relative ml-5 mt-1 space-y-1 pl-3 before:absolute before:bottom-3 before:left-0 before:top-0 before:w-px before:rounded-full before:bg-blue-100">
+                      <div className="relative ml-5 mt-1 space-y-1 pl-3 before:absolute before:bottom-3 before:left-0 before:top-0 before:w-px before:rounded-full before:bg-brand-100">
                         {userSubItems
                           .filter((item) => canVisit(item.href))
                           .map((item) => {
@@ -597,9 +597,9 @@ export function StaffDashboardView() {
                                   router.push(item.href);
                                   setIsMenuOpen(false);
                                 }}
-                                className={`relative flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition before:absolute before:-left-3 before:top-1/2 before:h-3 before:w-3 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-blue-100 before:bg-transparent ${
+                                className={`relative flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition before:absolute before:-left-3 before:top-1/2 before:h-3 before:w-3 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-brand-100 before:bg-transparent ${
                                   active
-                                    ? "bg-blue-50 text-brand-700 shadow-sm shadow-blue-100/50"
+                                    ? "bg-brand-50 text-brand-700 shadow-sm shadow-brand-100/50"
                                     : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                                 }`}
                               >
@@ -669,7 +669,7 @@ export function StaffDashboardView() {
                   />
                 </button>
                 {isSettingsMenuOpen && !isSidebarCollapsed ? (
-                  <div className="relative ml-5 mt-1 space-y-1 pl-3 before:absolute before:bottom-3 before:left-0 before:top-0 before:w-px before:rounded-full before:bg-blue-100">
+                  <div className="relative ml-5 mt-1 space-y-1 pl-3 before:absolute before:bottom-3 before:left-0 before:top-0 before:w-px before:rounded-full before:bg-brand-100">
                     {settingsSubItems
                       .filter((item) => canVisit(item.href))
                       .map((item) => {
@@ -682,9 +682,9 @@ export function StaffDashboardView() {
                               router.push(item.href);
                               setIsMenuOpen(false);
                             }}
-                            className={`relative flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition before:absolute before:-left-3 before:top-1/2 before:h-3 before:w-3 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-blue-100 before:bg-transparent ${
+                            className={`relative flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition before:absolute before:-left-3 before:top-1/2 before:h-3 before:w-3 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-brand-100 before:bg-transparent ${
                               active && isSettingsPage
-                                ? "bg-blue-50 text-brand-700 shadow-sm shadow-blue-100/50"
+                                ? "bg-brand-50 text-brand-700 shadow-sm shadow-brand-100/50"
                                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                             }`}
                           >
@@ -721,7 +721,7 @@ export function StaffDashboardView() {
               isTeacherMaterialsPage ||
               isTeacherClassDetailPage ||
               isTeacherStudentDetailPage
-                ? `w-full ${studentDetailId ? "bg-[#F5F9FF]" : ""}`
+                ? `w-full ${studentDetailId ? "bg-brand-50/50" : ""}`
                 : "mx-auto max-w-[1280px]"
             }
           >

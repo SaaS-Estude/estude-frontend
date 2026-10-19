@@ -24,8 +24,8 @@ const config: Config = {
         },
       },
       boxShadow: {
-        soft: "0 24px 80px rgba(24, 58, 112, 0.14)",
-        card: "0 14px 40px rgba(28, 57, 104, 0.08)",
+        soft: "0 24px 80px rgb(var(--brand-900, 24 58 112) / 0.14)",
+        card: "0 14px 40px rgb(var(--brand-900, 28 57 104) / 0.08)",
       },
       animation: {
         float: "float 7s ease-in-out infinite",

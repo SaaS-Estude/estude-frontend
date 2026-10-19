@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #f4f8fc;
+  --background: rgb(var(--brand-50, 244 248 252));
   --foreground: #12233f;
 }
 
@@ -82,7 +82,7 @@ input {
 
 ::selection {
   color: #fff;
-  background: #2269ef;
+  background: rgb(var(--brand-600, 34 105 239));
 }
 
 .admin-login-input:-webkit-autofill,
@@ -181,7 +181,7 @@ input {
 .table-loading-track {
   height: 3px;
   overflow: hidden;
-  background: #e0f2fe;
+  background: rgb(var(--brand-100, 224 242 254));
 }
 
 .table-loading-indicator {
@@ -189,8 +189,8 @@ input {
   width: 34%;
   height: 100%;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #38bdf8, #2563eb 50%, #38bdf8);
-  box-shadow: 0 0 8px rgb(37 99 235 / 45%);
+  background: linear-gradient(90deg, rgb(var(--brand-400, 56 189 248)), rgb(var(--brand-600, 37 99 235)) 50%, rgb(var(--brand-400, 56 189 248)));
+  box-shadow: 0 0 8px rgb(var(--brand-600, 37 99 235) / 45%);
   animation: table-loading-slide 1.8s ease-in-out infinite;
 }
 
@@ -209,6 +209,6 @@ main > div > div.pb-8 > div.mb-6:first-child {
   .table-loading-indicator {
     width: 100%;
     animation: none;
-    background: #2563eb;
+    background: rgb(var(--brand-600, 37 99 235));
   }
 }

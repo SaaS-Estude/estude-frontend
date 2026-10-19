@@ -107,7 +107,7 @@ export function StudentDashboardView() {
                       `/student/courses/${course.classId}/${course.subjectId}`,
                     )
                   }
-                  className="rounded-xl border border-slate-200 p-4 text-left hover:border-brand-300 hover:bg-blue-50/30"
+                  className="rounded-xl border border-slate-200 p-4 text-left hover:border-brand-300 hover:bg-brand-50/30"
                 >
                   <span className="text-xs font-bold text-brand-700">
                     {course.subject.code}
