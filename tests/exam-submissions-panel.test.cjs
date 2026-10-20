@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -33,7 +33,7 @@ async function renderPanel(t, { submissions = [], allowed = true, getSubmissions
     if (id === "@/context/permissions-context") return { usePermissions: () => ({ can: () => allowed, loading: false }) };
     if (id === "lucide-react") return new Proxy({}, { get: () => () => React.createElement("svg") });
     if (id === "@/components/ui/button") return { Button: ({ children, ...props }) => React.createElement("button", props, children) };
-    if (id === "@/components/ui/form-control") return { Input: (props) => React.createElement("input", props) };
+    if (id === "@/components/ui/form-control") return { ...require("./helpers/register-ui.cjs").formControls,  Input: (props) => React.createElement("input", props) };
     if (id === "@/components/ui/data-table-footer") return { DataTableFooter: () => null };
     if (id === "@/components/ui/data-table") return {
       Table: (props) => React.createElement("table", props), TableBody: (props) => React.createElement("tbody", props),

@@ -20,6 +20,8 @@ import {
 import { dashboardService } from "@/lib/dashboard-api";
 import type { User } from "@/types/auth";
 import type { DashboardMetric, DashboardOverview } from "@/types/dashboard";
+import { Button } from "@/components/ui/button";
+
 
 const metricIcons = {
   students: GraduationCap,
@@ -104,9 +106,9 @@ export function OverviewDashboard({ user }: { user: User }) {
           </span>
           <h2 className="mt-4 text-lg font-black text-slate-600">Chưa tải được dữ liệu tổng quan</h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{error}</p>
-          <button type="button" onClick={() => void load()} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-700">
+          <Button variant="plain" type="button" onClick={() => void load()} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-700">
             <RefreshCw className="size-4" /> Thử lại
-          </button>
+          </Button>
         </div>
       </section>
     );
@@ -117,7 +119,7 @@ export function OverviewDashboard({ user }: { user: User }) {
       {error ? (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <span>Dữ liệu mới nhất chưa tải được: {error}</span>
-          <button type="button" onClick={() => void load(true)} className="shrink-0 font-bold">Thử lại</button>
+          <Button variant="plain" type="button" onClick={() => void load(true)} className="shrink-0 font-bold">Thử lại</Button>
         </div>
       ) : null}
 
@@ -179,7 +181,7 @@ function AttentionPanel({ items, onOpen }: { items: DashboardOverview["attention
       <h2 className="text-lg font-semibold tracking-tight text-slate-600">Tồn đọng</h2>
       <div className="mt-5 space-y-4">
         {items.map((item) => (
-          <button key={item.key} type="button" onClick={() => onOpen(item.href)} className="group block w-full text-left">
+          <Button variant="plain" key={item.key} type="button" onClick={() => onOpen(item.href)} className="group block w-full text-left">
             <span className="flex items-center justify-between gap-3">
               <span className="truncate text-sm font-bold text-slate-600">{attentionLabel(item.key, item.title)}</span>
               <span className={`shrink-0 text-sm font-black ${item.count === 0 ? "text-emerald-600" : item.severity === "critical" ? "text-rose-600" : "text-brand-700"}`}>
@@ -192,7 +194,7 @@ function AttentionPanel({ items, onOpen }: { items: DashboardOverview["attention
                 style={{ width: item.count === 0 ? "100%" : `${Math.max(12, (item.count / highestCount) * 100)}%` }}
               />
             </span>
-          </button>
+          </Button>
         ))}
       </div>
     </section>
@@ -206,7 +208,7 @@ function CoveragePanel({ items, isAdmin, onOpen }: { items: DashboardOverview["c
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-slate-600">{isAdmin ? "Lớp học mới cập nhật" : "Môn học được phân công"}</h2>
         </div>
-        <button type="button" onClick={onOpen} className="inline-flex items-center gap-1 text-sm font-bold text-brand-600 hover:text-brand-800">Xem tất cả <ArrowRight className="size-4" /></button>
+        <Button variant="plain" type="button" onClick={onOpen} className="inline-flex items-center gap-1 text-sm font-bold text-brand-600 hover:text-brand-800">Xem tất cả <ArrowRight className="size-4" /></Button>
       </div>
       {items.length ? (
         <div className="overflow-x-auto">
@@ -238,13 +240,13 @@ function RecentActivity({ items, onOpen }: { items: DashboardOverview["recentAct
       <h2 className="text-lg font-semibold tracking-tight text-slate-600">Cập nhật gần đây</h2>
       <div className="mt-5 space-y-1">
         {items.length ? items.map((item, index) => (
-          <button key={item.id} type="button" onClick={() => onOpen(item.href)} className="group relative flex w-full gap-3 rounded-xl px-2 py-3 text-left hover:bg-slate-50">
+          <Button variant="plain" key={item.id} type="button" onClick={() => onOpen(item.href)} className="group relative flex w-full gap-3 rounded-xl px-2 py-3 text-left hover:bg-slate-50">
             {index < items.length - 1 ? <span className="absolute bottom-0 left-[21px] top-10 w-px bg-slate-100" /> : null}
             <span className={`relative grid size-8 shrink-0 place-items-center rounded-lg ${item.category === "user" ? "bg-brand-50 text-brand-600" : "bg-violet-50 text-violet-600"}`}>
               {item.category === "user" ? <UserRoundPlus className="size-4" /> : <BookOpenCheck className="size-4" />}
             </span>
             <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-700">{item.title}</span><span className="mt-0.5 block truncate text-xs text-slate-500">{item.description}</span><span className="mt-1 block text-[11px] font-medium text-slate-500">{formatRelativeTime(item.occurredAt)}</span></span>
-          </button>
+          </Button>
         )) : <div className="py-10 text-center text-sm text-slate-400">Chưa có hoạt động mới</div>}
       </div>
     </section>
@@ -258,10 +260,10 @@ function UpcomingExams({ items, onOpen }: { items: DashboardOverview["upcomingEx
       <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-600">Bài kiểm tra đang mở và sắp mở</h2>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {items.length ? items.map((item) => (
-          <button key={item.id} type="button" onClick={() => onOpen(item.id)} className="rounded-2xl border border-slate-100 p-4 text-left transition hover:border-brand-200 hover:bg-brand-50/30">
+          <Button variant="plain" key={item.id} type="button" onClick={() => onOpen(item.id)} className="rounded-2xl border border-slate-100 p-4 text-left transition hover:border-brand-200 hover:bg-brand-50/30">
             <div className="flex items-start justify-between gap-3"><span className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-600"><Clock3 className="size-5" /></span><span className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500">{formatExamState(item.startsAt, item.endsAt)}</span></div>
             <p className="mt-4 truncate font-bold text-slate-700">{item.title}</p><p className="mt-1 truncate text-xs text-slate-500">{item.subjectName} · {item.className}</p><p className="mt-3 text-xs font-semibold text-brand-700">{new Date(item.startsAt).toLocaleString("vi-VN")}</p>
-          </button>
+          </Button>
         )) : <div className="col-span-full grid min-h-44 place-items-center text-center text-sm text-slate-400"><div><CalendarDays className="mx-auto size-8 text-slate-300" /><p className="mt-3">Chưa có bài kiểm tra sắp tới</p></div></div>}
       </div>
     </section>

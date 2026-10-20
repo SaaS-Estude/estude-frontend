@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LoaderCircle, Plus, Search, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CustomSelect, Input, type CustomSelectOption } from "@/components/ui/form-control";
+import { CustomSelect, Input, type CustomSelectOption, Checkbox } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { Pagination } from "@/components/ui/pagination";
 import {
@@ -342,7 +342,7 @@ export function ClassStudentAssignmentContent({ classId }: { classId: string }) 
           <Table className="min-w-[640px]">
             <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
               <tr>
-                <TableHead className="w-14 text-center"><input type="checkbox" checked={allPageSelected} onChange={toggleAllPageStudents} disabled={availableStudents.length === 0 || isAvailableLoading} className="size-4 accent-brand-600" aria-label="Chọn tất cả học sinh trên trang này" /></TableHead>
+                <TableHead className="w-14 text-center"><Checkbox type="checkbox" checked={allPageSelected} onChange={toggleAllPageStudents} disabled={availableStudents.length === 0 || isAvailableLoading} className="size-4 accent-brand-600" aria-label="Chọn tất cả học sinh trên trang này" /></TableHead>
                 <TableHead>Họ và tên</TableHead>
                 <TableHead>Tài khoản</TableHead>
                 <TableHead className="w-36">Trạng thái</TableHead>
@@ -353,7 +353,7 @@ export function ClassStudentAssignmentContent({ classId }: { classId: string }) 
               {!isAvailableLoading && availableStudents.length === 0 ? <TableEmptyRow colSpan={4} message={studentSearch ? "Không tìm thấy học sinh phù hợp" : "Không còn học sinh chưa có lớp"} /> : null}
               {!isAvailableLoading ? availableStudents.map((student) => (
                 <tr key={student.id} className={`cursor-pointer transition hover:bg-slate-50/70 ${selectedStudentIds.includes(student.id) ? "bg-blue-50/70" : ""}`} onClick={() => toggleStudent(student.id)}>
-                  <TableCell className="text-center"><input type="checkbox" checked={selectedStudentIds.includes(student.id)} onChange={() => toggleStudent(student.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-brand-600" aria-label={`Chọn ${student.fullName}`} /></TableCell>
+                  <TableCell className="text-center"><Checkbox type="checkbox" checked={selectedStudentIds.includes(student.id)} onChange={() => toggleStudent(student.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-brand-600" aria-label={`Chọn ${student.fullName}`} /></TableCell>
                   <TableCell className="font-bold text-slate-900">{student.fullName}</TableCell>
                   <TableCell className="font-mono text-xs font-semibold text-brand-700">{student.accountName}</TableCell>
                   <TableCell><span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">Chưa có lớp</span></TableCell>

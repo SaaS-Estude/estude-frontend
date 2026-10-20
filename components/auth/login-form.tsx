@@ -9,6 +9,8 @@ import { FormField } from "@/components/auth/form-field";
 import { useAuth } from "@/context/auth-context";
 import { ApiError } from "@/lib/auth-api";
 import { getRoleHome } from "@/lib/role-routes";
+import { Button } from "@/components/ui/button";
+
 
 interface LoginErrors {
   accountName?: string;
@@ -100,7 +102,7 @@ export function LoginForm() {
           }}
         />
 
-        <button
+        <Button variant="plain"
           type="submit"
           disabled={isSubmitting || isInitializing}
           className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3.5 font-bold text-white shadow-lg shadow-brand-600/20 transition hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 focus:outline-none focus:ring-4 focus:ring-brand-200"
@@ -109,7 +111,7 @@ export function LoginForm() {
             <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
           ) : null}
           {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-7 text-center text-sm text-slate-500">

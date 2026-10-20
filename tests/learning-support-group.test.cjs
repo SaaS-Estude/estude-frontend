@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -52,12 +52,12 @@ async function render(
     if (id === "@/components/ui/button")
       return { Button: (props) => React.createElement("button", props) };
     if (id === "@/components/ui/date-range-picker")
-      return {
+      return { ...require("./helpers/register-ui.cjs").dateControls,
         DateTimePicker: (props) =>
           React.createElement("date-time-picker", props),
       };
     if (id === "@/components/ui/form-control")
-      return {
+      return { ...require("./helpers/register-ui.cjs").formControls,
         CustomSelect: (props) => React.createElement("custom-select", props),
         Input: (props) => React.createElement("input", props),
         Textarea: (props) => React.createElement("textarea", props),
@@ -188,7 +188,7 @@ async function render(
 test("groups at-risk students by topic and creates one cohort draft for the selection", async (t) => {
   const page = await render(t, true);
   assert.match(page.text(), /Chủ đề A/);
-  assert.match(page.text(), /Đã chọn 2\/2 sinh viên/);
+  assert.match(page.text(), /Đã chọn 2\/2 học sinh/);
   assert.deepEqual(page.renderer.root.findByType("custom-select").props.options, [
     { value: "objective", label: "Chủ đề A" },
     { value: "material-objective", label: "Tài liệu · Tài liệu A.pdf" },
@@ -264,7 +264,7 @@ test("shows exam risk groups but no plan composer without attached material", as
   const page = await render(t, false);
   assert.match(page.text(), /Nguy cơ từ bài kiểm tra/);
   assert.doesNotMatch(page.text(), /Chủ đề A/);
-  assert.match(page.text(), /Đã chọn 2\/2 sinh viên/);
+  assert.match(page.text(), /Đã chọn 2\/2 học sinh/);
   assert.match(page.text(), /chỉ theo dõi nguy cơ từ bài kiểm tra/);
   assert.doesNotMatch(page.text(), /AI đề xuất lộ trình cho nhóm đã chọn/);
 });

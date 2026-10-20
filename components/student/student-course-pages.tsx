@@ -54,8 +54,10 @@ import type {
   StudentCourseMaterial,
 } from "@/types/assessment";
 
+
+
 function courseHref(course: StudentCourse): string {
-  return `/student/courses/${encodeURIComponent(course.classId)}/${encodeURIComponent(course.subjectId)}`;
+  return `/student/courses/${encodeURIComponent(course.classId)}/${encodeURIComponent(course.subjectId)}${course.courseOfferingId ? `?courseOfferingId=${encodeURIComponent(course.courseOfferingId)}` : ""}`;
 }
 
 function formatDate(value: string): string {
@@ -253,7 +255,7 @@ export function StudentCourseDetailPage() {
     void progressService.studentCourse(params.classId, params.subjectId)
       .then((value) => { setProgress(value); setProgressError(''); })
       .catch((cause) => setProgressError(cause instanceof Error ? cause.message : 'Không thể tải tiến độ'));
-  }, [params.classId, params.subjectId]);
+  }, [params.classId, params.subjectId, searchParams]);
 
   function refreshProgress() {
     void progressService.studentCourse(params.classId, params.subjectId)
@@ -387,11 +389,11 @@ export function StudentCourseDetailPage() {
 
 function CourseTab({ active, icon: Icon, label, count, onClick }: { active: boolean; icon: ComponentType<{ className?: string }>; label: string; count?: number; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className={`relative flex h-14 shrink-0 items-center gap-2 px-3 text-sm font-bold ${active ? "text-brand-700" : "text-slate-500 hover:text-slate-900"}`}>
+    <Button variant="plain" type="button" onClick={onClick} className={`relative flex h-14 shrink-0 items-center gap-2 px-3 text-sm font-bold ${active ? "text-brand-700" : "text-slate-500 hover:text-slate-900"}`}>
       <Icon className="size-4" /> {label}
       {count !== undefined ? <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${active ? "bg-blue-50 text-brand-700" : "bg-slate-100 text-slate-500"}`}>{count}</span> : null}
       {active ? <span className="absolute inset-x-2 bottom-0 h-0.5 bg-brand-600" /> : null}
-    </button>
+    </Button>
   );
 }
 
@@ -417,7 +419,7 @@ function CourseOverview({ course, examCount, completedExamCount, availableExamCo
             <InfoItem label="Mã lớp" value={course.schoolClass.code} />
             <InfoItem label="Năm học" value={course.academicYear?.name ?? "Chưa cập nhật"} />
             <InfoItem label="Ngày tham gia" value={formatDate(course.enrollment.joinedAt)} />
-            <InfoItem label="Sĩ số lớp" value={`${course.studentCount} sinh viên`} />
+            <InfoItem label="Sĩ số lớp" value={`${course.studentCount} học sinh`} />
             <InfoItem label="Trạng thái" value="Đang theo học" />
           </dl>
         </section>

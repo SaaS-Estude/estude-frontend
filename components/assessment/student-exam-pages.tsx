@@ -41,6 +41,8 @@ import {
   type StudentExamStatus,
 } from "@/types/assessment";
 
+
+
 const studentStatusMeta: Record<
   StudentExamStatus,
   { label: string; tone: string }
@@ -935,7 +937,7 @@ export function StudentAttemptPage() {
             <span className="font-black text-brand-700">
               Câu {index + 1} / {orderedQuestions.length}
             </span>
-            <button
+            <Button variant="plain"
               type="button"
               disabled={locked}
               aria-pressed={answer.flagged}
@@ -946,7 +948,7 @@ export function StudentAttemptPage() {
             >
               <Flag className="size-4" />
               {answer.flagged ? "Đã đánh dấu" : "Đánh dấu"}
-            </button>
+            </Button>
           </div>
           <div className="mt-7">
             {currentQuestion.question?.imageEnabled &&
@@ -1001,7 +1003,7 @@ export function StudentAttemptPage() {
                 />
               ) : (
                 currentQuestion.question?.options.map((option) => (
-                  <button
+                  <Button variant="plain"
                     key={option.id}
                     type="button"
                     role={
@@ -1020,7 +1022,7 @@ export function StudentAttemptPage() {
                     <span className="text-sm font-semibold text-slate-700">
                       {option.text}
                     </span>
-                  </button>
+                  </Button>
                 ))
               )}
             </div>
@@ -1075,7 +1077,7 @@ export function StudentAttemptPage() {
                 itemAnswer.selectedOptionIds.length > 0 ||
                 Boolean(itemAnswer.essayText.trim());
               return (
-                <button
+                <Button variant="plain"
                   key={item.questionId}
                   type="button"
                   disabled={locked}
@@ -1098,7 +1100,7 @@ export function StudentAttemptPage() {
                       aria-hidden="true"
                     />
                   ) : null}
-                </button>
+                </Button>
               );
             })}
           </div>

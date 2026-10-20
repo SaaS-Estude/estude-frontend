@@ -126,6 +126,11 @@ async function request<T>(
   const { authenticated = false, retryOnUnauthorized = true } = options;
   const requestToken = accessToken;
   const headers = new Headers(init.headers);
+  if (authenticated && typeof window !== "undefined") {
+    const workspace = new URLSearchParams(window.location.search).get("courseOfferingId");
+    if (workspace && !headers.has("X-Course-Offering-ID")) headers.set("X-Course-Offering-ID", workspace);
+  }
+
 
   if (
     init.body &&
@@ -242,6 +247,8 @@ export function authenticatedUploadRequest<T>(
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${API_URL}${path}`);
       xhr.withCredentials = true;
+      const workspace=new URLSearchParams(window.location.search).get("courseOfferingId");
+      if(workspace)xhr.setRequestHeader("X-Course-Offering-ID",workspace);
       if (requestToken) {
         xhr.setRequestHeader("Authorization", `Bearer ${requestToken}`);
       }
@@ -318,6 +325,11 @@ async function requestBlob(
 ): Promise<Blob> {
   const requestToken = accessToken;
   const headers = new Headers(init.headers);
+  if (typeof window !== "undefined") {
+    const workspace = new URLSearchParams(window.location.search).get("courseOfferingId");
+    if (workspace && !headers.has("X-Course-Offering-ID")) headers.set("X-Course-Offering-ID", workspace);
+  }
+
   if (requestToken) {
     headers.set("Authorization", `Bearer ${requestToken}`);
   }

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { progressService } from "@/lib/progress-api";
 import type { TeacherCourseProgress } from "@/types/progress";
+import { Button } from "@/components/ui/button";
+
 
 export function TeacherProgressPanel({ classId, subjectId }: { classId: string; subjectId: string }) {
   const [data, setData] = useState<TeacherCourseProgress | null>(null);
@@ -27,7 +29,7 @@ export function TeacherProgressPanel({ classId, subjectId }: { classId: string; 
   return <section className="rounded-xl border border-slate-200 bg-white p-4">
     <div className="flex items-center justify-between gap-3">
       <div><h3 className="font-bold">Tiến độ học sinh</h3><p className="text-xs text-slate-500">Theo bài học bắt buộc đã công bố trong lớp và môn hiện tại.</p></div>
-      <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm" disabled={loading} onClick={() => void load()}>{loading ? "Đang tải..." : "Làm mới"}</button>
+      <Button variant="plain" type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm" disabled={loading} onClick={() => void load()}>{loading ? "Đang tải..." : "Làm mới"}</Button>
     </div>
     {error ? <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p> : null}
     {data && !data.students.length ? <p className="mt-3 text-sm text-slate-500">Chưa có học sinh đang theo học.</p> : null}

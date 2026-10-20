@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { examService } from "@/lib/assessment-api";
 import type { TeacherStudyAnalysis } from "@/types/assessment";
+import { Input, Textarea } from "@/components/ui/form-control";
+
 
 export function StudyTopicSuggestionsPanel({
   analysis,
@@ -188,7 +190,7 @@ export function StudyTopicSuggestionsPanel({
               ))}
               <label className="mt-3 block text-sm font-semibold">
                 Chủ đề đề xuất — có thể sửa tên trước khi xác nhận
-                <input
+                <Input
                   className="mt-1 w-full rounded-lg border p-2 disabled:bg-slate-100 disabled:text-slate-600"
                   maxLength={160}
                   value={name}
@@ -230,7 +232,7 @@ export function StudyTopicSuggestionsPanel({
                     <label className="mt-3 block text-sm font-semibold text-slate-700">
                       Nhận xét khi bác bỏ{" "}
                       <span className="text-rose-600">*</span>
-                      <textarea
+                      <Textarea
                         className="mt-1 min-h-20 w-full rounded-lg border p-2 font-normal"
                         maxLength={2000}
                         value={rejectionNote}

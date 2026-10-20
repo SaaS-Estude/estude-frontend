@@ -6,6 +6,8 @@ import { useAuth } from "@/context/auth-context";
 import { usePermissions } from "@/context/permissions-context";
 import { MODULE_LINKS } from "@/lib/permissions";
 import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+
 
 export function ModuleLauncher() {
   const { user } = useAuth();
@@ -14,7 +16,7 @@ export function ModuleLauncher() {
   if (!user || loading) return null;
   return (
     <>
-      <button
+      <Button variant="plain"
         type="button"
         onClick={() => setOpen(true)}
         title="Chức năng được cấp quyền"
@@ -22,7 +24,7 @@ export function ModuleLauncher() {
         className="fixed bottom-4 right-4 z-40 rounded-full bg-brand-600 p-3 text-white shadow-lg"
       >
         <LayoutGrid className="size-5" />
-      </button>
+      </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}

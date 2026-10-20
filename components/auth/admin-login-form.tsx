@@ -11,6 +11,8 @@ import { useAuth } from "@/context/auth-context";
 import { ApiError } from "@/lib/auth-api";
 import { getRoleHome } from "@/lib/role-routes";
 import type { UserRole } from "@/types/auth";
+import { Button } from "@/components/ui/button";
+
 
 interface LoginErrors {
   accountName?: string;
@@ -32,7 +34,7 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
       ? "giảng viên"
       : role === "PARENT"
         ? "phụ huynh"
-        : "sinh viên";
+        : "học sinh";
 
   useEffect(() => {
     setPasswordChanged(new URLSearchParams(window.location.search).get("password") === "changed");
@@ -148,17 +150,17 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
 
           {role !== "ADMIN" ? (
             <div className="-mt-2 text-right">
-              <button
+              <Button variant="plain"
                 type="button"
                 onClick={() => router.push(`/${role.toLowerCase()}/forgot-password`)}
                 className="text-sm font-semibold text-brand-600 transition hover:text-brand-800"
               >
                 Quên mật khẩu?
-              </button>
+              </Button>
             </div>
           ) : null}
 
-          <button
+          <Button variant="plain"
             type="submit"
             disabled={isSubmitting || isInitializing}
             className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 font-bold text-white shadow-lg shadow-brand-600/20 transition hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-brand-200 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
@@ -170,7 +172,7 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
               />
             ) : null}
             {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
-          </button>
+          </Button>
         </form>
 
         <p className="mt-6 text-center text-xs leading-5 text-slate-400">

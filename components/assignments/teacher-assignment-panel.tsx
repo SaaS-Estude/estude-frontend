@@ -15,6 +15,9 @@ import {
   type SubmissionAttempt,
   type TeacherAssignmentDetail,
 } from "@/types/assignment";
+import { Select, Input, Textarea, Checkbox } from "@/components/ui/form-control";
+import { DateInput } from "@/components/ui/date-range-picker";
+
 
 const field =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm";
@@ -229,7 +232,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
             key={row.id}
             className="rounded-lg border border-slate-200 p-3"
           >
-            <button
+            <Button variant="plain" type="submit"
               className="text-left font-semibold"
               onClick={() => {
                 setSelected(row.id);
@@ -237,7 +240,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
               }}
             >
               {row.title}
-            </button>
+            </Button>
             <p className="mt-1 text-xs text-slate-500">
               {row.status === "DRAFT" && row.publishedAt ? "Đã đóng" : labels[row.status]} · Hạn nộp: {displayDate(row.dueAt)} ·{" "}
               {row.submissionCount ?? 0}/{row.audienceCount ?? 0} học sinh đã
@@ -349,7 +352,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
             {detail.summary.notSubmitted} · Miễn: {detail.summary.excused} · Đã
             trả: {detail.summary.returned}
           </p>
-          <select
+          <Select
             aria-label="Lọc bài nộp"
             className={`${field} mt-3`}
             value={filter}
@@ -368,7 +371,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
                 {label}
               </option>
             ))}
-          </select>
+          </Select>
           <div className="mt-3 space-y-3">
             {detail.recipients.map((recipient) => (
               <article key={recipient.id} className="rounded-lg bg-white p-3">
@@ -419,7 +422,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
                       Lịch sử {recipient.attempts.length} lần nộp
                     </summary>
                     {recipient.attempts.map((attempt) => (
-                      <button
+                      <Button variant="plain" type="submit"
                         key={attempt.id}
                         className="mt-2 block text-brand-600"
                         onClick={() => void openGrade(attempt)}
@@ -427,7 +430,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
                         Lần {attempt.attemptNumber} ·{" "}
                         {displayDate(attempt.submittedAt)} ·{" "}
                         {attempt.isLate ? "Trễ" : "Đúng hạn"}
-                      </button>
+                      </Button>
                     ))}
                   </details>
                 ) : null}
@@ -454,7 +457,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
         >
           <label className="grid gap-1 text-sm">
             Tên bài tập
-            <input
+            <Input
               aria-label="Tên bài tập"
               className={field}
               required
@@ -464,10 +467,10 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
           </label>
-          <label className="grid gap-1 text-sm">Mục đích bài tập<select className={field} aria-label="Mục đích bài tập" value={form.assessmentPurpose} disabled={!!editor?.row?.publishedAt} onChange={(e) => setForm({ ...form, assessmentPurpose: e.target.value as AssessmentPurpose })}>{Object.entries(assessmentPurposeLabels).filter(([id]) => id !== 'LEGACY_REVIEW' || form.assessmentPurpose === id).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
+          <label className="grid gap-1 text-sm">Mục đích bài tập<Select className={field} aria-label="Mục đích bài tập" value={form.assessmentPurpose} disabled={!!editor?.row?.publishedAt} onChange={(e) => setForm({ ...form, assessmentPurpose: e.target.value as AssessmentPurpose })}>{Object.entries(assessmentPurposeLabels).filter(([id]) => id !== 'LEGACY_REVIEW' || form.assessmentPurpose === id).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</Select></label>
           <label className="grid gap-1 text-sm">
             Học kỳ
-            <select
+            <Select
               aria-label="Học kỳ bài tập"
               className={field}
               required
@@ -481,11 +484,11 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
                   {t.name} · {t.status}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="grid gap-1 text-sm">
             Mô tả
-            <textarea
+            <Textarea
               className={field}
               maxLength={2000}
               value={form.description}
@@ -496,7 +499,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
           </label>
           <label className="grid gap-1 text-sm">
             Yêu cầu / hướng dẫn
-            <textarea
+            <Textarea
               aria-label="Hướng dẫn bài tập"
               className={`${field} min-h-28`}
               maxLength={50000}
@@ -509,7 +512,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1 text-sm">
               Điểm tối đa
-              <input
+              <Input
                 aria-label="Điểm tối đa"
                 className={field}
                 type="number"
@@ -526,7 +529,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
             </label>
             <label className="grid gap-1 text-sm">
               Loại bài nộp
-              <select
+              <Select
                 className={field}
                 disabled={!!editor?.row?.publishedAt}
                 value={form.submissionType}
@@ -541,7 +544,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
                 <option value="TEXT">Văn bản</option>
                 <option value="FILE">File</option>
                 <option value="TEXT_AND_FILE">Văn bản và/hoặc file</option>
-              </select>
+              </Select>
             </label>
           </div>
           {(
@@ -553,7 +556,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
           ).map(([key, label]) => (
             <label key={key} className="grid gap-1 text-sm">
               {label}
-              <input
+              <DateInput
                 aria-label={label}
                 className={field}
                 type="datetime-local"
@@ -570,11 +573,11 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
             </label>
           ))}
           <label className="flex gap-2 text-sm">
-            <input type="checkbox" checked={form.requiredForCompletion !== false} onChange={(e) => setForm({ ...form, requiredForCompletion: e.target.checked })} />
+            <Checkbox type="checkbox" checked={form.requiredForCompletion !== false} onChange={(e) => setForm({ ...form, requiredForCompletion: e.target.checked })} />
             Bắt buộc để hoàn thành bài học
           </label>
           <label className="flex gap-2 text-sm">
-            <input
+            <Checkbox
               type="checkbox"
               checked={form.allowLateSubmission}
               onChange={(e) =>
@@ -584,7 +587,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
             Cho phép nộp trễ trước khóa nhận bài
           </label>
           <label className="flex gap-2 text-sm">
-            <input
+            <Checkbox
               type="checkbox"
               disabled={!!editor?.row?.publishedAt}
               checked={form.allowResubmit}
@@ -596,7 +599,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
           </label>
           <label className="grid gap-1 text-sm">
             Số lần nộp tối đa (để trống = không giới hạn)
-            <input
+            <Input
               className={field}
               type="number"
               min="1"
@@ -696,7 +699,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
             >
               <label className="grid gap-1 text-sm">
                 Điểm / {grading.maxScore}
-                <input
+                <Input
                   aria-label="Điểm bài nộp"
                   className={field}
                   type="number"
@@ -710,7 +713,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
               </label>
               <label className="grid gap-1 text-sm">
                 Feedback
-                <textarea
+                <Textarea
                   aria-label="Feedback bài nộp"
                   className={field}
                   maxLength={10000}
@@ -720,7 +723,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
               </label>
               <label className="grid gap-1 text-sm">
                 Lý do sửa điểm
-                <input
+                <Input
                   aria-label="Lý do sửa điểm"
                   className={field}
                   maxLength={1000}
@@ -811,7 +814,7 @@ export function TeacherAssignmentPanel({ lessonId }: { lessonId: string }) {
           <p className="text-sm">
             {excuse?.studentName}. Lịch sử nộp/chấm vẫn được giữ.
           </p>
-          <input
+          <Input
             aria-label="Lý do miễn bài"
             className={field}
             required

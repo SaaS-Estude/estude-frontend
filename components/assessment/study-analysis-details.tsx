@@ -15,6 +15,8 @@ import type {
   StudyLearningPath,
   StudySourceType,
 } from "@/types/assessment";
+import { Select, Input } from "@/components/ui/form-control";
+
 
 export const sourceMeta: Record<
   StudySourceType,
@@ -294,16 +296,16 @@ export function FeedbackControl({
   if (!onSend) return null;
   return (
     <div className="mt-2 text-xs">
-      <button
+      <Button variant="plain"
         type="button"
         className="font-semibold text-brand-700 underline"
         onClick={() => setOpen(!open)}
       >
         Báo nhận định chưa đúng/rõ
-      </button>
+      </Button>
       {open ? (
         <div className="mt-2 flex flex-wrap gap-2">
-          <select
+          <Select
             className="rounded-lg border p-2"
             value={reason}
             onChange={(event) =>
@@ -314,8 +316,8 @@ export function FeedbackControl({
             <option value="OUT_OF_SCOPE">Ngoài phạm vi</option>
             <option value="INSUFFICIENT_EVIDENCE">Thiếu bằng chứng</option>
             <option value="UNCLEAR">Chưa rõ</option>
-          </select>
-          <input
+          </Select>
+          <Input
             className="min-w-40 flex-1 rounded-lg border p-2"
             value={comment}
             onChange={(event) => setComment(event.target.value)}

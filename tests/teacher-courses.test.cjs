@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -30,6 +30,7 @@ function loadPanel(classes) {
     if (id === "next/link") return { __esModule: true, default: ({ href, children, ...props }) =>
       React.createElement("a", { href, ...props }, children) };
     if (id === "lucide-react") return new Proxy({}, { get: () => () => React.createElement("svg") });
+    if (id === "@/lib/course-offering-api") return { courseOfferingApi: { list: async () => [] } };
     if (id === "@/lib/assessment-api") return { academicDataService: {
       getTeacherAssignedClasses: async () => classes,
     } };

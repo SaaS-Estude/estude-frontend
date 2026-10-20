@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateTimePicker } from "@/components/ui/date-range-picker";
-import { CustomSelect, Input, Textarea } from "@/components/ui/form-control";
+import { CustomSelect, Input, Textarea, Checkbox } from "@/components/ui/form-control";
 import { learningPlanService } from "@/lib/assessment-api";
 import type {
   LearningObjectiveEvidence,
@@ -406,7 +406,7 @@ export function LearningSupportGroupPanel({
           <h2 className="font-black text-slate-900">Nhóm cần hỗ trợ</h2>
           <p className="mt-1 text-sm text-slate-500">
             {hasMaterial
-              ? "Gom theo chủ đề của câu làm sai hoặc bỏ trống. Một sinh viên có thể thuộc nhiều nhóm."
+              ? "Gom theo chủ đề của câu làm sai hoặc bỏ trống. Một học sinh có thể thuộc nhiều nhóm."
               : "Chỉ gom theo mức nguy cơ từ kết quả bài kiểm tra vì môn học chưa có tài liệu."}
           </p>
         </div>
@@ -422,7 +422,7 @@ export function LearningSupportGroupPanel({
             aria-label="Chọn nhóm kiến thức"
           >
             {groups.map((item) => (
-              <button
+              <Button variant="plain"
                 key={item.name}
                 type="button"
                 aria-pressed={group?.name === item.name}
@@ -433,7 +433,7 @@ export function LearningSupportGroupPanel({
                 <span className="ml-1 rounded-full bg-white px-1.5 py-0.5 text-xs">
                   {item.students.length}
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
           {group ? (
@@ -441,7 +441,7 @@ export function LearningSupportGroupPanel({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-bold text-slate-900">{group.name}</h3>
                 <span className="text-xs text-slate-500">
-                  Đã chọn {selectedIds.length}/{group.students.length} sinh viên
+                  Đã chọn {selectedIds.length}/{group.students.length} học sinh
                 </span>
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -450,7 +450,7 @@ export function LearningSupportGroupPanel({
                     key={student.id}
                     className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm transition ${selectedIds.includes(student.id) ? "border-brand-200 bg-blue-50/60" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"}`}
                   >
-                    <input
+                    <Checkbox
                       type="checkbox"
                       className="size-4 shrink-0 rounded border-slate-300 accent-brand-600 focus:ring-2 focus:ring-blue-100"
                       checked={selectedIds.includes(student.id)}
@@ -700,7 +700,7 @@ export function LearningSupportGroupPanel({
         </>
       ) : (
         <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-500">
-          Chưa có sinh viên được xếp mức cần hỗ trợ từ các bài kiểm tra.
+          Chưa có học sinh được xếp mức cần hỗ trợ từ các bài kiểm tra.
         </p>
       )}
       <details className="group mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -765,7 +765,7 @@ export function LearningSupportGroupPanel({
                         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                           <span className="inline-flex items-center gap-1.5">
                             <UsersRound className="size-3.5" />
-                            {cohort.length} sinh viên
+                            {cohort.length} học sinh
                           </span>
                           <span className="inline-flex items-center gap-1.5">
                             <CalendarDays className="size-3.5" />
@@ -795,7 +795,7 @@ export function LearningSupportGroupPanel({
               <BookOpenCheck className="size-5" />
             </span>
             <p className="mt-3 text-sm font-semibold text-slate-700">Chưa có lộ trình cho môn này</p>
-            <p className="mt-1 max-w-md text-xs text-slate-500">Lộ trình đã duyệt và giao cho sinh viên sẽ được lưu tại đây.</p>
+            <p className="mt-1 max-w-md text-xs text-slate-500">Lộ trình đã duyệt và giao cho học sinh sẽ được lưu tại đây.</p>
           </div>
         ) : null}
         </div>

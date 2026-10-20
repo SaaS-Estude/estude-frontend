@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), Module = require('node:module');
 const ts = require('typescript'), React = require('react'), { create, act } = require('react-test-renderer');
@@ -25,7 +25,8 @@ async function setup(t, { permissions = ['exams.create', 'exams.submissions', 'e
   let renderer; await act(async () => { renderer = create(React.createElement(loaded.exports.ExamRecoveryPanel, { exam,
     onMakeup: (ids, reason) => calls.push(['makeup', ids, reason]), onChanged: async () => calls.push(['reload']) })); });
   t.after(async () => { await act(async () => renderer.unmount()); });
-  const button = (text) => renderer.root.findAllByType('button').find((b) => JSON.stringify(b.children).includes(text));
+  const content = (node) => typeof node === 'string' ? node : Array.isArray(node) ? node.map(content).join('') : node?.children ? content(node.children) : '';
+  const button = (text) => renderer.root.findAllByType('button').find((b) => content(b).includes(text));
   return { renderer, calls, button, text: () => JSON.stringify(renderer.toJSON()) };
 }
 test('recovery is hidden before exam end or without permission', async (t) => {

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -136,8 +136,9 @@ function loader(api) {
         };
       if (id === "@/components/ui/button")
         return {
-          Button: ({ permission, children, ...props }) =>
-            React.createElement("button", props, children),
+          Button: ({ permission, children, ...props }) => {
+            void permission; return React.createElement("button", props, children);
+          },
         };
       if (id === "@/components/ui/modal")
         return {

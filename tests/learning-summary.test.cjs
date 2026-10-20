@@ -1,3 +1,4 @@
+require("./helpers/register-ui.cjs");
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),Module=require('node:module'),path=require('node:path'),React=require('react'),{create,act}=require('react-test-renderer');
 global.IS_REACT_ACT_ENVIRONMENT=true;
 const filename=path.resolve('components/dashboard/student-overview-summary.tsx'),loaded=new Module(filename,module);loaded.filename=filename;loaded.paths=Module._nodeModulePaths(path.dirname(filename));const original=loaded.require.bind(loaded);loaded.require=id=>id==='@/lib/auth-api'?{authenticatedRequest:()=>assert.fail('summary must not fetch or impersonate student')}:original(id);loaded._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,filename);

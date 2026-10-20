@@ -25,6 +25,8 @@ import { CustomSelect } from "@/components/ui/form-control";
 import { ApiError, authenticatedRequest } from "@/lib/auth-api";
 import type { User } from "@/types/auth";
 
+
+
 type DetailTab = "overview" | "subjects" | "semesters" | "exams" | "warnings";
 
 interface StudentOverview {
@@ -595,13 +597,13 @@ export function StudentDetailPanel({
             <div className="shrink-0 border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-800">
               Đang lọc hồ sơ theo lớp và môn học của bài kiểm tra đã chọn.
               {returnTo ? (
-                <button
+                <Button variant="plain"
                   type="button"
                   onClick={() => router.push(effectiveBackHref)}
                   className="ml-2 font-extrabold text-brand-700 underline underline-offset-2"
                 >
                   Quay lại báo cáo lớp
-                </button>
+                </Button>
               ) : null}
             </div>
           ) : null}
@@ -661,7 +663,7 @@ export function StudentDetailPanel({
           <div className="shrink-0 overflow-x-auto border-y border-slate-100 px-3">
             <div className="flex min-w-max gap-1">
               {tabs.map((tab) => (
-                <button
+                <Button variant="plain"
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
@@ -671,7 +673,7 @@ export function StudentDetailPanel({
                   {tab.id === "warnings" && summary.warningCount
                     ? ` (${summary.warningCount})`
                     : ""}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

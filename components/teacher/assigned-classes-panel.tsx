@@ -17,6 +17,8 @@ import {
   TableHeader,
   TableLoadingBarRow,
 } from "@/components/ui/data-table";
+import { Input } from "@/components/ui/form-control";
+
 
 function errorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback;
@@ -99,7 +101,7 @@ export function TeacherAssignedClassesPanel() {
             <p className="mt-1 text-xs text-slate-500">{filteredClasses.length} lớp đang phụ trách</p>
             <div className="relative mt-3">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <input
+              <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Tìm theo lớp hoặc môn học"
@@ -119,7 +121,7 @@ export function TeacherAssignedClassesPanel() {
                 Không tìm thấy lớp phù hợp.
               </div>
             ) : filteredClasses.map((item) => (
-              <button
+              <Button variant="plain"
                 type="button"
                 key={item.id}
                 onClick={() => {
@@ -145,7 +147,7 @@ export function TeacherAssignedClassesPanel() {
                     </span>
                   ))}
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
         </section>
@@ -171,7 +173,7 @@ export function TeacherAssignedClassesPanel() {
           <div className="shrink-0 border-b border-slate-100 p-2.5">
             <div className="relative w-full max-w-[360px]">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <input
+              <Input
                 value={studentSearch}
                 onChange={(event) => setStudentSearch(event.target.value)}
                 placeholder="Tìm theo tên hoặc tài khoản học viên"

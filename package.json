@@ -34,7 +34,8 @@
     "test:study-evidence": "node --test tests/study-evidence.test.cjs tests/study-evidence-api.test.cjs tests/study-evidence-panels.test.cjs",
     "test:learning-interventions": "node --test tests/learning-interventions.test.cjs tests/learning-support-group.test.cjs tests/learning-support-inbox.test.cjs",
     "test:study-coach": "node --test tests/study-coach-flashcards.test.cjs tests/study-coach-quiz.test.cjs tests/study-coach-ui.test.cjs tests/study-coach-materials.test.cjs",
-    "test:internal-results": "node --test tests/internal-results.test.cjs"
+    "test:internal-results": "node --test tests/internal-results.test.cjs",
+    "test": "node --test --test-concurrency=2 tests/*.test.cjs"
   },
   "dependencies": {
     "@vercel/functions": "3.10.1",

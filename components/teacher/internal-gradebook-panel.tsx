@@ -6,6 +6,8 @@ import { usePermissions } from '@/context/permissions-context';
 import type { TeacherAssignedClass, Term } from '@/types/assessment';
 import type { GradebookView } from '@/types/gradebook';
 import { UnifiedGradeItems } from './unified-grade-items';
+import { Select, Input } from "@/components/ui/form-control";
+
 
 export function InternalGradebookPanel({ schoolClass }: { schoolClass: TeacherAssignedClass }) {
   const { can } = usePermissions();
@@ -42,7 +44,7 @@ export function InternalGradebookPanel({ schoolClass }: { schoolClass: TeacherAs
   const field = 'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm';
   return <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
     <div><h2 className="font-bold">Kết quả học tập nội bộ</h2><p className="text-sm text-slate-500">Mỗi bài đánh giá thường xuyên tính một lần. Học sinh và phụ huynh chỉ thấy kết quả đã công bố.</p></div>
-    <div className="flex flex-wrap gap-3"><label className="grid gap-1 text-xs">Môn học<select className={field} value={subjectId} onChange={(e) => { setSubjectId(e.target.value); setNotice(''); }}>{schoolClass.subjects.map((s) => <option key={s.id} value={s.id}>{s.vietnameseName || s.name}</option>)}</select></label><label className="grid gap-1 text-xs">Học kỳ<select className={field} value={termId} onChange={(e) => { setTermId(e.target.value); setNotice(''); }}>{terms.map((t) => <option key={t.id} value={t.id}>{t.name} · {t.status === 'COMPLETED' ? 'Chấm nốt' : t.status === 'LOCKED' ? 'Đã khóa' : t.status === 'ACTIVE' ? 'Đang diễn ra' : 'Sắp diễn ra'}</option>)}</select></label><label className="grid gap-1 text-xs">Tìm học sinh<input className={field} value={search} onChange={(e) => setSearch(e.target.value)} /></label></div>
+    <div className="flex flex-wrap gap-3"><label className="grid gap-1 text-xs">Môn học<Select className={field} value={subjectId} onChange={(e) => { setSubjectId(e.target.value); setNotice(''); }}>{schoolClass.subjects.map((s) => <option key={s.id} value={s.id}>{s.vietnameseName || s.name}</option>)}</Select></label><label className="grid gap-1 text-xs">Học kỳ<Select className={field} value={termId} onChange={(e) => { setTermId(e.target.value); setNotice(''); }}>{terms.map((t) => <option key={t.id} value={t.id}>{t.name} · {t.status === 'COMPLETED' ? 'Chấm nốt' : t.status === 'LOCKED' ? 'Đã khóa' : t.status === 'ACTIVE' ? 'Đang diễn ra' : 'Sắp diễn ra'}</option>)}</Select></label><label className="grid gap-1 text-xs">Tìm học sinh<Input className={field} value={search} onChange={(e) => setSearch(e.target.value)} /></label></div>
     {error ? <p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-700">{error}</p> : null}{notice ? <p role="status" className="rounded-lg bg-emerald-50 p-3 text-emerald-700">{notice}</p> : null}
     {loading ? <p role="status">Đang tải kết quả…</p> : null}
     {view && !view.book ? <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">Chưa có bảng kết quả. Quản trị viên cần cấu hình sổ điểm cho môn và học kỳ trong lớp. Các nguồn điểm đang chờ sẽ được liên kết khi cấu hình xong.</p> : null}

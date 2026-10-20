@@ -4,7 +4,7 @@ import { courseResourceContentType } from './course-resource-file';
 
 const request = <T>(path: string, method: string, payload?: unknown) => authenticatedRequest<T>(path, { method, ...(payload === undefined ? {} : { body: JSON.stringify(payload) }) });
 export const contentService = {
-  topics: (classId: string) => authenticatedRequest<ClassTopic[]>(`/teacher/assigned-classes/${encodeURIComponent(classId)}/topics`),
+  topics: (classId: string, courseOfferingId?: string) => authenticatedRequest<ClassTopic[]>(`/teacher/assigned-classes/${encodeURIComponent(classId)}/topics${courseOfferingId ? `?courseOfferingId=${encodeURIComponent(courseOfferingId)}` : ''}`),
   createTopic: (classId: string, payload: ClassTopicInput) => request<ClassTopic>(`/teacher/assigned-classes/${encodeURIComponent(classId)}/topics`, 'POST', payload),
   updateTopic: (id: string, payload: Partial<ClassTopicInput>) => request<ClassTopic>(`/teacher/class-topics/${id}`, 'PATCH', payload),
   topicStatus: (id: string, status: ContentStatus, window: ContentWindow = {}) => request<ClassTopic>(`/teacher/class-topics/${id}/lifecycle`, 'PATCH', { status, ...window }),

@@ -10,6 +10,8 @@ import type {
   LearningPlan,
   StudyEvidenceBundle,
 } from "@/types/assessment";
+import { Textarea } from "@/components/ui/form-control";
+
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleString("vi-VN", {
@@ -395,7 +397,7 @@ export function StudyEvidencePanel({
                               >
                                 Vì sao chọn kết quả này để so sánh sau khi ôn?
                               </label>
-                              <textarea
+                              <Textarea
                                 id={`baseline-reason-${evidence.id}`}
                                 className="min-h-20 w-full rounded-lg border border-slate-300 p-3 text-sm"
                                 value={reason}

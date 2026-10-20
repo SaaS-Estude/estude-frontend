@@ -15,7 +15,7 @@ import {
   TableLoadingBarRow,
 } from "@/components/ui/data-table";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateRangePicker, DateInput } from "@/components/ui/date-range-picker";
 import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
 import { CustomSelect, Input } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
@@ -750,7 +750,7 @@ export function UserManagementPanel({ role }: { role: ManagedRole }) {
               ]}
               onValueChange={setGender}
             />
-            <Input
+            <DateInput
               className="!rounded-lg"
               label="Ngày sinh"
               type="date"

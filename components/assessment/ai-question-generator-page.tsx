@@ -43,6 +43,8 @@ import type {
   TeacherDifficultySettings,
 } from "@/types/assessment";
 
+
+
 const builtInDifficultyLevels: DifficultyLevelDefinition[] = [
   {
     code: "EASY",
@@ -480,7 +482,7 @@ export function AiQuestionGeneratorPage() {
                 onChange={(event) => update("learningObjective", event.target.value)}
                 maxLength={500}
                 rows={2}
-                placeholder="Ví dụ: Sinh viên phân biệt các dạng chuẩn và áp dụng chuẩn hóa vào một bảng dữ liệu thực tế."
+                placeholder="Ví dụ: Học sinh phân biệt các dạng chuẩn và áp dụng chuẩn hóa vào một bảng dữ liệu thực tế."
               />
               <p className="mt-1 text-xs leading-5 text-slate-500">Hệ thống kiểm tra cấu trúc, đáp án và trích dẫn. Giáo viên đối chiếu trước khi đưa vào ngân hàng.</p>
             </Field>
@@ -563,7 +565,7 @@ export function AiQuestionGeneratorPage() {
                     )?.description
                   }
                 </span>
-                <button
+                <Button variant="plain"
                   type="button"
                   onClick={() =>
                     setCustomizingDifficulty((current) => !current)
@@ -572,7 +574,7 @@ export function AiQuestionGeneratorPage() {
                 >
                   <Settings2 className="size-3.5" />
                   Tùy chỉnh 3–4 mức độ
-                </button>
+                </Button>
               </Field>
             </div>
             {customizingDifficulty && difficultySettings ? (

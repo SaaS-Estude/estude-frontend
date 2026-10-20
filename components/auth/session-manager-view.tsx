@@ -16,6 +16,8 @@ import { useAuth } from '@/context/auth-context';
 import { ApiError, authApi } from '@/lib/auth-api';
 import { getRoleHome, getRoleLogin } from '@/lib/role-routes';
 import type { LoginSessionInfo } from '@/types/auth';
+import { Button } from "@/components/ui/button";
+
 
 function getDevice(userAgent: string | null): {
   label: string;
@@ -123,13 +125,13 @@ export function SessionManagerView() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950 sm:px-6 lg:py-12">
       <div className="mx-auto max-w-4xl">
-        <button
+        <Button variant="plain"
           type="button"
           onClick={() => router.push(getRoleHome(user.role))}
           className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-600 transition hover:bg-white hover:text-slate-950"
         >
           <ArrowLeft className="size-4" /> Quay lại trang chính
-        </button>
+        </Button>
 
         <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-900/5">
           <div className="border-b border-slate-100 bg-slate-950 px-6 py-7 text-white sm:px-8">
@@ -144,14 +146,14 @@ export function SessionManagerView() {
                   Xem và thu hồi những thiết bị đang truy cập tài khoản của bạn.
                 </p>
               </div>
-              <button
+              <Button variant="plain"
                 type="button"
                 onClick={() => void loadSessions()}
                 disabled={isLoading}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-sm font-bold transition hover:bg-white/15 disabled:opacity-60"
               >
                 <RefreshCw className={`size-4 ${isLoading ? 'animate-spin' : ''}`} /> Làm mới
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -200,7 +202,7 @@ export function SessionManagerView() {
                           Đăng nhập {formatDate(session.createdAt)} · Hết hạn {formatDate(session.expiresAt)}
                         </p>
                       </div>
-                      <button
+                      <Button variant="plain"
                         type="button"
                         onClick={() => void handleRevoke(session)}
                         disabled={Boolean(revokingId) || isSigningOutAll}
@@ -208,7 +210,7 @@ export function SessionManagerView() {
                       >
                         {isRevoking ? <LoaderCircle className="size-4 animate-spin" /> : <LogOut className="size-4" />}
                         {session.current ? 'Đăng xuất' : 'Thu hồi'}
-                      </button>
+                      </Button>
                     </article>
                   );
                 })}
@@ -219,7 +221,7 @@ export function SessionManagerView() {
               <p className="max-w-xl text-sm leading-6 text-slate-500">
                 Nếu phát hiện thiết bị lạ, hãy đăng xuất tất cả thiết bị và đổi mật khẩu ngay.
               </p>
-              <button
+              <Button variant="plain"
                 type="button"
                 onClick={() => void handleSignOutAll()}
                 disabled={isSigningOutAll || Boolean(revokingId)}
@@ -227,7 +229,7 @@ export function SessionManagerView() {
               >
                 {isSigningOutAll ? <LoaderCircle className="size-4 animate-spin" /> : <LogOut className="size-4" />}
                 Đăng xuất tất cả
-              </button>
+              </Button>
             </div>
           </div>
         </section>

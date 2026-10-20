@@ -281,6 +281,9 @@ export interface AvailableStudentsPage {
 }
 
 export interface SubjectTeacherAssignment {
+  courseOfferingId?: string;
+  courseStatus?: string;
+  term?: Term;
   id: string;
   classId: string;
   subjectId: string;
@@ -305,6 +308,8 @@ export interface SubjectTeacherAssignment {
 }
 
 export interface TeacherAssignedClass {
+  courseOfferingId?: string;
+  courseTermId?: string;
   id: string;
   code: string;
   name: string;
@@ -537,6 +542,7 @@ export interface TeacherExamDefaultSettings {
 }
 
 export interface Exam {
+  courseOfferingId?: string | null;
   assessmentPurpose?: AssessmentPurpose | null;
   id: string;
   makeupOfExamId?: string | null;
@@ -578,6 +584,7 @@ export interface Exam {
 }
 
 export interface ExamInput {
+  courseOfferingId?: string;
   assessmentPurpose?: AssessmentPurpose;
   title: string;
   lessonId?: string;

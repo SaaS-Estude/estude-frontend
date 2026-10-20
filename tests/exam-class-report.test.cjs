@@ -1,5 +1,5 @@
 /* CommonJS is required by the repository's isolated TypeScript component test loader. */
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -251,7 +251,7 @@ test("teacher class report separates students from attempts and supports reviewe
         TableHeader: (props) => React.createElement("thead", props),
       };
     if (id === "@/components/ui/form-control")
-      return {
+      return { ...require("./helpers/register-ui.cjs").formControls,
         Textarea: ({ label, hint, ...props }) => React.createElement("label", null, label, React.createElement("textarea", props), hint),
       };
     if (id === "@/components/ui/modal")

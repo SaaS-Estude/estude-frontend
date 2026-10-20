@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -75,7 +75,7 @@ test('teacher uploads a file directly from a topic without opening a lesson or l
   const file = { name: 'bai-giang.pdf', type: 'application/pdf', size: 1024 };
   await act(async () => { ui.ui.root.findByProps({ 'aria-label': 'Chọn tài liệu từ máy' }).props.onChange({ target: { files: [file], value: '' } }); await flush(); });
   assert.deepEqual(calls, [['topic', 'bai-giang.pdf'], ['share', 'uploaded']]);
-  assert.equal(ui.ui.root.findAllByProps({ 'aria-label': 'Chọn tài liệu từ máy' }).length, 0);
+  assert.equal(ui.ui.root.findAll((node) => node.type === 'input' && node.props['aria-label'] === 'Chọn tài liệu từ máy').length, 0);
 });
 
 test('teacher may keep an uploaded file private without any publish call', async (t) => {
@@ -214,11 +214,11 @@ test('lesson add dialog shows only the selected source of learning material', as
   const ui = await teacher(t, fixture(), { getMaterialLibrary: async () => [] });
   await choose(ui);
   await act(async () => { ui.button('Tải tài liệu').props.onClick(); });
-  assert.equal(ui.ui.root.findAllByProps({ 'aria-label': 'Chọn tài liệu từ máy' }).length, 1);
-  assert.equal(ui.ui.root.findAllByProps({ 'aria-label': 'URL tham khảo' }).length, 0);
+  assert.equal(ui.ui.root.findAll((node) => node.type === 'input' && node.props['aria-label'] === 'Chọn tài liệu từ máy').length, 1);
+  assert.equal(ui.ui.root.findAll((node) => node.type === 'input' && node.props['aria-label'] === 'URL tham khảo').length, 0);
   await act(async () => { ui.ui.root.findAllByType('button').find((button) => text(button.props.children) === 'Liên kết').props.onClick(); });
-  assert.equal(ui.ui.root.findAllByProps({ 'aria-label': 'Chọn tài liệu từ máy' }).length, 0);
-  assert.equal(ui.ui.root.findAllByProps({ 'aria-label': 'URL tham khảo' }).length, 1);
+  assert.equal(ui.ui.root.findAll((node) => node.type === 'input' && node.props['aria-label'] === 'Chọn tài liệu từ máy').length, 0);
+  assert.equal(ui.ui.root.findAll((node) => node.type === 'input' && node.props['aria-label'] === 'URL tham khảo').length, 1);
 });
 
 test('the automatically opened lesson is used when adding a learning link', async (t) => {

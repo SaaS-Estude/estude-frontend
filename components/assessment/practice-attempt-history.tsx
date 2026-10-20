@@ -11,6 +11,8 @@ import type {
   StudyPracticeContentType,
 } from "@/types/assessment";
 
+
+
 export const assistanceLabel = (value: string) =>
   value === "SYSTEM_HINTS_USED"
     ? "Có dùng gợi ý hệ thống"
@@ -189,7 +191,7 @@ export function PracticeAttemptHistory({
         layerClassName="z-[110]"
       >
         <div className="grid gap-3 sm:grid-cols-2">
-          <button
+          <Button variant="plain"
             type="button"
             className="rounded-2xl border border-slate-200 p-4 text-left transition hover:border-brand-400 hover:bg-brand-50"
             onClick={() => {
@@ -204,8 +206,8 @@ export function PracticeAttemptHistory({
             <span className="mt-1 block text-sm leading-5 text-slate-600">
               Làm lại đúng các câu đã trả lời sai trong bài kiểm tra gốc.
             </span>
-          </button>
-          <button
+          </Button>
+          <Button variant="plain"
             type="button"
             className="rounded-2xl border border-slate-200 p-4 text-left transition hover:border-brand-400 hover:bg-brand-50"
             onClick={() => {
@@ -220,7 +222,7 @@ export function PracticeAttemptHistory({
             <span className="mt-1 block text-sm leading-5 text-slate-600">
               Làm câu hỏi mới bám sát phần tài liệu chứa nội dung của các câu sai.
             </span>
-          </button>
+          </Button>
         </div>
       </Modal>
       <Modal

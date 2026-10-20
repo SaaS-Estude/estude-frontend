@@ -10,7 +10,7 @@ import {
 import { CheckCircle2, Edit3, Plus, Settings2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { Input, Select } from "@/components/ui/form-control";
+import { Input, Select, Checkbox } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { academicDataService } from "@/lib/assessment-api";
 import { getVietnameseSubjectName } from "@/lib/subject-localization";
@@ -20,6 +20,7 @@ import type {
   Subject,
   Term,
 } from "@/types/assessment";
+import { DateInput } from "@/components/ui/date-range-picker";
 
 type YearStatus = "UPCOMING" | "ACTIVE" | "COMPLETED";
 type TermStatus = "UPCOMING" | "ACTIVE" | "COMPLETED" | "LOCKED";
@@ -321,7 +322,7 @@ export function AcademicDataPanel() {
             }
           />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input
+            <DateInput
               label="Ngày bắt đầu"
               type="date"
               required
@@ -330,7 +331,7 @@ export function AcademicDataPanel() {
                 setYearForm({ ...yearForm, startsAt: event.target.value })
               }
             />
-            <Input
+            <DateInput
               label="Ngày kết thúc"
               type="date"
               required
@@ -340,7 +341,7 @@ export function AcademicDataPanel() {
               }
             />
           </div>
-          {!editingYear ? yearForm.terms.map((term, index) => <fieldset key={index} className="grid gap-3 rounded-lg border border-slate-200 p-3 sm:grid-cols-2"><legend className="px-1 text-sm font-semibold">Lịch Học kỳ {index + 1}</legend><Input label="Ngày bắt đầu" type="date" required value={term.startsAt} onChange={(e) => setYearForm({ ...yearForm, terms: yearForm.terms.map((t, i) => i === index ? { ...t, startsAt: e.target.value } : t) })} /><Input label="Ngày kết thúc" type="date" required value={term.endsAt} onChange={(e) => setYearForm({ ...yearForm, terms: yearForm.terms.map((t, i) => i === index ? { ...t, endsAt: e.target.value } : t) })} /></fieldset>) : null}
+          {!editingYear ? yearForm.terms.map((term, index) => <fieldset key={index} className="grid gap-3 rounded-lg border border-slate-200 p-3 sm:grid-cols-2"><legend className="px-1 text-sm font-semibold">Lịch Học kỳ {index + 1}</legend><DateInput label="Ngày bắt đầu" type="date" required value={term.startsAt} onChange={(e) => setYearForm({ ...yearForm, terms: yearForm.terms.map((t, i) => i === index ? { ...t, startsAt: e.target.value } : t) })} /><DateInput label="Ngày kết thúc" type="date" required value={term.endsAt} onChange={(e) => setYearForm({ ...yearForm, terms: yearForm.terms.map((t, i) => i === index ? { ...t, endsAt: e.target.value } : t) })} /></fieldset>) : null}
           <Select
             label="Trạng thái"
             value={yearForm.status}
@@ -417,7 +418,7 @@ export function AcademicDataPanel() {
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input
+            <DateInput
               label="Ngày bắt đầu"
               type="date"
               required
@@ -426,7 +427,7 @@ export function AcademicDataPanel() {
                 setTermForm({ ...termForm, startsAt: event.target.value })
               }
             />
-            <Input
+            <DateInput
               label="Ngày kết thúc"
               type="date"
               required
@@ -824,7 +825,7 @@ function GradeComponentConfiguration({
             />
           </div>
           <label className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-3 text-sm">
-            <input
+            <Checkbox
               className="mt-1"
               type="checkbox"
               checked={form.teacherCanConfigureCalculation}

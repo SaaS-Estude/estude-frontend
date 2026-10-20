@@ -2,6 +2,8 @@
 import { assessmentPurposeLabels, type AssessmentPurpose } from "@/lib/internal-results";
 
 import Link from "next/link";
+import {courseOfferingApi,type CourseOffering} from "@/lib/course-offering-api";
+import {currentCourseId,courseWorkspaceHref} from "@/lib/course-workspace";
 import {
   ArrowDown,
   ArrowLeft,
@@ -54,11 +56,7 @@ import {
 import { DataTableFooter } from "@/components/ui/data-table-footer";
 import { DateTimePicker } from "@/components/ui/date-range-picker";
 import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
-import {
-  CustomSelect,
-  Input,
-  Textarea,
-} from "@/components/ui/form-control";
+import { CustomSelect, Input, Textarea, Select, Checkbox } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import {
   academicDataService,
@@ -383,7 +381,7 @@ export function TeacherExamsPage() {
             <div className="flex shrink-0 flex-nowrap justify-end gap-2">
               <Button permission="exams.create"
                 className="!h-[42px] !rounded-lg"
-                onClick={() => router.push("/teacher/exams/new")}
+                onClick={() => router.push(courseWorkspaceHref("/teacher/exams/new"))}
               >
                 <Plus className="size-4" /> Tạo mới
               </Button>
@@ -646,6 +644,10 @@ export function ExamWizardPage({
   const [courseLessons, setCourseLessons] = useState<Array<{ id: string; title: string; topicName: string }>>([]);
   const [progressLessonId, setProgressLessonId] = useState('');
   const [assessmentPurpose, setAssessmentPurpose] = useState<AssessmentPurpose>('REGULAR');
+  const [workspaceId,setWorkspaceId]=useState("");
+  const [workspaceOptions,setWorkspaceOptions]=useState<CourseOffering[]>([]);
+  useEffect(()=>{let active=true;courseOfferingApi.list().then((rows)=>{if(active){setWorkspaceOptions(rows);setWorkspaceId((old)=>old||currentCourseId());}}).catch(()=>{});return()=>{active=false};},[]);
+  const selectedWorkspace=workspaceOptions.find((course)=>course.id===workspaceId);
   const [termId, setTermId] = useState('');
   const [examTerms, setExamTerms] = useState<import('@/types/assessment').Term[]>([]);
   const [requiredForCompletion, setRequiredForCompletion] = useState(true);
@@ -658,6 +660,12 @@ export function ExamWizardPage({
     topicName: "",
     description: "",
   });
+  useEffect(()=>{
+    if(initializing||!selectedWorkspace)return;
+    const course=selectedWorkspace;
+    setInfo((old)=>({...old,classId:course.primaryClassId,subjectId:course.subjectId,className:course.schoolClass?.name??old.className,subjectName:course.subject?.vietnameseName||course.subject?.name||old.subjectName}));
+    setTermId(course.termId);
+  },[selectedWorkspace,initializing]);
   useEffect(() => {
     let active = true;
     const cls = classes.find((c) => c.id === info.classId);
@@ -721,6 +729,7 @@ export function ExamWizardPage({
           );
           setAssessmentPurpose(exam.assessmentPurpose ?? 'LEGACY_REVIEW');
           setTermId(exam.termId ?? '');
+          setWorkspaceId(exam.courseOfferingId ?? currentCourseId());
           setInfo({
             title: makeup ? `Thi bù — ${exam.title}` : exam.title,
             subjectId: exam.subjectId,
@@ -794,11 +803,11 @@ export function ExamWizardPage({
   useEffect(() => {
     if (!info.classId || !info.subjectId) { setCourseLessons([]); return; }
     let active = true;
-    void contentService.topics(info.classId)
+    void contentService.topics(info.classId, workspaceId || undefined)
       .then((rows) => { if (active) setCourseLessons(rows.filter((topic) => topic.subjectId === info.subjectId && topic.status === 'PUBLISHED').flatMap((topic) => (topic.lessons ?? []).filter((lesson) => lesson.status === 'PUBLISHED').map((lesson) => ({ id: lesson.id, title: lesson.title, topicName: topic.name })))); })
       .catch(() => { if (active) setCourseLessons([]); });
     return () => { active = false; };
-  }, [info.classId, info.subjectId]);
+  }, [info.classId, info.subjectId, workspaceId]);
 
   useEffect(() => {
     if (!info.subjectId) {
@@ -1120,6 +1129,7 @@ export function ExamWizardPage({
     setSaving(true);
     const payload: ExamInput = {
       ...info,
+      courseOfferingId:workspaceId||undefined,
       assessmentPurpose: assessmentPurpose === 'LEGACY_REVIEW' ? undefined : assessmentPurpose,
       termId: termId || undefined,
       ...(makeup ? { termId: makeup.source.termId ?? undefined } : {}),
@@ -1245,6 +1255,7 @@ export function ExamWizardPage({
                 </p>
               </div>
               <div className="grid gap-5 md:grid-cols-2">
+                {workspaceOptions.length>0 && <CustomSelect label="Môn học theo lớp" className="md:col-span-2" value={workspaceId} disabled={publishedExam||Boolean(makeup)} options={workspaceOptions.filter((course)=>course.status==="OPEN"||course.status==="DRAFT"||course.id===workspaceId).map((course)=>({value:course.id,label:course.displayName}))} placeholder="Chọn môn học theo lớp" onValueChange={(id)=>{setWorkspaceId(id);const url=new URL(window.location.href);url.searchParams.set("courseOfferingId",id);window.history.replaceState(null,"",url);setProgressLessonId("");}} />}
                 <div className="md:col-span-2">
                   <Input
                     label="Tên bài kiểm tra"
@@ -1254,12 +1265,12 @@ export function ExamWizardPage({
                       updateInfo("title", event.target.value)
                     }
                     placeholder="Ví dụ: Kiểm tra giữa kỳ React"
-                    hint="Tên ngắn gọn, giúp sinh viên dễ nhận biết."
+                    hint="Tên ngắn gọn, giúp học sinh dễ nhận biết."
                   />
                 </div>
                 <CustomSelect
                   label="Môn học"
-                  disabled={Boolean(makeup)}
+                  disabled={Boolean(makeup)||Boolean(selectedWorkspace)}
                   value={info.subjectId}
                   options={subjects.map((subject) => ({
                     value: subject.id,
@@ -1271,7 +1282,7 @@ export function ExamWizardPage({
                 />
                 <CustomSelect
                   label="Lớp học"
-                  disabled={Boolean(makeup)}
+                  disabled={Boolean(makeup)||Boolean(selectedWorkspace)}
                   value={info.classId}
                   options={availableClasses.map((item) => ({
                     value: item.id,
@@ -1293,7 +1304,7 @@ export function ExamWizardPage({
                     }));
                   }}
                 />
-                <CustomSelect label="Học kỳ" value={termId} disabled={publishedExam || Boolean(makeup)} options={examTerms.filter((t) => ['ACTIVE', 'UPCOMING'].includes(t.status) || t.id === termId).map((t) => ({ value: t.id, label: t.name }))} placeholder="Chọn học kỳ" ariaLabel="Học kỳ bài kiểm tra" onValueChange={setTermId} />
+                <CustomSelect label="Học kỳ" value={termId} disabled={publishedExam || Boolean(makeup) || Boolean(selectedWorkspace)} options={examTerms.filter((t) => ['ACTIVE', 'UPCOMING'].includes(t.status) || t.id === termId).map((t) => ({ value: t.id, label: t.name }))} placeholder="Chọn học kỳ" ariaLabel="Học kỳ bài kiểm tra" onValueChange={setTermId} />
                 <CustomSelect label="Mục đích kiểm tra" value={assessmentPurpose} disabled={publishedExam || Boolean(makeup)} options={Object.entries(assessmentPurposeLabels).filter(([id]) => id !== 'LEGACY_REVIEW' || assessmentPurpose === id).map(([value, label]) => ({ value, label }))} ariaLabel="Mục đích kiểm tra" onValueChange={(v) => setAssessmentPurpose(v as AssessmentPurpose)} />
                 <CustomSelect
                   label="Chủ đề"
@@ -1315,12 +1326,12 @@ export function ExamWizardPage({
                 />
                 <div className="md:col-span-2 grid gap-2 rounded-lg border border-slate-200 p-3 text-sm">
                   <label className="grid gap-1">Bài học gắn với tiến độ (không bắt buộc)
-                    <select className="rounded-lg border border-slate-200 p-2" value={progressLessonId} disabled={publishedExam || Boolean(makeup)} onChange={(event) => setProgressLessonId(event.target.value)}>
+                    <Select className="rounded-lg border border-slate-200 p-2" value={progressLessonId} disabled={publishedExam || Boolean(makeup)} onChange={(event) => setProgressLessonId(event.target.value)}>
                       <option value="">Không gắn bài học — không tính vào tiến độ môn</option>
                       {courseLessons.map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.topicName} / {lesson.title}</option>)}
-                    </select>
+                    </Select>
                   </label>
-                  {progressLessonId && !makeup ? <label className="flex items-center gap-2"><input type="checkbox" checked={requiredForCompletion} onChange={(event) => setRequiredForCompletion(event.target.checked)} />Bắt buộc để hoàn thành bài học</label> : null}
+                  {progressLessonId && !makeup ? <label className="flex items-center gap-2"><Checkbox type="checkbox" checked={requiredForCompletion} onChange={(event) => setRequiredForCompletion(event.target.checked)} />Bắt buộc để hoàn thành bài học</label> : null}
                   {makeup ? <p className="text-sm text-brand-700">Đề thi bù cho {makeup.studentIds.length} học sinh; hoàn thành thay cho bài gốc, không thêm cột điểm.</p> : null}
                   <p className="text-xs text-slate-500">Chỉ bài kiểm tra đã gắn với bài học và attempt FINALIZED mới được tính; điểm số vẫn thuộc sổ điểm.</p>
                 </div>
@@ -1332,7 +1343,7 @@ export function ExamWizardPage({
                       updateInfo("description", event.target.value)
                     }
                     rows={4}
-                    placeholder="Mục tiêu, phạm vi kiến thức hoặc lưu ý cho sinh viên..."
+                    placeholder="Mục tiêu, phạm vi kiến thức hoặc lưu ý cho học sinh..."
                   />
                 </div>
               </div>
@@ -1730,7 +1741,7 @@ export function ExamWizardPage({
                 </div>
                 <label className="mt-4 block text-sm font-semibold text-slate-700">
                   Thời điểm phát hành đáp án đúng
-                  <select className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3"
+                  <Select className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3"
                     value={settings.answerReleasePolicy ?? (settings.showCorrectAnswers ? "AFTER_EXAM_END" : "NEVER")}
                     onChange={(event) => setSettings((current) => ({ ...current,
                       answerReleasePolicy: event.target.value as NonNullable<ExamSettings["answerReleasePolicy"]>,
@@ -1740,7 +1751,7 @@ export function ExamWizardPage({
                     <option value="AFTER_SUBMIT">Ngay sau khi học sinh nộp (có thể lộ đáp án khi Exam còn mở)</option>
                     <option value="AFTER_EXAM_END">Sau khi Exam đóng (khuyến nghị)</option>
                     <option value="AFTER_RESULT_PUBLISHED">Sau khi giáo viên công bố điểm</option>
-                  </select>
+                  </Select>
                 </label>
               </div>
             </div>

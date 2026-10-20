@@ -1,5 +1,5 @@
 /* CommonJS is required by the repository's isolated TypeScript component test loader. */
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -83,7 +83,7 @@ async function renderComponent(t, file, exportName, api, options = {}) {
     if (id === "@/components/student/student-review-page") return { StudentExamReviewPanel: () => React.createElement("section", { "data-testid": "exam-review-panel" }, "Ôn tập bài kiểm tra") };
     if (id === "@/components/student/study-coach-material-library") return { StudyCoachMaterialLibrary: () => React.createElement("section", { "data-testid": "material-library" }) };
     if (id === "@/components/ui/button") return { Button: ({ children, ...props }) => React.createElement("button", props, children) };
-    if (id === "@/components/ui/form-control") return { Select: ({ children, label, ...props }) => React.createElement("label", null, label, React.createElement("select", props, children)) };
+    if (id === "@/components/ui/form-control") return { ...require("./helpers/register-ui.cjs").formControls,  Select: ({ children, label, ...props }) => React.createElement("label", null, label, React.createElement("select", props, children)) };
     if (id === "@/lib/study-coach-api") return { studyCoachService: api };
     if (id === "@/lib/study-coach-view") return { difficultyLabels: { EASY: "Dễ", MEDIUM: "Trung bình", HARD: "Thử thách" }, masteryLabels: { NEW: "Chưa đủ dữ liệu", NEEDS_SUPPORT: "Cần ôn lại", DEVELOPING: "Đang tiến bộ", PROFICIENT: "Nắm vững", STRONG: "Nắm rất vững" }, masteryTones: { NEW: "", NEEDS_SUPPORT: "", DEVELOPING: "", PROFICIENT: "", STRONG: "" }, actionLabels: { LEARN: "Xem lại kiến thức", PRACTICE: "Làm bài luyện", REVIEW: "Ôn thẻ ghi nhớ", CHALLENGE: "Làm bài nâng cao" }, actionHref: () => "/next", isInsightDisabled: (error) => error?.disabled === true, studentError: (error, fallback) => error?.message || fallback };
     return originalRequire(id);

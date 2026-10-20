@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -85,7 +85,7 @@ async function renderPage(t, initial, allowed = true, reportFixture = null) {
     if (id === "@/components/ui/button")
       return { Button: (props) => React.createElement("button", props) };
     if (id === "@/components/ui/form-control")
-      return { Textarea: (props) => React.createElement("textarea", props) };
+      return { ...require("./helpers/register-ui.cjs").formControls,  Textarea: (props) => React.createElement("textarea", props) };
     if (id === "@/components/ui/action-notification")
       return { useActionNotification: () => ({ notify() {} }) };
     if (id === "@/lib/subject-localization")

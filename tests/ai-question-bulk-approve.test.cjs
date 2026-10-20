@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -34,7 +34,7 @@ async function render(t, options = {}) {
     };
     if (id === '@/components/ui/button') return { Button: ({ permission, children, ...props }) =>
       permission === 'ai_questions.approve' && options.allowed === false ? null : React.createElement('button', props, children) };
-    if (id === '@/components/ui/form-control') return {
+    if (id === '@/components/ui/form-control') return { ...require("./helpers/register-ui.cjs").formControls,
       CustomSelect: ({ options, onValueChange }) => React.createElement("select", { "data-subject-select": options.some((item) => item.value === "subject"), onChange: (event) => onValueChange(event.target.value) }), Input: (props) => React.createElement('input', props), Textarea: (props) => React.createElement('textarea', props),
     };
     if (id === '@/components/ui/toggle-switch') return { ToggleSwitch: () => null };

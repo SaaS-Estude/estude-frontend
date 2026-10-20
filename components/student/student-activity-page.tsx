@@ -6,6 +6,8 @@ import { BellRing, CalendarCheck2, Check, CircleAlert, LoaderCircle } from "luci
 import { AssessmentShell, ErrorPanel, PageHeading } from "@/components/assessment/assessment-shell";
 import { attendanceService, NOTIFICATIONS_CHANGED_EVENT, notificationService } from "@/lib/engagement-api";
 import type { AttendanceHistoryRecord as AttendanceRecord, PortalNotification } from "@/types/engagement";
+import { Select } from "@/components/ui/form-control";
+
 
 const attendanceLabels: Record<AttendanceRecord['status'], string> = {
   NOT_MARKED: 'Chưa điểm danh', UNDER_REVIEW: 'Đang rà soát', PRESENT: 'Có mặt', ABSENT: 'Vắng',
@@ -61,7 +63,7 @@ export function StudentActivityPage() {
     {loading ? <div className="grid min-h-64 place-items-center"><LoaderCircle className="size-8 animate-spin text-brand-600" /></div> : null}
     {error ? <ErrorPanel message={error} /> : null}
     {!loading && !error ? <div className="grid gap-6 xl:grid-cols-2">
-      <div><div className="mb-3 flex flex-wrap gap-2 text-sm"><select aria-label="Lọc học kỳ" className="rounded-lg border border-slate-200 p-2" value={termFilter} onChange={(event) => setTermFilter(event.target.value)}><option value="ALL">Mọi học kỳ</option>{terms.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select><select aria-label="Lọc môn học" className="rounded-lg border border-slate-200 p-2" value={subjectFilter} onChange={(event) => setSubjectFilter(event.target.value)}><option value="ALL">Mọi môn</option>{subjects.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></div>
+      <div><div className="mb-3 flex flex-wrap gap-2 text-sm"><Select aria-label="Lọc học kỳ" className="rounded-lg border border-slate-200 p-2" value={termFilter} onChange={(event) => setTermFilter(event.target.value)}><option value="ALL">Mọi học kỳ</option>{terms.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</Select><Select aria-label="Lọc môn học" className="rounded-lg border border-slate-200 p-2" value={subjectFilter} onChange={(event) => setSubjectFilter(event.target.value)}><option value="ALL">Mọi môn</option>{subjects.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</Select></div>
         <TimelineSection icon={CalendarCheck2} title="Lịch sử điểm danh" empty="Chưa có buổi điểm danh đã chốt phù hợp.">
           {filteredAttendance.map((item) => <TimelineItem key={item.id} tone={item.status === 'PRESENT' || item.status === 'LATE' ? 'emerald' : item.status === 'NOT_MARKED' ? 'slate' : 'rose'} icon={item.status === 'PRESENT' || item.status === 'LATE' ? Check : CircleAlert} title={attendanceLabels[item.status]} time={new Date(item.sessionDate).toLocaleDateString('vi-VN', { timeZone: 'UTC' })}><p>{item.subject?.name ?? 'Môn học'} · {item.class?.name ?? 'Lớp học'}{item.startTime ? ` · ${item.startTime}${item.endTime ? `–${item.endTime}` : ''}` : item.period ? ` · ${item.period}` : ''}</p>{item.note ? <p className="mt-1 text-xs">Ghi chú: {item.note}</p> : null}{item.legacy ? <p className="mt-1 text-xs">Dữ liệu điểm danh cũ (không rõ giờ)</p> : null}</TimelineItem>)}
         </TimelineSection></div>

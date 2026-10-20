@@ -13,6 +13,8 @@ import { useActionNotification } from "@/components/ui/action-notification";
 import { aiQuestionSettingsService } from "@/lib/assessment-api";
 import type { Difficulty, DifficultyLevelDefinition } from "@/types/assessment";
 
+
+
 const builtInLevels: DifficultyLevelDefinition[] = [
   {
     code: "EASY",
@@ -158,14 +160,14 @@ export function AiDifficultySettingsPanel() {
             </span>
             <div className="flex gap-2">
               {([3, 4] as const).map((count) => (
-                <button
+                <Button variant="plain"
                   key={count}
                   type="button"
                   onClick={() => changeLevelCount(count)}
                   className={`rounded-lg px-4 py-2 text-xs font-black ${levels.length === count ? "bg-brand-600 text-white" : "border border-slate-200 bg-white text-slate-600"}`}
                 >
                   {count} mức
-                </button>
+                </Button>
               ))}
             </div>
           </div>

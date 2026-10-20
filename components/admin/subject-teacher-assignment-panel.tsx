@@ -15,6 +15,8 @@ import { getSubjectApiSearchQueries, getVietnameseSubjectName } from "@/lib/subj
 import type { SubjectTeacherAssignment } from "@/types/assessment";
 import type { UsersPage } from "@/types/users";
 
+
+
 function errorMessage(error: unknown, fallback: string) {
   if (!(error instanceof ApiError)) return fallback;
   return error.details.length ? error.details.join(" · ") : error.message;
@@ -53,7 +55,7 @@ function PickerField({
   return (
     <div>
       <span className="mb-2 block text-sm font-bold text-slate-700">{label}</span>
-      <button
+      <Button variant="plain"
         type="button"
         aria-haspopup="dialog"
         onClick={onOpen}
@@ -63,7 +65,7 @@ function PickerField({
           {selectedOption?.label ?? placeholder}
         </span>
         <ChevronsUpDown className="size-4 shrink-0 text-slate-400" />
-      </button>
+      </Button>
     </div>
   );
 }
@@ -144,7 +146,7 @@ function OptionPickerModal({
         {!isSearching ? options.map((option) => {
           const selected = option.value === value;
           return (
-            <button
+            <Button variant="plain"
               key={option.value}
               type="button"
               aria-pressed={selected}
@@ -158,7 +160,7 @@ function OptionPickerModal({
             >
               <span>{option.label}</span>
               {selected ? <Check className="size-4 shrink-0" /> : null}
-            </button>
+            </Button>
           );
         }) : null}
       </div>

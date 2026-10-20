@@ -20,7 +20,7 @@ import {
   ContentLoading,
   ContentLoadingOverlay,
 } from "@/components/ui/content-loading";
-import { Input, Textarea } from "@/components/ui/form-control";
+import { Input, Textarea, Checkbox } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import {
   Table,
@@ -363,7 +363,7 @@ function SupportContent({
               />
             </div>
             <label className="flex items-center gap-2 px-2">
-              <input
+              <Checkbox
                 type="checkbox"
                 checked={followUpOnly}
                 onChange={(event) => setFollowUpOnly(event.target.checked)}

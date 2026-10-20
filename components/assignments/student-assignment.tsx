@@ -13,6 +13,8 @@ import {
   type StudentAssignmentDetail,
   type SubmissionFile,
 } from "@/types/assignment";
+import { Textarea, FileInput } from "@/components/ui/form-control";
+
 
 const displayDate = (value: string | null) =>
   value ? new Date(value).toLocaleString("vi-VN") : "Không giới hạn";
@@ -311,7 +313,7 @@ export function StudentAssignmentDetail({ id }: { id: string }) {
               {data.assignment.submissionType !== "FILE" ? (
                 <label className="grid gap-2 text-sm">
                   Nội dung bài làm
-                  <textarea
+                  <Textarea
                     aria-label="Nội dung bài làm"
                     className="min-h-40 rounded-lg border border-slate-200 p-3"
                     maxLength={50000}
@@ -324,7 +326,7 @@ export function StudentAssignmentDetail({ id }: { id: string }) {
               {data.assignment.submissionType !== "TEXT" ? (
                 <label className="grid gap-2 text-sm">
                   File bài làm (5 file, 10 MB/file, tổng 25 MB)
-                  <input
+                  <FileInput
                     aria-label="File bài làm"
                     type="file"
                     multiple

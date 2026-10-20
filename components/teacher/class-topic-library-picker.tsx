@@ -9,6 +9,8 @@ import { useActionNotification } from "@/components/ui/action-notification";
 import { academicDataService } from "@/lib/assessment-api";
 import { matchesSearchKeyword } from "@/lib/search-keyword";
 import type { ClassTopic, LearningMaterial } from "@/types/assessment";
+import { Input, Checkbox } from "@/components/ui/form-control";
+
 
 function formatFileSize(size: number): string {
   if (size < 1024) return `${size} B`;
@@ -99,7 +101,7 @@ export function ClassTopicLibraryPicker({
         </p>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-          <input
+          <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Tìm tài liệu theo tên"
@@ -123,7 +125,7 @@ export function ClassTopicLibraryPicker({
               const assigned = assignedIds.has(material.id);
               return (
                 <label key={material.id} className={`flex items-center gap-3 px-4 py-3 ${assigned ? "bg-slate-50 text-slate-400" : "cursor-pointer transition hover:bg-blue-50/50"}`}>
-                  <input
+                  <Checkbox
                     type="checkbox"
                     checked={assigned || selectedIds.includes(material.id)}
                     disabled={assigned || saving}

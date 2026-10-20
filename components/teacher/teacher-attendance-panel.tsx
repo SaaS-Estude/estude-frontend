@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CourseWorkspacePicker } from "./course-workspace-picker";
+import { currentCourseId } from "@/lib/course-workspace";
 import { AssessmentShell, PageHeading } from '@/components/assessment/assessment-shell';
 import { Button } from '@/components/ui/button';
 import { academicDataService } from '@/lib/assessment-api';
@@ -9,6 +11,9 @@ import { ApiError } from '@/lib/auth-api';
 import { getVietnameseSubjectName } from '@/lib/subject-localization';
 import type { TeacherAssignedClass } from '@/types/assessment';
 import type { AttendanceAudit, AttendanceSession, AttendanceSessionDetail, AttendanceStatus } from '@/types/engagement';
+import { Select, Input } from "@/components/ui/form-control";
+import { DateInput } from "@/components/ui/date-range-picker";
+
 
 const statuses: AttendanceStatus[] = ['NOT_MARKED', 'PRESENT', 'ABSENT', 'LATE', 'EXCUSED', 'LEAVE'];
 const labels: Record<AttendanceStatus, string> = {
@@ -128,6 +133,7 @@ export function TeacherAttendancePanel() {
   }
 
   return <AssessmentShell>
+    <CourseWorkspacePicker />
     <PageHeading eyebrow="Attendance" title="Điểm danh theo buổi" description="Chọn lớp, môn và ngày; mỗi lần điểm danh có danh sách học sinh cố định. Chỉ buổi đã chốt mới hiển thị cho học sinh." />
     {error ? <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : null}
     {stale && selectedId ? <div className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
@@ -135,21 +141,21 @@ export function TeacherAttendancePanel() {
       <Button variant="outline" disabled={busy} onClick={() => void action(() => loadDetail(selectedId), false)}>Tải lại dữ liệu (bỏ chỉnh sửa chưa lưu)</Button>
     </div> : null}
     <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3">
-      <label className="grid gap-1 text-sm">Lớp<select className={field} disabled={busy} value={classId} onChange={(event) => {
+      <label className="grid gap-1 text-sm">Lớp<Select className={field} disabled={busy || Boolean(currentCourseId())} value={classId} onChange={(event) => {
         const id = event.target.value; setClassId(id); setSubjectId(classes.find((row) => row.id === id)?.subjects[0]?.id ?? '');
-      }}>{classes.map((row) => <option key={row.id} value={row.id}>{row.code} · {row.name}</option>)}</select></label>
-      <label className="grid gap-1 text-sm">Môn<select className={field} disabled={busy} value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>{selectedClass?.subjects.map((row) => <option key={row.id} value={row.id}>{getVietnameseSubjectName(row)}</option>)}</select></label>
-      <label className="grid gap-1 text-sm">Ngày học (giờ Việt Nam)<input className={field} type="date" disabled={busy} value={date} onChange={(event) => setDate(event.target.value)} /></label>
+      }}>{classes.map((row) => <option key={row.id} value={row.id}>{row.code} · {row.name}</option>)}</Select></label>
+      <label className="grid gap-1 text-sm">Môn<Select className={field} disabled={busy || Boolean(currentCourseId())} value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>{selectedClass?.subjects.map((row) => <option key={row.id} value={row.id}>{getVietnameseSubjectName(row)}</option>)}</Select></label>
+      <label className="grid gap-1 text-sm">Ngày học (giờ Việt Nam)<DateInput className={field} type="date" disabled={busy} value={date} onChange={(event) => setDate(event.target.value)} /></label>
     </section>
     <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
       <h2 className="font-bold">Các lần điểm danh trong ngày</h2>
-      <div className="mt-3 flex flex-wrap gap-2">{sessions.map((session) => <button key={session.id} type="button" disabled={busy} onClick={() => setSelectedId(session.id)} className={`rounded-lg border px-3 py-2 text-sm ${selectedId === session.id ? 'border-brand-500 bg-blue-50' : 'border-slate-200'}`}>{sessionLabel(session)} · {session.status}</button>)}
+      <div className="mt-3 flex flex-wrap gap-2">{sessions.map((session) => <Button variant="plain" key={session.id} type="button" disabled={busy} onClick={() => setSelectedId(session.id)} className={`rounded-lg border px-3 py-2 text-sm ${selectedId === session.id ? 'border-brand-500 bg-blue-50' : 'border-slate-200'}`}>{sessionLabel(session)} · {session.status}</Button>)}
         {!loading && !sessions.length ? <p className="text-sm text-slate-500">Chưa có lần điểm danh.</p> : null}</div>
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="grid gap-1 text-xs">Bắt đầu (tùy chọn)<input className={field} type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} /></label>
-        <label className="grid gap-1 text-xs">Kết thúc (tùy chọn)<input className={field} type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} /></label>
-        <label className="grid gap-1 text-xs">Tiết/ca (tùy chọn)<input className={field} value={period} maxLength={60} onChange={(event) => setPeriod(event.target.value)} /></label>
-        <label className="grid gap-1 text-xs">Nhãn (tùy chọn)<input className={field} value={label} maxLength={80} onChange={(event) => setLabel(event.target.value)} /></label>
+        <label className="grid gap-1 text-xs">Bắt đầu (tùy chọn)<DateInput className={field} type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} /></label>
+        <label className="grid gap-1 text-xs">Kết thúc (tùy chọn)<DateInput className={field} type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} /></label>
+        <label className="grid gap-1 text-xs">Tiết/ca (tùy chọn)<Input className={field} value={period} maxLength={60} onChange={(event) => setPeriod(event.target.value)} /></label>
+        <label className="grid gap-1 text-xs">Nhãn (tùy chọn)<Input className={field} value={label} maxLength={80} onChange={(event) => setLabel(event.target.value)} /></label>
       </div>
       <p className="mt-2 text-xs text-slate-500">Để trống mọi ô để dùng một lần điểm danh mặc định/ngày. Muốn thêm lần thứ hai, nhập giờ bắt đầu hoặc tiết/nhãn khác.</p>
       <Button className="mt-3" permission="attendance.update" disabled={busy || !classId || !subjectId || !date} onClick={() => void create()}>Tạo lần điểm danh</Button>
@@ -163,11 +169,11 @@ export function TeacherAttendancePanel() {
           {detail.session.status === 'FINALIZED' ? <Button permission="attendance.update" variant="outline" disabled={busy || stale || reason.trim().length < 3} onClick={() => void action(() => attendanceService.reopenSession(detail.session.id, reason, version!))}>Mở lại có lý do</Button> : null}</div></div>
       <p className="mt-3 text-sm">{statuses.map((status) => `${labels[status]}: ${summary[status]}`).join(' · ')}</p>
       {summary.NOT_MARKED > 0 && editable ? <p className="mt-2 text-xs text-amber-700">Còn {summary.NOT_MARKED} học sinh chưa điểm danh; backend sẽ từ chối chốt buổi.</p> : null}
-      {detail.session.reopenedCount > 0 || detail.session.status === 'FINALIZED' ? <label className="mt-3 grid gap-1 text-sm">Lý do mở lại/chỉnh sau khi chốt<input className={field} maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Bắt buộc khi sửa sau khi mở lại" /></label> : null}
+      {detail.session.reopenedCount > 0 || detail.session.status === 'FINALIZED' ? <label className="mt-3 grid gap-1 text-sm">Lý do mở lại/chỉnh sau khi chốt<Input className={field} maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Bắt buộc khi sửa sau khi mở lại" /></label> : null}
       <div className="mt-4 space-y-2">{detail.students.map((student) => <div key={student.id} className="grid gap-2 rounded-lg bg-slate-50 p-3 md:grid-cols-[minmax(0,1fr)_180px_minmax(0,1fr)] md:items-center">
         <p className="text-sm font-semibold">{student.fullName} <span className="font-normal text-slate-500">· {student.accountName}</span></p>
-        <select aria-label={`Trạng thái ${student.fullName}`} className={field} disabled={!editable || busy} value={draft[student.id]?.status ?? 'NOT_MARKED'} onChange={(event) => setDraft((current) => ({ ...current, [student.id]: { ...current[student.id], status: event.target.value as AttendanceStatus } }))}>{statuses.map((status) => <option key={status} value={status}>{labels[status]}</option>)}</select>
-        <input aria-label={`Ghi chú ${student.fullName}`} className={field} disabled={!editable || busy} maxLength={500} placeholder="Ghi chú (tùy chọn)" value={draft[student.id]?.note ?? ''} onChange={(event) => setDraft((current) => ({ ...current, [student.id]: { ...current[student.id], note: event.target.value } }))} />
+        <Select aria-label={`Trạng thái ${student.fullName}`} className={field} disabled={!editable || busy} value={draft[student.id]?.status ?? 'NOT_MARKED'} onChange={(event) => setDraft((current) => ({ ...current, [student.id]: { ...current[student.id], status: event.target.value as AttendanceStatus } }))}>{statuses.map((status) => <option key={status} value={status}>{labels[status]}</option>)}</Select>
+        <Input aria-label={`Ghi chú ${student.fullName}`} className={field} disabled={!editable || busy} maxLength={500} placeholder="Ghi chú (tùy chọn)" value={draft[student.id]?.note ?? ''} onChange={(event) => setDraft((current) => ({ ...current, [student.id]: { ...current[student.id], note: event.target.value } }))} />
       </div>)}</div>
       <details className="mt-4 text-sm"><summary className="cursor-pointer font-semibold">Lịch sử chỉnh sửa ({audit.length})</summary><ul className="mt-2 space-y-1">{audit.map((item) => <li key={item.id} className="rounded bg-slate-50 p-2">{new Date(item.createdAt).toLocaleString('vi-VN')} · {item.action} {item.studentId ? `· ${detail.students.find((student) => student.id === item.studentId)?.fullName ?? 'Học sinh'}` : ''} {item.oldStatus ? `${labels[item.oldStatus]} → ${item.newStatus ? labels[item.newStatus] : ''}` : ''} {item.reason ? `· ${item.reason}` : ''}</li>)}</ul></details>
     </section> : null}

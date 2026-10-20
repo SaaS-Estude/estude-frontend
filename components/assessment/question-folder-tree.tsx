@@ -3,6 +3,8 @@
 import { ChevronDown, ChevronRight, FileQuestion, Folder, FolderPlus, Pencil, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { QuestionFolder } from "@/types/assessment";
+import { Button } from "@/components/ui/button";
+
 
 export type FolderSelection = "all" | "unfiled" | string;
 
@@ -52,23 +54,23 @@ export function QuestionFolderTree({
         return (
           <div key={folder.id}>
             <div className="group flex items-center gap-0.5" style={{ paddingLeft: (folder.depth - 1) * 12 }}>
-              <button
+              <Button variant="plain"
                 type="button"
                 aria-label={isCollapsed ? `Mở ${folder.name}` : `Thu gọn ${folder.name}`}
                 className="flex size-6 shrink-0 items-center justify-center text-slate-400"
                 onClick={() => setCollapsed((ids) => isCollapsed ? ids.filter((id) => id !== folder.id) : [...ids, folder.id])}
               >
                 {hasChildren ? isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" /> : null}
-              </button>
-              <button type="button" className={rowClass(selected === folder.id)} onClick={() => onSelect(folder.id)} title={folder.name}>
+              </Button>
+              <Button variant="plain" type="button" className={rowClass(selected === folder.id)} onClick={() => onSelect(folder.id)} title={folder.name}>
                 <Folder className="size-4 shrink-0" />
                 <span className="min-w-0 flex-1 truncate">{folder.name}</span>
                 <span className="text-xs font-normal text-slate-400">{count}</span>
-              </button>
+              </Button>
               <div className="hidden items-center group-hover:flex group-focus-within:flex">
-                {canCreate && folder.depth < 3 ? <button type="button" className="rounded p-1 text-slate-500 hover:bg-slate-100" title="Tạo thư mục con" aria-label={`Tạo thư mục con trong ${folder.name}`} onClick={() => onCreate(folder.id)}><FolderPlus className="size-3.5" /></button> : null}
-                {canUpdate ? <button type="button" className="rounded p-1 text-slate-500 hover:bg-slate-100" title="Đổi tên" aria-label={`Đổi tên ${folder.name}`} onClick={() => onRename(folder)}><Pencil className="size-3.5" /></button> : null}
-                {canDelete ? <button type="button" className="rounded p-1 text-rose-500 hover:bg-rose-50" title="Xóa thư mục trống" aria-label={`Xóa ${folder.name}`} onClick={() => onDelete(folder)}><Trash2 className="size-3.5" /></button> : null}
+                {canCreate && folder.depth < 3 ? <Button variant="plain" type="button" className="rounded p-1 text-slate-500 hover:bg-slate-100" title="Tạo thư mục con" aria-label={`Tạo thư mục con trong ${folder.name}`} onClick={() => onCreate(folder.id)}><FolderPlus className="size-3.5" /></Button> : null}
+                {canUpdate ? <Button variant="plain" type="button" className="rounded p-1 text-slate-500 hover:bg-slate-100" title="Đổi tên" aria-label={`Đổi tên ${folder.name}`} onClick={() => onRename(folder)}><Pencil className="size-3.5" /></Button> : null}
+                {canDelete ? <Button variant="plain" type="button" className="rounded p-1 text-rose-500 hover:bg-rose-50" title="Xóa thư mục trống" aria-label={`Xóa ${folder.name}`} onClick={() => onDelete(folder)}><Trash2 className="size-3.5" /></Button> : null}
               </div>
             </div>
             {!isCollapsed ? renderChildren(folder.id) : null}
@@ -79,16 +81,16 @@ export function QuestionFolderTree({
 
   return (
     <nav aria-label="Cây thư mục câu hỏi" className="space-y-1">
-      <button type="button" className={rowClass(selected === "all")} onClick={() => onSelect("all")}>
+      <Button variant="plain" type="button" className={rowClass(selected === "all")} onClick={() => onSelect("all")}>
         <FileQuestion className="size-4 shrink-0" />
         <span className="min-w-0 flex-1 truncate">Tất cả câu hỏi</span>
         <span className="text-xs font-normal text-slate-400">{counts.all ?? 0}</span>
-      </button>
-      <button type="button" className={rowClass(selected === "unfiled")} onClick={() => onSelect("unfiled")}>
+      </Button>
+      <Button variant="plain" type="button" className={rowClass(selected === "unfiled")} onClick={() => onSelect("unfiled")}>
         <Folder className="size-4 shrink-0" />
         <span className="min-w-0 flex-1 truncate">Chưa xếp thư mục</span>
         <span className="text-xs font-normal text-slate-400">{counts.unfiled ?? 0}</span>
-      </button>
+      </Button>
       <div className="border-t border-slate-100 pt-2">{renderChildren(null)}</div>
     </nav>
   );

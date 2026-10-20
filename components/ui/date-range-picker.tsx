@@ -10,13 +10,22 @@ import {
   Clock3,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { CustomSelect } from "./custom-select";
+
+interface PickerControlProps {
+  id?: string;
+  disabled?: boolean;
+  ariaLabel?: string;
+  min?: string;
+  max?: string;
+}
 
 export interface DateRangeValue {
   from: string;
   to: string;
 }
 
-interface DateRangePickerProps extends DateRangeValue {
+interface DateRangePickerProps extends DateRangeValue, PickerControlProps {
   onChange: (value: DateRangeValue) => void;
   className?: string;
   buttonClassName?: string;
@@ -24,7 +33,7 @@ interface DateRangePickerProps extends DateRangeValue {
   onClear?: () => void;
 }
 
-interface DateTimePickerProps {
+interface DateTimePickerProps extends PickerControlProps {
   value: string;
   onChange: (value: string) => void;
   label?: string;
@@ -209,6 +218,11 @@ export function DateRangePicker({
   buttonClassName,
   singleDate = false,
   onClear,
+  id,
+  disabled,
+  ariaLabel,
+  min,
+  max,
 }: DateRangePickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const today = useMemo(() => normalizeDate(new Date()), []);
@@ -269,12 +283,16 @@ export function DateRangePicker({
   const displayTo = to ? formatDate(to) : "Đến ngày";
 
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
+    <div ref={containerRef} className={cn("relative", className)} onKeyDown={(event) => {
+      if (event.key === "Escape" && open) { event.preventDefault(); event.stopPropagation(); setOpen(false); containerRef.current?.querySelector<HTMLButtonElement>("button")?.focus(); }
+    }}>
       <button
+        id={id}
+        disabled={disabled}
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={singleDate ? "Chọn ngày" : "Lọc theo khoảng thời gian"}
+        aria-label={ariaLabel ?? (singleDate ? "Chọn ngày" : "Lọc theo khoảng thời gian")}
         onClick={() => setOpen((current) => !current)}
         className={cn(
           "flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-left text-sm outline-none transition hover:border-slate-300 focus:border-brand-400",
@@ -306,6 +324,7 @@ export function DateRangePicker({
           aria-label="Xóa bộ lọc"
           title="Xóa bộ lọc"
           onClick={(event) => { event.stopPropagation(); onClear(); setOpen(false); }}
+          disabled={disabled}
           className="absolute right-2 top-1/2 z-10 grid size-6 -translate-y-1/2 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
         >
           ×
@@ -354,6 +373,8 @@ export function DateRangePicker({
               from={from}
               to={to}
               onDaySelect={handleDaySelect}
+              min={min}
+              max={max}
               onPreviousMonth={() => setVisibleMonth((month) => addMonths(month, -1))}
               onPreviousYear={() => setVisibleMonth((month) => addMonths(month, -12))}
               onNextMonth={
@@ -377,6 +398,8 @@ export function DateRangePicker({
               from={from}
               to={to}
               onDaySelect={handleDaySelect}
+              min={min}
+              max={max}
               onNextMonth={() => setVisibleMonth((month) => addMonths(month, 1))}
               onNextYear={() => setVisibleMonth((month) => addMonths(month, 12))}
             />
@@ -393,6 +416,11 @@ export function DateTimePicker({
   label,
   className,
   buttonClassName,
+  id,
+  disabled,
+  ariaLabel,
+  min,
+  max,
 }: DateTimePickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const today = useMemo(() => normalizeDate(new Date()), []);
@@ -467,13 +495,18 @@ export function DateTimePicker({
     : "00";
 
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
+    <div ref={containerRef} className={cn("relative", className)} onKeyDown={(event) => {
+      if (event.key === "Escape" && open) { event.preventDefault(); event.stopPropagation(); setOpen(false); containerRef.current?.querySelector<HTMLButtonElement>("button")?.focus(); }
+    }}>
       {label ? (
         <span className="mb-2 block text-sm font-bold text-slate-700">
           {label}
         </span>
       ) : null}
       <button
+        id={id}
+        disabled={disabled}
+        aria-label={ariaLabel ?? label ?? "Chọn ngày và giờ"}
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -502,6 +535,8 @@ export function DateTimePicker({
             from={selectedDate}
             to=""
             onDaySelect={selectDay}
+            min={min?.slice(0, 10)}
+            max={max?.slice(0, 10)}
             onPreviousMonth={() =>
               setVisibleMonth((month) => addMonths(month, -1))
             }
@@ -521,31 +556,9 @@ export function DateTimePicker({
               <span className="mr-auto text-sm font-bold text-slate-700">
                 Thời gian
               </span>
-              <select
-                value={selectedHour}
-                onChange={(event) => selectTime("hour", event.target.value)}
-                aria-label="Giờ"
-                className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-blue-100"
-              >
-                {hourOptions.map((hour) => (
-                  <option key={hour} value={hour}>
-                    {hour}
-                  </option>
-                ))}
-              </select>
+              <CustomSelect ariaLabel="Giờ" className="w-20" value={selectedHour} disabled={disabled} placement="top" options={hourOptions.map((hour) => ({ value: hour, label: hour }))} onValueChange={(value) => selectTime("hour", value)} />
               <span className="font-black text-slate-400">:</span>
-              <select
-                value={selectedMinute}
-                onChange={(event) => selectTime("minute", event.target.value)}
-                aria-label="Phút"
-                className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-blue-100"
-              >
-                {minuteOptions.map((minute) => (
-                  <option key={minute} value={minute}>
-                    {minute}
-                  </option>
-                ))}
-              </select>
+              <CustomSelect ariaLabel="Phút" className="w-20" value={selectedMinute} disabled={disabled} placement="top" options={minuteOptions.map((minute) => ({ value: minute, label: minute }))} onValueChange={(value) => selectTime("minute", value)} />
             </div>
             <div className="mt-3 flex justify-between border-t border-slate-100 pt-3">
               <button
@@ -581,7 +594,11 @@ function CalendarMonth({
   onNextMonth,
   onNextYear,
   className,
+  min,
+  max,
 }: {
+  min?: string;
+  max?: string;
   month: Date;
   today: Date;
   from: string;
@@ -658,6 +675,7 @@ function CalendarMonth({
             <button
               type="button"
               key={value}
+              disabled={Boolean(min && value < min || max && value > max)}
               onClick={() => onDaySelect(date)}
               aria-label={dateFormatter.format(date)}
               aria-pressed={isStart || isEnd}
@@ -700,3 +718,5 @@ function CalendarNavButton({
     </button>
   );
 }
+
+export { DateInput, type DateInputProps } from "./date-input";

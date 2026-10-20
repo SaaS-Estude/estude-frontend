@@ -13,6 +13,8 @@ import { studyCoachService } from "@/lib/study-coach-api";
 import { actionHref, actionLabels, masteryLabels, masteryTones, studentError } from "@/lib/study-coach-view";
 import type { ConceptMasteryState, ConceptMasteryView, LearningInsight, StudyCoachCapabilities, StudyCoachMaterial } from "@/types/study-coach";
 
+
+
 const states: ConceptMasteryState[] = ["STRONG", "PROFICIENT", "DEVELOPING", "NEEDS_SUPPORT", "NEW"];
 type StudyCoachMenu = "self-study" | "exam-review";
 
@@ -93,22 +95,22 @@ export function StudyCoachHomePage() {
       className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-card sm:inline-grid sm:grid-cols-2"
       aria-label="Chọn nội dung Study Coach"
     >
-      <button
+      <Button variant="plain"
         type="button"
         onClick={() => selectMenu("self-study")}
         className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition ${activeMenu === "self-study" ? "bg-brand-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}
         aria-current={activeMenu === "self-study" ? "page" : undefined}
       >
         <Layers className="size-4" /> Tự học
-      </button>
-      {FEATURES.examAnalysis ? <button
+      </Button>
+      {FEATURES.examAnalysis ? <Button variant="plain"
         type="button"
         onClick={() => selectMenu("exam-review")}
         className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition ${activeMenu === "exam-review" ? "bg-brand-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}
         aria-current={activeMenu === "exam-review" ? "page" : undefined}
       >
         <BookOpenCheck className="size-4" /> Ôn tập bài kiểm tra
-      </button> : null}
+      </Button> : null}
     </nav>
 
     {activeMenu === "exam-review" ? (
@@ -155,5 +157,5 @@ function DocumentMasteryCard({ material, items, onOpen }: { material: StudyCoach
 }
 
 function Shortcut({ label, detail, icon: Icon, onClick }: { label: string; detail: string; icon: typeof Layers; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-card transition hover:border-brand-300 focus:outline-none focus:ring-4 focus:ring-blue-100"><Icon className="size-5 text-brand-600" /><span className="mt-3 block font-black text-slate-900">{label}</span><span className="mt-1 block text-xs text-slate-500">{detail}</span></button>;
+  return <Button variant="plain" type="button" onClick={onClick} className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-card transition hover:border-brand-300 focus:outline-none focus:ring-4 focus:ring-blue-100"><Icon className="size-5 text-brand-600" /><span className="mt-3 block font-black text-slate-900">{label}</span><span className="mt-1 block text-xs text-slate-500">{detail}</span></Button>;
 }

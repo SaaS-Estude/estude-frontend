@@ -5,7 +5,7 @@ import { RoleGate } from "@/components/auth/role-gate";
 
 export const metadata: Metadata = {
   title: "Ôn tập cùng AI",
-  description: "Lộ trình ôn tập cá nhân hóa từ kết quả bài kiểm tra của sinh viên.",
+  description: "Lộ trình ôn tập cá nhân hóa từ kết quả bài kiểm tra của học sinh.",
 };
 
 export default function StudentReviewRoute() {

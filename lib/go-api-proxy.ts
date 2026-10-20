@@ -111,7 +111,7 @@ export async function forwardGoApi(request: Request): Promise<Response> {
   };
   for (const name of [
     "content-type", "accept", "cookie", "authorization", "origin",
-    "user-agent", "idempotency-key", "range", "if-match",
+    "user-agent", "idempotency-key", "range", "if-match", "x-course-offering-id",
   ]) {
     const value = request.headers.get(name);
     if (value !== null) headers[name] = value;

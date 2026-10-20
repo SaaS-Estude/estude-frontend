@@ -37,6 +37,8 @@ import type {
   MaterialAssignmentTarget,
   TeacherAssignedClass,
 } from "@/types/assessment";
+import { FileInput, Checkbox, Select, Input } from "@/components/ui/form-control";
+
 
 type TargetDraft = {
   selected: boolean;
@@ -342,7 +344,7 @@ export function TeacherMaterialLibraryPanel() {
             <label className={`inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-bold text-white transition hover:bg-brand-700 ${isUploading || !can('materials.create') ? "pointer-events-none opacity-60" : ""}`}>
               {isUploading ? <LoaderCircle className="size-4 animate-spin" /> : <Upload className="size-4" />}
               {isUploading ? "Đang tải lên..." : "Tải tài liệu"}
-              <input type="file" disabled={!can('materials.create')} multiple className="hidden" accept={COURSE_RESOURCE_ACCEPT} onChange={(event) => { void uploadMaterials(event.target.files); event.currentTarget.value = ""; }} />
+              <FileInput type="file" disabled={!can('materials.create')} multiple className="hidden" accept={COURSE_RESOURCE_ACCEPT} onChange={(event) => { void uploadMaterials(event.target.files); event.currentTarget.value = ""; }} />
             </label>
           </div>
         </div>
@@ -356,7 +358,7 @@ export function TeacherMaterialLibraryPanel() {
               <tr>
                 <TableHead className="w-14 text-center">
                   <span className="flex h-5 items-center justify-center">
-                    <input
+                    <Checkbox
                       type="checkbox"
                       checked={allPageSelected}
                       onChange={toggleAllPage}
@@ -385,7 +387,7 @@ export function TeacherMaterialLibraryPanel() {
               {!isLoading ? pagedMaterials.map((material) => (
                 <tr key={material.id} className={`transition hover:bg-slate-50/70 ${selectedIds.includes(material.id) ? "bg-blue-50/50" : ""}`}>
                   <TableCell className="text-center">
-                    <input
+                    <Checkbox
                       type="checkbox"
                       checked={selectedIds.includes(material.id)}
                       onChange={() => toggleMaterial(material.id)}
@@ -506,12 +508,12 @@ export function TeacherMaterialLibraryPanel() {
             if (!target) return null;
             const availableTopics = (topicsByClass[schoolClass.id] ?? []).filter((topic) => topic.subjectId === target.subjectId);
             return <section key={schoolClass.id} className={`rounded-xl border p-4 transition ${target.selected ? "border-brand-200 bg-blue-50/40" : "border-slate-200"}`}>
-              <label className="flex cursor-pointer items-start gap-3"><input type="checkbox" checked={target.selected} onChange={(event) => updateTarget(schoolClass.id, { selected: event.target.checked })} className="mt-1 size-4 rounded border-slate-300 accent-brand-600" /><span><b className="block text-sm text-slate-900">{schoolClass.name}</b><span className="mt-0.5 block text-xs font-semibold text-brand-600">{schoolClass.code}</span></span></label>
+              <label className="flex cursor-pointer items-start gap-3"><Checkbox type="checkbox" checked={target.selected} onChange={(event) => updateTarget(schoolClass.id, { selected: event.target.checked })} className="mt-1 size-4 rounded border-slate-300 accent-brand-600" /><span><b className="block text-sm text-slate-900">{schoolClass.name}</b><span className="mt-0.5 block text-xs font-semibold text-brand-600">{schoolClass.code}</span></span></label>
               {target.selected ? <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 md:grid-cols-3">
-                <label className="grid gap-1.5 text-xs font-bold text-slate-600">Môn học<select value={target.subjectId} onChange={(event) => changeSubject(schoolClass, event.target.value)} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400">{schoolClass.subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.code} · {getVietnameseSubjectName(subject)}</option>)}</select></label>
-                <label className="grid gap-1.5 text-xs font-bold text-slate-600">Cách gán<select value={target.topicMode} onChange={(event) => updateTarget(schoolClass.id, { topicMode: event.target.value as "existing" | "new" })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400"><option value="existing" disabled={!availableTopics.length}>Chủ đề có sẵn</option><option value="new">Tạo chủ đề mới</option></select></label>
-                {target.topicMode === "existing" ? <label className="grid gap-1.5 text-xs font-bold text-slate-600">Chủ đề<select value={target.topicId} onChange={(event) => updateTarget(schoolClass.id, { topicId: event.target.value, lessonId: availableTopics.find((t) => t.id === event.target.value)?.lessons?.[0]?.id ?? "" })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400">{availableTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</select></label> : <label className="grid gap-1.5 text-xs font-bold text-slate-600">Tên chủ đề mới<input required maxLength={120} value={target.topicName} onChange={(event) => updateTarget(schoolClass.id, { topicName: event.target.value })} placeholder="Ví dụ: Tài liệu tuần 1" className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400" /></label>}
-                {target.topicMode === "existing" ? <label className="grid gap-1.5 text-xs font-bold text-slate-600">Bài học<select value={target.lessonId} onChange={(event) => updateTarget(schoolClass.id, { lessonId: event.target.value })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal"><option value="">Nội dung mặc định (bản nháp)</option>{availableTopics.find((t) => t.id === target.topicId)?.lessons?.filter((l) => l.status !== 'ARCHIVED').map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}</select></label> : null}
+                <label className="grid gap-1.5 text-xs font-bold text-slate-600">Môn học<Select value={target.subjectId} onChange={(event) => changeSubject(schoolClass, event.target.value)} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400">{schoolClass.subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.code} · {getVietnameseSubjectName(subject)}</option>)}</Select></label>
+                <label className="grid gap-1.5 text-xs font-bold text-slate-600">Cách gán<Select value={target.topicMode} onChange={(event) => updateTarget(schoolClass.id, { topicMode: event.target.value as "existing" | "new" })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400"><option value="existing" disabled={!availableTopics.length}>Chủ đề có sẵn</option><option value="new">Tạo chủ đề mới</option></Select></label>
+                {target.topicMode === "existing" ? <label className="grid gap-1.5 text-xs font-bold text-slate-600">Chủ đề<Select value={target.topicId} onChange={(event) => updateTarget(schoolClass.id, { topicId: event.target.value, lessonId: availableTopics.find((t) => t.id === event.target.value)?.lessons?.[0]?.id ?? "" })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400">{availableTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</Select></label> : <label className="grid gap-1.5 text-xs font-bold text-slate-600">Tên chủ đề mới<Input required maxLength={120} value={target.topicName} onChange={(event) => updateTarget(schoolClass.id, { topicName: event.target.value })} placeholder="Ví dụ: Tài liệu tuần 1" className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400" /></label>}
+                {target.topicMode === "existing" ? <label className="grid gap-1.5 text-xs font-bold text-slate-600">Bài học<Select value={target.lessonId} onChange={(event) => updateTarget(schoolClass.id, { lessonId: event.target.value })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal"><option value="">Nội dung mặc định (bản nháp)</option>{availableTopics.find((t) => t.id === target.topicId)?.lessons?.filter((l) => l.status !== 'ARCHIVED').map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}</Select></label> : null}
                 <p className="text-xs text-slate-500 md:col-span-3">Tài nguyên được gắn vào bài học ở trạng thái bản nháp. Công bố trong không gian lớp để học sinh xem.</p>
               </div> : null}
             </section>;

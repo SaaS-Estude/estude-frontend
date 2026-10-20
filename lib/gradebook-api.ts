@@ -11,12 +11,12 @@ import type {
 } from "@/types/gradebook";
 
 export const gradebookService = {
-  get(scope: GradeScope) {
+  get(scope: GradeScope & {courseOfferingId?:string}) {
     return authenticatedRequest<GradebookView>(
-      `/gradebooks?${new URLSearchParams({ ...scope })}`,
+      `/gradebooks?${new URLSearchParams(Object.fromEntries(Object.entries(scope).filter(([,value])=>value !== undefined)) as Record<string,string>)}`,
     );
   },
-  configure(input: GradeScope & GradePolicy & { revision: number }) {
+  configure(input: GradeScope & GradePolicy & { revision: number; courseOfferingId?:string }) {
     return authenticatedRequest<Gradebook>("/gradebooks/configure", {
       method: "POST",
       body: JSON.stringify(input),

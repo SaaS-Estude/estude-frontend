@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { courseWorkspaceHref } from "@/lib/course-workspace";
 import { useRouter } from "next/navigation";
 import {
   BookOpenCheck,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { CourseWorkspacePicker } from "./course-workspace-picker";
 import { CourseContentPanel } from "@/components/teacher/course-content-panel";
 import { useActionNotification } from "@/components/ui/action-notification";
 import { ClassChatPanel } from "@/components/class-chat/class-chat-panel";
@@ -29,6 +31,8 @@ import { academicDataService, examService } from "@/lib/assessment-api";
 import { matchesSearchKeyword } from "@/lib/search-keyword";
 import { getVietnameseSubjectName } from "@/lib/subject-localization";
 import type { ClassRoster, Exam, ExamListAiAnalysis, TeacherAssignedClass } from "@/types/assessment";
+import { Input } from "@/components/ui/form-control";
+
 
 type ClassTab = "topics" | "students" | "exams" | "grades" | "chat";
 
@@ -161,6 +165,7 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
 
   return (
     <div className="space-y-3">
+      <CourseWorkspacePicker classId={classId} />
       {error ? <p className="flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700"><XCircle className="size-4" />{error}</p> : null}
 
       <div className="space-y-3">
@@ -178,7 +183,7 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
               && (tab.id !== "exams" || canReadExams)
               && (Boolean(schoolClass?.subjects.length) || !(["topics", "exams", "grades"] as ClassTab[]).includes(tab.id)),
             ).map((tab) => (
-              <button
+              <Button variant="plain"
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
@@ -186,7 +191,7 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
                 className={`border-b-2 px-4 py-3 text-[13px] font-bold transition ${visibleTab === tab.id ? "border-brand-600 text-brand-700" : "border-transparent text-slate-500 hover:text-slate-800"}`}
               >
                 {tab.label}
-              </button>
+              </Button>
             ))}
           </div>
         </nav>
@@ -214,7 +219,7 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
               {analyzingExams ? <LoaderCircle className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
               {analyzingExams ? "Đang phân tích..." : "AI phân tích lớp"}
             </Button>
-            <Button permission="exams.read" variant="outline" size="sm" onClick={() => router.push("/teacher/exams")}>Quản lý bài kiểm tra</Button>
+            <Button permission="exams.read" variant="outline" size="sm" onClick={() => router.push(courseWorkspaceHref("/teacher/exams"))}>Quản lý bài kiểm tra</Button>
           </div>
         </header>
         {exams.length ? (
@@ -228,7 +233,7 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
                     <div className="flex flex-wrap items-center gap-2"><p className="font-bold text-slate-900">{exam.title}</p><span className={`rounded-md px-2 py-0.5 text-[11px] font-bold ${status.className}`}>{status.label}</span></div>
                     <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500"><span>{exam.subjectName}</span><span className="inline-flex items-center gap-1"><CalendarClock className="size-3.5" />{new Date(exam.settings.startsAt).toLocaleString("vi-VN")}</span><span>{exam.attemptedCount ?? 0} học sinh đã bắt đầu</span></p>
                   </div>
-                  <Button permission={exam.published ? "exams.submissions" : "exams.read"} size="sm" variant={exam.published ? "secondary" : "outline"} onClick={() => router.push(exam.published ? `/teacher/exams/${exam.id}/submissions` : `/teacher/exams/${exam.id}`)}>{exam.published ? "Xem báo cáo lớp" : "Xem bài kiểm tra"}</Button>
+                  <Button permission={exam.published ? "exams.submissions" : "exams.read"} size="sm" variant={exam.published ? "secondary" : "outline"} onClick={() => router.push(courseWorkspaceHref(exam.published ? `/teacher/exams/${exam.id}/submissions` : `/teacher/exams/${exam.id}`))}>{exam.published ? "Xem báo cáo lớp" : "Xem bài kiểm tra"}</Button>
                 </article>
               );
             })}
@@ -247,7 +252,7 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
                 <div><h3 className="font-black text-slate-900">Danh sách học sinh</h3><p className="mt-1 text-sm text-slate-500">{roster?.students.length ?? schoolClass?.studentCount ?? 0} học sinh trong lớp</p></div>
                 <div className="relative w-full sm:w-72">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                  <input value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="Tìm học sinh hoặc tài khoản" className="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm outline-none focus:border-brand-400 focus:ring-4 focus:ring-blue-100" />
+                  <Input value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="Tìm học sinh hoặc tài khoản" className="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm outline-none focus:border-brand-400 focus:ring-4 focus:ring-blue-100" />
                 </div>
               </header>
               {rosterError ? <p className="m-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{rosterError}</p> : null}

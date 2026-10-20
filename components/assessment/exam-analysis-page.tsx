@@ -15,7 +15,7 @@ import { useParams } from "next/navigation";
 import { AssessmentShell } from "@/components/assessment/assessment-shell";
 import { ExamDetailTabs } from "@/components/assessment/exam-detail-tabs";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/form-control";
+import { Textarea, Select, Input } from "@/components/ui/form-control";
 import { useActionNotification } from "@/components/ui/action-notification";
 import { usePermissions } from "@/context/permissions-context";
 import { examService } from "@/lib/assessment-api";
@@ -27,6 +27,9 @@ import type {
   ExamClassReport,
   ExamInsightActionInput,
 } from "@/types/assessment";
+
+import { DateInput } from "@/components/ui/date-range-picker";
+
 
 const formatNumber = (value: number) =>
   new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 }).format(value);
@@ -435,7 +438,7 @@ function InsightActionPanel({
             >
               Nhóm học sinh
             </label>
-            <select
+            <Select
               id="insight-group"
               className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 font-semibold text-slate-700"
               value={groupId}
@@ -446,7 +449,7 @@ function InsightActionPanel({
                   {group.label}
                 </option>
               ))}
-            </select>
+            </Select>
             <p className="mt-2 text-xs leading-5 text-slate-500">
               {groups.find((group) => group.id === groupId)?.reason}
             </p>
@@ -454,7 +457,7 @@ function InsightActionPanel({
           <div className="space-y-3">
             <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">
               Tiêu đề
-              <input
+              <Input
                 className="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold normal-case tracking-normal text-slate-800"
                 maxLength={160}
                 value={title}
@@ -471,7 +474,7 @@ function InsightActionPanel({
             <div className="flex flex-wrap items-end justify-between gap-3">
               <label className="text-xs font-bold uppercase tracking-wide text-slate-500">
                 Hạn ôn tập (không bắt buộc)
-                <input
+                <DateInput
                   type="datetime-local"
                   className="mt-1 block h-10 rounded-lg border border-slate-200 px-3 text-sm font-semibold normal-case tracking-normal text-slate-700"
                   value={dueAt}

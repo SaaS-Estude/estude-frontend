@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { studyCoachService } from "@/lib/study-coach-api";
 import type { FlashcardQueue, StudyCoachFlashcard } from "@/types/study-coach";
 
+
+
 const SESSION_KEY = "estude:study-coach:flashcards:v1";
 const RATINGS = [
   { value: 1 as const, label: "Học lại", detail: "Không nhớ", tone: "border-rose-200 bg-rose-50 text-rose-700" },
@@ -196,13 +198,13 @@ export function StudentFlashcardsPage() {
     <StudentShell>
       <header className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <button
+          <Button variant="plain"
             type="button"
             onClick={() => router.push(backHref)}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-brand-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
           >
             <ArrowLeft className="size-4" /> {documentId ? "Quay lại tài liệu" : "Quay lại Study Coach"}
-          </button>
+          </Button>
           <p className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-brand-600">
             Ôn tập theo tài liệu
           </p>
@@ -313,7 +315,7 @@ export function StudentFlashcardsPage() {
                   <legend className="text-sm font-black text-slate-900">Bạn nhớ thẻ này thế nào?</legend>
                   <div className="mt-3 grid gap-2 sm:grid-cols-4">
                     {RATINGS.map((rating) => (
-                      <button
+                      <Button variant="plain"
                         key={rating.value}
                         type="button"
                         onClick={() => void submitRating(rating.value)}
@@ -323,7 +325,7 @@ export function StudentFlashcardsPage() {
                       >
                         <span className="block text-sm font-black">{rating.value} · {rating.label}</span>
                         <span className="mt-0.5 block text-xs opacity-80">{rating.detail}</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </fieldset>

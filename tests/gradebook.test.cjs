@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -168,7 +168,7 @@ function loadTeacher(view, save, extraService = {}) {
     if (id === "@/components/ui/data-table-footer") return {
       DataTableFooter: (props) => React.createElement("data-table-footer", props),
     };
-    if (id === "@/components/ui/form-control") return {
+    if (id === "@/components/ui/form-control") return { ...require("./helpers/register-ui.cjs").formControls,
       Input: (props) => {
         const inputProps = { ...props };
         delete inputProps.icon;
@@ -202,6 +202,7 @@ function loadAdminConfig(view, configure) {
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const original = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    if (id === "@/components/ui/form-control") return { ...require("./helpers/register-ui.cjs").formControls,  CustomSelect: (props) => React.createElement("custom-select", props) };
     if (id === "./legacy-purpose-review") return { LegacyPurposeReview: () => null };
     if (id === "./internal-gradebook-panel") return { InternalGradebookPanel: () => null };
     if (id === "@/lib/assessment-api") return { academicDataService: {

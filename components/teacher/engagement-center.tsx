@@ -20,6 +20,8 @@ import { attendanceService, notificationService } from "@/lib/engagement-api";
 import { getVietnameseSubjectName } from "@/lib/subject-localization";
 import type { TeacherAssignedClass } from "@/types/assessment";
 import type { AttendanceRoster, AttendanceStatus } from "@/types/engagement";
+import { DateInput } from "@/components/ui/date-range-picker";
+
 
 export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "message" }) {
   const { notify } = useActionNotification();
@@ -156,7 +158,7 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
               ariaLabel="Chọn môn học"
               onValueChange={setSubjectId}
             />
-            {isAttendance ? <Input className="!h-[42px] !rounded-lg focus:!ring-0" label="Ngày học" type="date" value={date} onChange={(event) => setDate(event.target.value)} /> : null}
+            {isAttendance ? <DateInput className="!h-[42px] !rounded-lg focus:!ring-0" label="Ngày học" type="date" value={date} onChange={(event) => setDate(event.target.value)} /> : null}
           </div>
         </section>
 
@@ -237,5 +239,5 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
 
 function AttendanceToggle({ value, onClick, compact = false }: { value?: AttendanceStatus; onClick: () => void; compact?: boolean }) {
   const present = value !== "ABSENT";
-  return <button type="button" onClick={onClick} aria-pressed={present} aria-label={present ? "Đang có mặt, nhấn để đánh dấu vắng" : "Đang vắng, nhấn để đánh dấu có mặt"} className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border text-xs font-bold transition focus:outline-none focus:ring-4 focus:ring-blue-100 ${compact ? "w-9 px-0" : "min-w-24 px-3"} ${present ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"}`}>{present ? <Check className="size-4" /> : <CircleAlert className="size-4" />}{compact ? null : present ? "Có mặt" : "Vắng"}</button>;
+  return <Button variant="plain" type="button" onClick={onClick} aria-pressed={present} aria-label={present ? "Đang có mặt, nhấn để đánh dấu vắng" : "Đang vắng, nhấn để đánh dấu có mặt"} className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border text-xs font-bold transition focus:outline-none focus:ring-4 focus:ring-blue-100 ${compact ? "w-9 px-0" : "min-w-24 px-3"} ${present ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"}`}>{present ? <Check className="size-4" /> : <CircleAlert className="size-4" />}{compact ? null : present ? "Có mặt" : "Vắng"}</Button>;
 }

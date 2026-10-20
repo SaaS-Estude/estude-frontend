@@ -23,6 +23,8 @@ import type {
   StudyCoachLearningActivity,
 } from "@/types/study-coach";
 
+
+
 const EMPTY_ACTIVITY: StudyCoachLearningActivity = {
   flashcardReviewCount: 0,
   quizAnswerCount: 0,
@@ -96,13 +98,13 @@ export function StudyCoachMasteryPage() {
     <StudentShell>
       <div data-testid="mastery-overview">
         <header className="rounded-3xl bg-gradient-to-br from-brand-700 to-blue-500 p-6 text-white shadow-card sm:p-8">
-          <button
+          <Button variant="plain"
             type="button"
             onClick={() => router.push(backHref)}
             className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-300/40"
           >
             <ArrowLeft className="size-4" /> Quay lại tài liệu
-          </button>
+          </Button>
           <p className="mt-4 text-xs font-black uppercase tracking-wider text-blue-100">Tiến độ của bạn</p>
           <h1 className="mt-1 text-3xl font-black">Mức độ nắm vững kiến thức</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-blue-50">
@@ -142,7 +144,7 @@ export function StudyCoachMasteryPage() {
                     ? items.length
                     : items.filter((concept) => concept.state === item.value).length;
                   return (
-                    <button
+                    <Button variant="plain"
                       key={item.value}
                       type="button"
                       aria-pressed={filter === item.value}
@@ -154,7 +156,7 @@ export function StudyCoachMasteryPage() {
                       }`}
                     >
                       {item.label} <span className="ml-1 opacity-75">{count}</span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

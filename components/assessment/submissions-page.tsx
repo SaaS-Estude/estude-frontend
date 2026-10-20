@@ -36,7 +36,7 @@ import {
 import { useActionNotification } from "@/components/ui/action-notification";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableEmptyRow, TableHead, TableHeader } from "@/components/ui/data-table";
-import { Input, Textarea } from "@/components/ui/form-control";
+import { Input, Textarea, Select, Checkbox } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { examAttemptService, examService } from "@/lib/assessment-api";
 import { StudentInterventionPanel } from "@/components/assessment/student-intervention-panel";
@@ -426,14 +426,14 @@ export function SubmissionsPage() {
       <div className="mb-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_repeat(4,minmax(150px,auto))]">
         <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-card">
           <Search className="size-4 shrink-0 text-slate-400" />
-          <input
+          <Input
             className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
             value={studentSearch}
             onChange={(event) => setStudentSearch(event.target.value)}
             placeholder="Tìm theo tên hoặc mã học sinh"
           />
         </label>
-        <select
+        <Select
           aria-label="Lọc trạng thái tham gia"
           className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-card"
           value={participationFilter}
@@ -447,8 +447,8 @@ export function SubmissionsPage() {
           <option value="NOT_STARTED">Chưa bắt đầu</option>
           <option value="IN_PROGRESS">Đang làm</option>
           <option value="SUBMITTED">Đã nộp</option>
-        </select>
-        <select
+        </Select>
+        <Select
           aria-label="Lọc trạng thái chấm"
           className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-card"
           value={gradingFilter}
@@ -460,8 +460,8 @@ export function SubmissionsPage() {
           <option value="COMPLETE">Đã đủ điểm</option>
           <option value="PARTIAL">Còn tự luận</option>
           <option value="PUBLISHED">Đã công bố điểm</option>
-        </select>
-        <select
+        </Select>
+        <Select
           aria-label="Lọc chủ đề cần hỗ trợ"
           className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-card"
           value={topicFilter}
@@ -476,7 +476,7 @@ export function SubmissionsPage() {
               {topic.topicName}
             </option>
           ))}
-        </select>
+        </Select>
         <Button
           variant={supportOnly ? "secondary" : "outline"}
           aria-pressed={supportOnly}
@@ -525,7 +525,7 @@ export function SubmissionsPage() {
               cỡ mẫu và nội dung câu.
             </p>
           </div>
-          <select
+          <Select
             aria-label="Lọc cảnh báo item analysis"
             className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
             value={itemFlagFilter}
@@ -540,7 +540,7 @@ export function SubmissionsPage() {
             <option value="NON_FUNCTIONING_DISTRACTOR">
               Phương án nhiễu yếu
             </option>
-          </select>
+          </Select>
         </div>
       ) : null}
 
@@ -654,13 +654,13 @@ function ReportTab({
   label: string;
 }) {
   return (
-    <button
+    <Button variant="plain"
       type="button"
       onClick={onClick}
       className={`rounded-lg px-3 py-2 text-sm font-bold transition ${active ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-50"}`}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -1390,7 +1390,7 @@ function StudentReportTable({
             {students.map((student) => (
               <tr key={student.id} className="transition hover:bg-slate-50/70">
                 <TableCell>
-                  <button
+                  <Button variant="plain"
                     type="button"
                     className="text-left"
                     onClick={() => onOpenProfile(student.id)}
@@ -1401,7 +1401,7 @@ function StudentReportTable({
                     <p className="mt-1 font-mono text-xs text-slate-400">
                       {student.studentCode}
                     </p>
-                  </button>
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <ParticipationBadge status={student.participationStatus} />
@@ -1595,14 +1595,14 @@ function TopicReportTable({
                   <div className="flex max-w-xl flex-wrap gap-1.5">
                     {topic.supportStudentIds.length ? (
                       topic.supportStudentIds.map((studentId) => (
-                        <button
+                        <Button variant="plain"
                           type="button"
                           key={studentId}
                           onClick={() => onOpenStudent(studentId)}
                           className="rounded-md bg-rose-50 px-2 py-1 text-xs font-bold text-rose-700 hover:bg-rose-100"
                         >
                           {names.get(studentId) ?? studentId}
-                        </button>
+                        </Button>
                       ))
                     ) : (
                       <span className="text-sm text-emerald-700">
@@ -1923,7 +1923,7 @@ export function SubmissionDetailPage() {
           role="tablist"
           aria-label="Nội dung chi tiết bài làm"
         >
-          <button
+          <Button variant="plain"
             type="button"
             role="tab"
             id="submission-detail-tab"
@@ -1934,8 +1934,8 @@ export function SubmissionDetailPage() {
           >
             <FileText className="size-4" />
             Bài làm và kết quả
-          </button>
-          {FEATURES.examAnalysis ?           <button
+          </Button>
+          {FEATURES.examAnalysis ?           <Button variant="plain"
             type="button"
             role="tab"
             id="submission-analysis-tab"
@@ -1961,7 +1961,7 @@ export function SubmissionDetailPage() {
                 · Chưa nộp bài
               </span>
             ) : null}
-          </button> : null}
+          </Button> : null}
         </div>
 
         {canViewAiAnalysis && hasOpenedAnalysis ? (
@@ -2232,7 +2232,7 @@ function AnswerKeyRegradeEditor({ questionId, options, type, previous, onSave }:
     <summary className="cursor-pointer font-bold text-amber-800">Sửa đáp án đúng và chấm lại toàn bộ Exam</summary>
     <p className="mt-2 text-amber-800">Thao tác này cập nhật điểm nháp của mọi bài đã hoàn tất; điểm đã công bố vẫn giữ nguyên đến lần công bố lại.</p>
     <div className="mt-3 grid gap-2">{options.map((option) => <label key={`${questionId}:${option.id}`} className="flex items-center gap-2">
-      <input type={type === "MULTIPLE_CHOICE" ? "checkbox" : "radio"} name={`regrade:${questionId}`} checked={selected.includes(option.id)} onChange={() => setSelected(type === "MULTIPLE_CHOICE" ? selected.includes(option.id) ? selected.filter((id) => id !== option.id) : [...selected, option.id] : [option.id])} />
+      <Checkbox type={type === "MULTIPLE_CHOICE" ? "checkbox" : "radio"} name={`regrade:${questionId}`} checked={selected.includes(option.id)} onChange={() => setSelected(type === "MULTIPLE_CHOICE" ? selected.includes(option.id) ? selected.filter((id) => id !== option.id) : [...selected, option.id] : [option.id])} />
       {option.text}
     </label>)}</div>
     <Input className="mt-3" aria-label="Lý do sửa đáp án đúng" maxLength={1000} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Lý do sửa đáp án đúng" />

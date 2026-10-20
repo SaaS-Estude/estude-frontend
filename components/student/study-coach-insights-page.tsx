@@ -10,6 +10,8 @@ import { studyCoachService } from "@/lib/study-coach-api";
 import { actionHref, actionLabels, difficultyLabels, isInsightDisabled, masteryLabels, studentError } from "@/lib/study-coach-view";
 import type { ConceptMasteryResult, InsightScope, LearningInsight, StudyCoachMaterial } from "@/types/study-coach";
 
+
+
 export function StudyCoachInsightsPage() {
   const router = useRouter();
   const params = useParams<{ materialId?: string }>();
@@ -75,7 +77,7 @@ export function StudyCoachInsightsPage() {
 
   return <StudentShell><div>
     <header className="rounded-3xl bg-gradient-to-br from-violet-700 to-brand-600 p-6 text-white shadow-card sm:p-8">
-      <button type="button" onClick={() => router.push(backHref)} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-violet-50"><ArrowLeft className="size-4" /> {backDocumentId ? "Quay lại tài liệu" : "Study Coach"}</button>
+      <Button variant="plain" type="button" onClick={() => router.push(backHref)} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-violet-50"><ArrowLeft className="size-4" /> {backDocumentId ? "Quay lại tài liệu" : "Study Coach"}</Button>
       <p className="mt-4 text-xs font-black uppercase tracking-wider text-violet-100">Nhìn lại kết quả học</p><h1 className="mt-1 text-3xl font-black">Bạn đang học đến đâu?</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-violet-50">Study Coach dựa vào kết quả bài luyện và các lần ôn tập để giúp bạn nhận ra phần đã vững và phần nên học tiếp.</p>
     </header>

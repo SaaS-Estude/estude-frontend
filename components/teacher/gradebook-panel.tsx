@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Download, FileSpreadsheet, Filter, LoaderCircle, RefreshCw, Search, Upload } from "lucide-react";
 import { Table, TableBody, TableCell, TableEmptyRow, TableHead, TableHeader } from "@/components/ui/data-table";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
-import { CustomSelect, Input } from "@/components/ui/form-control";
+import { CustomSelect, Input, Select, FileInput, Textarea } from "@/components/ui/form-control";
 import { academicDataService } from "@/lib/assessment-api";
 import { gradebookService } from "@/lib/gradebook-api";
 import { matchesSearchKeyword, normalizeSearchKeyword } from "@/lib/search-keyword";
@@ -20,6 +20,9 @@ import { outcomeText } from "@/components/assessment/official-grade-report";
 import { usePermissions } from "@/context/permissions-context";
 import { InternalGradebookPanel } from "./internal-gradebook-panel";
 import { UnifiedGradeItems } from "@/components/teacher/unified-grade-items";
+
+import { Button } from "@/components/ui/button";
+
 
 const field =
   "h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100";
@@ -149,7 +152,9 @@ export function LegacyGradebookPanel({
       .getTerms(schoolClass.academicYearId, true)
       .then((items) => {
         if (!active) return;
-        setTerms(items);
+        const scoped=schoolClass.courseTermId ? items.filter((item)=>item.id===schoolClass.courseTermId) : items;
+        setTerms(scoped);
+        items=scoped;
         setTermId(
           (items.find((item) => item.status === "ACTIVE") ?? items[0])?.id ??
             "",
@@ -165,7 +170,7 @@ export function LegacyGradebookPanel({
     return () => {
       active = false;
     };
-  }, [schoolClass.academicYearId]);
+  }, [schoolClass.academicYearId,schoolClass.courseTermId]);
   useEffect(() => {
     let active = true;
     setView(null);
@@ -299,7 +304,7 @@ export function LegacyGradebookPanel({
     return (
       <>
         {view?.book?.assessmentMode === "COMMENT" ? (
-          <select
+          <Select
             aria-label={label}
             className={`${field} w-24 px-1`}
             disabled={locked}
@@ -311,9 +316,9 @@ export function LegacyGradebookPanel({
             <option value="">Chưa đánh giá</option>
             <option value="PASS">Đạt</option>
             <option value="FAIL">Chưa đạt</option>
-          </select>
+          </Select>
         ) : (
-          <input
+          <Input
             aria-label={label}
             className={`${field} w-16 px-2 text-center`}
             disabled={locked}
@@ -347,21 +352,21 @@ export function LegacyGradebookPanel({
               <CustomSelect className="min-w-0 flex-1" value={statusFilter} options={statusOptions} disabled={Boolean(editing)} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái điểm" onValueChange={(value) => { setStatusFilter(value); setPage(1); }} />
             </div>
           ) : (
-            <button ref={filterButtonRef} type="button" aria-expanded={filterOpen} aria-controls="gradebook-filter-popup" className="inline-flex h-[42px] shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50" onClick={() => filterOpen ? setFilterOpen(false) : openFilters()}>
+            <Button variant="plain" ref={filterButtonRef} type="button" aria-expanded={filterOpen} aria-controls="gradebook-filter-popup" className="inline-flex h-[42px] shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50" onClick={() => filterOpen ? setFilterOpen(false) : openFilters()}>
               Bộ lọc<span className="relative"><Filter className="size-4" />{hasActiveFilters ? <span className="absolute -right-1 -top-1 size-2 rounded-full bg-orange-500" /> : null}</span>
-            </button>
+            </Button>
           )}
-          <button type="button" className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled={saving || Boolean(editing) || loading} onClick={() => { setNotice(""); setRefresh((value) => value + 1); }}>
+          <Button variant="plain" type="button" className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled={saving || Boolean(editing) || loading} onClick={() => { setNotice(""); setRefresh((value) => value + 1); }}>
             <RefreshCw className="size-4" />Tải lại
-          </button>
-          <button type="button" aria-pressed={entryMode === "excel"} className={`inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold disabled:opacity-50 ${entryMode === "excel" ? "bg-brand-600 text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`} disabled={!view?.book || loading || Boolean(editing) || Boolean(importBusy)} onClick={() => setEntryMode((mode) => mode === "excel" ? "manual" : "excel")}>
+          </Button>
+          <Button variant="plain" type="button" aria-pressed={entryMode === "excel"} className={`inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold disabled:opacity-50 ${entryMode === "excel" ? "bg-brand-600 text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`} disabled={!view?.book || loading || Boolean(editing) || Boolean(importBusy)} onClick={() => setEntryMode((mode) => mode === "excel" ? "manual" : "excel")}>
             <FileSpreadsheet className="size-4" />Import Excel
-          </button>
+          </Button>
           {compactFilters && filterOpen ? (
             <div ref={filterPopupRef} id="gradebook-filter-popup" className="absolute right-3 top-full z-50 mt-1 w-[calc(100%_-_1.5rem)] max-w-[480px] rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/15">
               <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                 <span className="text-sm font-bold text-amber-600">Bộ lọc</span>
-                <button type="button" aria-label="Đặt lại bộ lọc" className="rounded-md p-1 text-amber-600 hover:bg-amber-50" onClick={() => { setDraftSubjectId(firstSubjectId); setDraftTermId(defaultTermId); setDraftStatusFilter(""); }}><RefreshCw className="size-4" /></button>
+                <Button variant="plain" type="button" aria-label="Đặt lại bộ lọc" className="rounded-md p-1 text-amber-600 hover:bg-amber-50" onClick={() => { setDraftSubjectId(firstSubjectId); setDraftTermId(defaultTermId); setDraftStatusFilter(""); }}><RefreshCw className="size-4" /></Button>
               </div>
               <div className="grid gap-4 p-4 sm:grid-cols-2">
                 <CustomSelect label="Môn học" value={draftSubjectId} options={schoolClass.subjects.map((subject) => ({ value: subject.id, label: subject.vietnameseName || subject.name }))} disabled={saving || Boolean(editing) || !schoolClass.subjects.length} ariaLabel="Lọc theo môn học" placeholder="Chưa có môn học" onValueChange={setDraftSubjectId} />
@@ -369,8 +374,8 @@ export function LegacyGradebookPanel({
                 <CustomSelect label="Trạng thái" value={draftStatusFilter} options={statusOptions} disabled={Boolean(editing)} ariaLabel="Lọc theo trạng thái điểm" onValueChange={setDraftStatusFilter} />
               </div>
               <div className="flex justify-end gap-2 border-t border-slate-200 p-4">
-                <button type="button" className="rounded-lg border border-amber-500 px-4 py-2 text-sm font-semibold text-amber-700" onClick={() => setFilterOpen(false)}>Hủy</button>
-                <button type="button" className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={saving || Boolean(editing) || termsLoading} onClick={applyFilters}>Áp dụng</button>
+                <Button variant="plain" type="button" className="rounded-lg border border-amber-500 px-4 py-2 text-sm font-semibold text-amber-700" onClick={() => setFilterOpen(false)}>Hủy</Button>
+                <Button variant="plain" type="button" className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={saving || Boolean(editing) || termsLoading} onClick={applyFilters}>Áp dụng</Button>
               </div>
             </div>
           ) : null}
@@ -402,17 +407,17 @@ export function LegacyGradebookPanel({
           {view.book && entryMode === "excel" ? <div className="m-3 space-y-4 rounded-xl border border-slate-200 bg-white p-4">
             <div><h3 className="font-bold text-slate-900">Nhập điểm từ Excel</h3><p className="mt-1 text-sm text-slate-500">Tải tệp mẫu của lớp này, điền điểm vào các cột, sau đó kiểm tra dữ liệu trước khi lưu. Ô trống được xem là chưa đánh giá.</p></div>
             <div className="flex flex-wrap items-end gap-3">
-              <button type="button" className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-brand-700 disabled:opacity-50" disabled={Boolean(importBusy)} onClick={() => void downloadTemplate()}><Download className="size-4" />Tải tệp mẫu</button>
+              <Button variant="plain" type="button" className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-brand-700 disabled:opacity-50" disabled={Boolean(importBusy)} onClick={() => void downloadTemplate()}><Download className="size-4" />Tải tệp mẫu</Button>
               <label className="grid min-w-56 flex-1 gap-1 text-xs font-bold text-slate-600">Tệp điểm .xlsx
-                <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="block w-full rounded-lg border border-slate-200 bg-white p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-2 file:py-1 file:font-bold file:text-brand-700" disabled={locked || Boolean(importBusy)} onChange={(event) => { setImportFile(event.target.files?.[0] ?? null); setImportPreview(null); setError(""); }} />
+                <FileInput type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="block w-full rounded-lg border border-slate-200 bg-white p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-2 file:py-1 file:font-bold file:text-brand-700" disabled={locked || Boolean(importBusy)} onChange={(event) => { setImportFile(event.target.files?.[0] ?? null); setImportPreview(null); setError(""); }} />
               </label>
-              <button type="button" className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-bold text-white disabled:opacity-50" disabled={locked || Boolean(importBusy) || !importFile} onClick={() => void previewExcel()}><Upload className="size-4" />{importBusy === "preview" ? "Đang kiểm tra..." : "Kiểm tra tệp"}</button>
+              <Button variant="plain" type="button" className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-bold text-white disabled:opacity-50" disabled={locked || Boolean(importBusy) || !importFile} onClick={() => void previewExcel()}><Upload className="size-4" />{importBusy === "preview" ? "Đang kiểm tra..." : "Kiểm tra tệp"}</Button>
             </div>
             {importPreview ? <div className="space-y-3 border-t border-slate-100 pt-3">
               <p className="text-sm font-semibold text-slate-700">Đã đọc {importPreview.totalRows} học sinh · {importPreview.changedRows} học sinh có thay đổi · {importPreview.errors.length} dòng lỗi</p>
               {importPreview.errors.length ? <div role="alert" className="max-h-40 space-y-1 overflow-y-auto rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{importPreview.errors.map((item) => <p key={`${item.row}-${item.message}`}>Dòng {item.row}: {item.message}</p>)}</div> : null}
               {importPreview.rows.length ? <div className="max-h-64 overflow-auto rounded-lg border border-slate-200"><table className="w-full min-w-[600px] text-left text-xs"><thead className="sticky top-0 bg-slate-50 text-slate-600"><tr><th className="p-2">Dòng</th><th className="p-2">Học sinh</th><th className="p-2">Điểm / đánh giá</th><th className="p-2">Nhận xét</th></tr></thead><tbody>{importPreview.rows.map((item) => <tr key={item.studentId} className="border-t border-slate-100"><td className="p-2">{item.row}</td><td className="p-2 font-semibold">{item.fullName}<span className="ml-1 text-slate-400">{item.accountName}</span></td><td className="p-2">{[...item.marks.regular, item.marks.midterm, item.marks.final].map(markText).join(" · ")}</td><td className="p-2">{item.comment || "—"}</td></tr>)}</tbody></table></div> : null}
-              <button type="button" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50" disabled={locked || Boolean(importBusy) || importPreview.errors.length > 0 || importPreview.changedRows === 0 || importPreview.revision !== view.book.revision} onClick={() => void importExcel()}>{importBusy === "save" ? "Đang lưu..." : `Lưu ${importPreview.changedRows} học sinh`}</button>
+              <Button variant="plain" type="button" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50" disabled={locked || Boolean(importBusy) || importPreview.errors.length > 0 || importPreview.changedRows === 0 || importPreview.revision !== view.book.revision} onClick={() => void importExcel()}>{importBusy === "save" ? "Đang lưu..." : `Lưu ${importPreview.changedRows} học sinh`}</Button>
               {importPreview.errors.length ? <p className="text-xs text-rose-700">Sửa các dòng lỗi trong Excel rồi kiểm tra lại; hệ thống chưa lưu điểm nào.</p> : null}
             </div> : null}
           </div> : null}
@@ -443,13 +448,13 @@ export function LegacyGradebookPanel({
                       <TableCell className="text-center">{isEditing ? markInput(current.final, `${student.fullName} cuối kỳ`, (value) => setMarks((previous) => ({ ...previous, final: value }))) : markText(current.final)}</TableCell>
                       <TableCell className="text-center font-bold text-slate-800">{outcomeText(student.outcome)}</TableCell>
                       <TableCell className="max-w-40 truncate text-xs text-slate-500" title={student.record?.comment ?? ""}>{student.record?.comment || "—"}</TableCell>
-                      <TableCell className="text-right">{isEditing ? <div className="flex justify-end gap-2"><button type="button" className="font-bold text-brand-700 disabled:opacity-50" disabled={locked} onClick={() => void save()}>{saving ? "Đang lưu..." : "Lưu"}</button><button type="button" className="text-slate-500 disabled:opacity-50" disabled={saving} onClick={() => setEditing("")}>Hủy</button></div> : canWrite && !historicalReadOnly && !legacyManualLocked && !["LOCKED"].includes(view.term.status) ? <button type="button" className="font-bold text-brand-700 hover:underline disabled:text-slate-400" disabled={Boolean(editing) || saving} onClick={() => { setEditing(student.id); setMarks(emptyMarks(requiredRegular, student.record?.marks)); setComment(student.record?.comment ?? ""); setNotice(""); setError(""); }}>{student.record ? "Sửa điểm" : "Nhập điểm"}</button> : null}</TableCell>
+                      <TableCell className="text-right">{isEditing ? <div className="flex justify-end gap-2"><Button variant="plain" type="button" className="font-bold text-brand-700 disabled:opacity-50" disabled={locked} onClick={() => void save()}>{saving ? "Đang lưu..." : "Lưu"}</Button><Button variant="plain" type="button" className="text-slate-500 disabled:opacity-50" disabled={saving} onClick={() => setEditing("")}>Hủy</Button></div> : canWrite && !historicalReadOnly && !legacyManualLocked && !["LOCKED"].includes(view.term.status) ? <Button variant="plain" type="button" className="font-bold text-brand-700 hover:underline disabled:text-slate-400" disabled={Boolean(editing) || saving} onClick={() => { setEditing(student.id); setMarks(emptyMarks(requiredRegular, student.record?.marks)); setComment(student.record?.comment ?? ""); setNotice(""); setError(""); }}>{student.record ? "Sửa điểm" : "Nhập điểm"}</Button> : null}</TableCell>
                     </tr>;
                   })}
                 </TableBody>
               </Table>
             </div>
-            {editing ? <div className="flex flex-wrap items-end gap-3 border-t border-blue-100 bg-blue-50/40 p-3"><label className="grid min-w-64 flex-1 gap-1 text-xs font-bold text-slate-600">Nhận xét cho {view.students.find((student) => student.id === editing)?.fullName}<textarea className="min-h-16 rounded-lg border border-slate-200 bg-white p-2 text-sm outline-none focus:border-brand-400" maxLength={2000} disabled={saving} value={comment} onChange={(event) => setComment(event.target.value)} /></label><p className="max-w-xs text-xs text-slate-500">Để trống cột chưa đánh giá. Cột trống không được tính là điểm 0.</p></div> : null}
+            {editing ? <div className="flex flex-wrap items-end gap-3 border-t border-blue-100 bg-blue-50/40 p-3"><label className="grid min-w-64 flex-1 gap-1 text-xs font-bold text-slate-600">Nhận xét cho {view.students.find((student) => student.id === editing)?.fullName}<Textarea className="min-h-16 rounded-lg border border-slate-200 bg-white p-2 text-sm outline-none focus:border-brand-400" maxLength={2000} disabled={saving} value={comment} onChange={(event) => setComment(event.target.value)} /></label><p className="max-w-xs text-xs text-slate-500">Để trống cột chưa đánh giá. Cột trống không được tính là điểm 0.</p></div> : null}
             {editing ? <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">Lưu hoặc hủy điểm đang nhập để chuyển trang.</p> : <DataTableFooter rowCount={pagedStudents.length} totalItems={filteredStudents.length} itemLabel="học sinh" page={currentPage} totalPages={totalPages} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />}
           </div>
           ) : null}

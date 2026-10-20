@@ -39,6 +39,8 @@ import {
   LEARNING_SUPPORT_CHANGED_EVENT,
   learningSupportService,
 } from "@/lib/learning-support-api";
+import { Button } from "@/components/ui/button";
+
 
 interface WorkspaceLink {
   href?: string;
@@ -168,14 +170,14 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
       <header
         className={`fixed inset-x-0 top-0 z-40 flex h-16 items-center border-b border-slate-200 bg-white/95 px-4 backdrop-blur transition-[padding] lg:pr-8 ${isSidebarCollapsed ? "lg:pl-[92px]" : "lg:pl-[286px]"}`}
       >
-        <button
+        <Button variant="plain"
           type="button"
           onClick={() => setIsMenuOpen(true)}
           className="mr-3 grid size-10 place-items-center rounded-xl text-slate-600 hover:bg-slate-100 lg:hidden"
           aria-label="Mở menu"
         >
           <Menu className="size-5" />
-        </button>
+        </Button>
         {breadcrumbs.length > 1 ? (
           <nav
             className="flex min-w-0 items-center gap-2 text-base font-bold tracking-tight sm:text-lg"
@@ -213,7 +215,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
           </h1>
         )}
         <div className="ml-auto flex items-center gap-2 sm:gap-4">
-          <button
+          <Button variant="plain"
             type="button"
             onClick={() =>
               requestWorkspaceNavigation(() =>
@@ -233,10 +235,10 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
                 {supportUnreadCount > 9 ? "9+" : supportUnreadCount}
               </span>
             ) : null}
-          </button>
+          </Button>
           <div className="hidden h-8 w-px bg-slate-200 sm:block" />
           <div ref={accountMenuRef} className="relative">
-            <button
+            <Button variant="plain"
               type="button"
               onClick={() => setIsAccountMenuOpen((value) => !value)}
               className="flex items-center gap-3 rounded-xl p-1.5 text-left hover:bg-slate-50"
@@ -266,13 +268,13 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
               <ChevronDown
                 className={`hidden size-4 text-slate-400 transition-transform md:block ${isAccountMenuOpen ? "rotate-180" : ""}`}
               />
-            </button>
+            </Button>
             {isAccountMenuOpen ? (
               <div
                 role="menu"
                 className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
               >
-                <button
+                <Button variant="plain"
                   type="button"
                   role="menuitem"
                   onClick={() => {
@@ -282,8 +284,8 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
                   className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
                 >
                   <CircleUserRound className="size-4" /> Hồ sơ cá nhân
-                </button>
-                <button
+                </Button>
+                <Button variant="plain"
                   type="button"
                   role="menuitem"
                   onClick={() => {
@@ -293,8 +295,8 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
                   className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
                 >
                   <CircleHelp className="size-4" /> Trợ giúp
-                </button>
-                <button
+                </Button>
+                <Button variant="plain"
                   type="button"
                   role="menuitem"
                   onClick={() => {
@@ -307,9 +309,9 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
                   className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
                 >
                   <Settings className="size-4" /> Cài đặt
-                </button>
+                </Button>
                 <div className="my-1 border-t border-slate-100" />
-                <button
+                <Button variant="plain"
                   type="button"
                   role="menuitem"
                   onClick={() =>
@@ -318,7 +320,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
                   className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-rose-600 hover:bg-rose-50"
                 >
                   <LogOut className="size-4" /> Đăng xuất
-                </button>
+                </Button>
               </div>
             ) : null}
           </div>
@@ -326,7 +328,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
       </header>
 
       {isMenuOpen ? (
-        <button
+        <Button variant="plain"
           type="button"
           className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm lg:hidden"
           onClick={() => setIsMenuOpen(false)}
@@ -336,7 +338,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-[266px] flex-col border-r border-slate-200 bg-white px-4 pb-6 pt-4 shadow-xl shadow-slate-900/[0.06] transition-all duration-300 lg:translate-x-0 ${isSidebarCollapsed ? "lg:w-[72px] lg:px-2" : "lg:w-[266px]"} ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <button
+        <Button variant="plain"
           type="button"
           onClick={() => setIsSidebarCollapsed((value) => !value)}
           className="absolute -right-[18px] bottom-28 hidden size-9 place-items-center rounded-full border border-blue-100 bg-white text-brand-600 shadow-md lg:grid"
@@ -347,21 +349,21 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
           ) : (
             <ChevronLeft className="size-5" />
           )}
-        </button>
+        </Button>
         <div className="relative flex items-center">
           <div
             className={`box-border max-w-[190px] overflow-hidden px-2 transition-[max-width,padding] ${isSidebarCollapsed ? "lg:max-w-[56px] lg:px-[6px]" : "lg:max-w-[190px] lg:px-2"}`}
           >
             <BrandLogo withShadow={false} />
           </div>
-          <button
+          <Button variant="plain"
             type="button"
             onClick={() => setIsMenuOpen(false)}
             className="absolute right-0 grid size-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden"
             aria-label="Đóng menu"
           >
             <X className="size-5" />
-          </button>
+          </Button>
         </div>
         <nav className="mt-4 space-y-1.5" aria-label="Điều hướng khu vực">
           {links
@@ -375,7 +377,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
               );
               return (
                 <div key={`${label}-${index}`}>
-                  <button
+                  <Button variant="plain"
                     type="button"
                     onClick={() => {
                       if (href)
@@ -392,7 +394,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
                         {supportUnreadCount > 99 ? "99+" : supportUnreadCount}
                       </span>
                     ) : null}
-                  </button>
+                  </Button>
                 </div>
               );
             })}

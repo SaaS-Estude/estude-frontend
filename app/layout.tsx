@@ -15,7 +15,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "EStude | Không gian học tập số",
-  description: "Nền tảng học tập và quản lý lớp học dành cho sinh viên IUH.",
+  description: "Nền tảng học tập và quản lý lớp học dành cho học sinh IUH.",
 };
 
 export default function RootLayout({

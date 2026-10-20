@@ -1,5 +1,5 @@
 /* CommonJS loader keeps component tests isolated from the Next runtime. */
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -26,7 +26,7 @@ async function renderComponent(t, file, exportName, api, options = {}) {
     if (id === "lucide-react") return new Proxy({}, { get: (_target, name) => (props) => React.createElement("svg", { ...props, "data-icon": String(name) }) });
     if (id === "@/components/student/student-shell") return { StudentShell: ({ children }) => React.createElement("main", null, children) };
     if (id === "@/components/ui/button") return { Button: ({ children, ...props }) => React.createElement("button", props, children) };
-    if (id === "@/components/ui/form-control") return { Select: ({ children, label, ...props }) => React.createElement("label", null, label, React.createElement("select", props, children)) };
+    if (id === "@/components/ui/form-control") return { ...require("./helpers/register-ui.cjs").formControls,  Select: ({ children, label, ...props }) => React.createElement("label", null, label, React.createElement("select", props, children)) };
     if (id === "@/components/ui/action-notification") return { useActionNotification: () => ({ notify: options.notify ?? (() => {}) }) };
     if (id === "@/lib/assessment-api") return { academicDataService: { getSubjects: async () => [{ id: "subject", name: "Biology", vietnameseName: "Sinh học", isActive: true }] } };
     if (id === "@/lib/study-coach-api") return { studyCoachService: api };

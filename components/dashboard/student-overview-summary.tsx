@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { authenticatedRequest } from "@/lib/auth-api";
 import type { StudentOverview } from "@/types/student-overview";
+import { Button } from "@/components/ui/button";
+
 
 export function LearningSummary({ report }: { report: StudentOverview }) {
   const values = [
@@ -109,13 +111,13 @@ export function StudentOverviewSummary() {
         <p role="status">Đang tải kết quả học tập…</p>
       ) : null}
       {report ? <LearningSummary report={report} /> : null}
-      <button
+      <Button variant="plain" type="submit"
         disabled={loading}
         onClick={() => void load()}
         className="text-xs font-semibold text-brand-700"
       >
         {loading ? "Đang cập nhật…" : "Làm mới kết quả"}
-      </button>
+      </Button>
     </div>
   );
 }

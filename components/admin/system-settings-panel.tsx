@@ -25,6 +25,8 @@ import type {
   ParentLinkSettings,
 } from "@/types/users";
 
+
+
 function SettingSwitch({
   checked,
   onChange,
@@ -37,7 +39,7 @@ function SettingSwitch({
   description: string;
 }) {
   return (
-    <button
+    <Button variant="plain"
       type="button"
       role="switch"
       aria-checked={checked}
@@ -61,7 +63,7 @@ function SettingSwitch({
           }`}
         />
       </span>
-    </button>
+    </Button>
   );
 }
 
@@ -345,7 +347,7 @@ export function SystemSettingsPanel({
                 setAttendance({ ...attendance, gpsEnabled })
               }
               label="Cho phép điểm danh bằng GPS"
-              description="Sinh viên cần ở trong bán kính cho phép của lớp học."
+              description="Học sinh cần ở trong bán kính cho phép của lớp học."
             />
             <SettingSwitch
               checked={attendance.qrEnabled}
@@ -670,7 +672,7 @@ export function SystemSettingsPanel({
             thu hồi từng phiên hoặc đăng xuất tất cả thiết bị tại trang quản lý
             phiên.
           </p>
-          <button
+          <Button variant="plain"
             type="button"
             onClick={() => router.push("/admin/settings/sessions")}
             className="mt-5 flex w-full items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-left text-sm font-bold text-brand-700 transition hover:bg-blue-100"
@@ -679,7 +681,7 @@ export function SystemSettingsPanel({
               <UsersRound className="size-4" /> Quản lý phiên đăng nhập
             </span>
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
           {section === "security" && <ChangePasswordForm role="ADMIN" />}
         </section>
       </div>

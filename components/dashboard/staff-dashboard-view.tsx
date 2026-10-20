@@ -59,6 +59,8 @@ import { PermissionsPanel } from "@/components/admin/permissions-panel";
 import { usePermissions } from "@/context/permissions-context";
 import { useAuth } from "@/context/auth-context";
 import { getRoleLogin, getRoleSessionSettings } from "@/lib/role-routes";
+import { Button } from "@/components/ui/button";
+
 
 const staffNavItems = [
   {
@@ -251,7 +253,7 @@ export function StaffDashboardView() {
           },
           {
             icon: BookOpenCheck,
-            label: "Lớp môn học",
+            label: "Môn học theo lớp",
             href: "/admin/course-offerings",
           },
           {
@@ -333,27 +335,27 @@ export function StaffDashboardView() {
             isSidebarCollapsed ? "lg:pl-[92px]" : "lg:pl-[286px]"
           }`}
         >
-          <button
+          <Button variant="plain"
             type="button"
             onClick={() => setIsMenuOpen(true)}
             className="mr-3 grid size-10 place-items-center rounded-xl text-slate-600 hover:bg-slate-100 lg:hidden"
             aria-label="Mở menu"
           >
             <Menu className="size-5" />
-          </button>
+          </Button>
 
           {studentDetailId ? (
             <nav
               className="flex min-w-0 items-center gap-2 text-[13px] font-semibold sm:gap-3 sm:text-sm"
               aria-label="Vị trí hiện tại"
             >
-              <button
+              <Button variant="plain"
                 type="button"
                 onClick={() => router.push(studentDetailBackHref)}
                 className="shrink-0 text-slate-500 transition hover:text-brand-700"
               >
                 Học sinh
-              </button>
+              </Button>
               <ChevronRight className="size-4 shrink-0 text-slate-400" />
               <span className="hidden shrink-0 text-slate-500 sm:inline">
                 Chi tiết học sinh
@@ -368,13 +370,13 @@ export function StaffDashboardView() {
               className="flex min-w-0 items-center gap-2 text-[13px] font-semibold sm:gap-3 sm:text-sm"
               aria-label="Vị trí hiện tại"
             >
-              <button
+              <Button variant="plain"
                 type="button"
                 onClick={() => router.push("/teacher/classes")}
                 className="shrink-0 text-slate-500 transition hover:text-brand-700"
               >
                 Lớp học
-              </button>
+              </Button>
               <ChevronRight className="size-4 shrink-0 text-slate-400" />
               <span className="hidden shrink-0 text-slate-500 sm:inline">
                 Chi tiết lớp học
@@ -393,17 +395,17 @@ export function StaffDashboardView() {
           )}
 
           <div className="ml-auto flex items-center gap-2 sm:gap-4">
-            <button
+            <Button variant="plain"
               type="button"
               className="relative grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
               aria-label="Thông báo"
             >
               <Bell className="size-5" />
               <span className="absolute right-2 top-2 size-2 rounded-full bg-amber-500 ring-2 ring-white" />
-            </button>
+            </Button>
             <div className="hidden h-8 w-px bg-slate-200 sm:block" />
             <div ref={accountMenuRef} className="relative">
-              <button
+              <Button variant="plain"
                 type="button"
                 onClick={() => setIsAccountMenuOpen((current) => !current)}
                 className="flex items-center gap-3 rounded-xl p-1.5 text-left transition hover:bg-slate-50 focus:outline-none"
@@ -433,14 +435,14 @@ export function StaffDashboardView() {
                     isAccountMenuOpen ? "rotate-180" : ""
                   }`}
                 />
-              </button>
+              </Button>
 
               {isAccountMenuOpen ? (
                 <div
                   role="menu"
                   className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/15"
                 >
-                  <button
+                  <Button variant="plain"
                     type="button"
                     role="menuitem"
                     onClick={() => {
@@ -450,8 +452,8 @@ export function StaffDashboardView() {
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
                   >
                     <CircleUserRound className="size-4" /> Hồ sơ cá nhân
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="plain"
                     type="button"
                     role="menuitem"
                     onClick={() => {
@@ -461,8 +463,8 @@ export function StaffDashboardView() {
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
                   >
                     <CircleHelp className="size-4" /> Trợ giúp
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="plain"
                     type="button"
                     role="menuitem"
                     onClick={() => {
@@ -476,9 +478,9 @@ export function StaffDashboardView() {
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
                   >
                     <Settings className="size-4" /> Cài đặt
-                  </button>
+                  </Button>
                   <div className="my-1 border-t border-slate-100" />
-                  <button
+                  <Button variant="plain"
                     type="button"
                     role="menuitem"
                     onClick={() => void handleSignOut()}
@@ -491,7 +493,7 @@ export function StaffDashboardView() {
                       <LogOut className="size-4" />
                     )}
                     {isSigningOut ? "Đang đăng xuất..." : "Đăng xuất"}
-                  </button>
+                  </Button>
                 </div>
               ) : null}
             </div>
@@ -499,7 +501,7 @@ export function StaffDashboardView() {
         </header>
 
         {isMenuOpen ? (
-          <button
+          <Button variant="plain"
             type="button"
             className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm lg:hidden"
             onClick={() => setIsMenuOpen(false)}
@@ -512,7 +514,7 @@ export function StaffDashboardView() {
             isSidebarCollapsed ? "lg:w-[72px] lg:px-2" : "lg:w-[266px]"
           } ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
-          <button
+          <Button variant="plain"
             type="button"
             onClick={() => setIsSidebarCollapsed((current) => !current)}
             className="absolute -right-[18px] bottom-28 hidden size-9 place-items-center rounded-full border border-brand-100 bg-white text-brand-600 shadow-md shadow-slate-950/15 transition hover:scale-105 hover:bg-brand-50 hover:text-brand-700 focus:outline-none lg:grid"
@@ -528,7 +530,7 @@ export function StaffDashboardView() {
             ) : (
               <ChevronLeft className="size-5" strokeWidth={2.5} />
             )}
-          </button>
+          </Button>
 
           <div className="relative flex shrink-0 items-center">
             <div
@@ -540,14 +542,14 @@ export function StaffDashboardView() {
             >
               <BrandLogo withShadow={false} />
             </div>
-            <button
+            <Button variant="plain"
               type="button"
               onClick={() => setIsMenuOpen(false)}
               className="absolute right-0 grid size-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:hidden"
               aria-label="Đóng menu"
             >
               <X className="size-5" />
-            </button>
+            </Button>
           </div>
 
           <nav
@@ -558,7 +560,7 @@ export function StaffDashboardView() {
               if (href === "/admin/users") {
                 return (
                   <div key={label}>
-                    <button
+                    <Button variant="plain"
                       type="button"
                       onClick={() => {
                         if (!isUsersPage || pathname === "/admin/users") {
@@ -582,7 +584,7 @@ export function StaffDashboardView() {
                           isUsersMenuOpen ? "rotate-180" : ""
                         } ${isSidebarCollapsed ? "lg:hidden" : ""}`}
                       />
-                    </button>
+                    </Button>
                     {isUsersMenuOpen && !isSidebarCollapsed ? (
                       <div className="relative ml-5 mt-1 space-y-1 pl-3 before:absolute before:bottom-3 before:left-0 before:top-0 before:w-px before:rounded-full before:bg-brand-100">
                         {userSubItems
@@ -590,7 +592,7 @@ export function StaffDashboardView() {
                           .map((item) => {
                             const active = pathname.startsWith(item.href);
                             return (
-                              <button
+                              <Button variant="plain"
                                 type="button"
                                 key={item.href}
                                 onClick={() => {
@@ -604,7 +606,7 @@ export function StaffDashboardView() {
                                 }`}
                               >
                                 {item.label}
-                              </button>
+                              </Button>
                             );
                           })}
                       </div>
@@ -619,7 +621,7 @@ export function StaffDashboardView() {
                 (href === "/teacher/students" && isTeacherStudentDetailPage);
               const Icon = href === "/admin/classes" ? School : NavIcon;
               return (
-                <button
+                <Button variant="plain"
                   type="button"
                   key={label}
                   onClick={() => {
@@ -635,12 +637,12 @@ export function StaffDashboardView() {
                 >
                   <Icon className="size-5 shrink-0" aria-hidden="true" />
                   <span className={sidebarLabelClass}>{label}</span>
-                </button>
+                </Button>
               );
             })}
             {settingsSubItems.some((item) => canVisit(item.href)) ? (
               <div>
-                <button
+                <Button variant="plain"
                   type="button"
                   onClick={() => {
                     if (!isSettingsPage) {
@@ -667,7 +669,7 @@ export function StaffDashboardView() {
                       isSettingsMenuOpen ? "rotate-180" : ""
                     } ${isSidebarCollapsed ? "lg:hidden" : ""}`}
                   />
-                </button>
+                </Button>
                 {isSettingsMenuOpen && !isSidebarCollapsed ? (
                   <div className="relative ml-5 mt-1 space-y-1 pl-3 before:absolute before:bottom-3 before:left-0 before:top-0 before:w-px before:rounded-full before:bg-brand-100">
                     {settingsSubItems
@@ -675,7 +677,7 @@ export function StaffDashboardView() {
                       .map((item) => {
                         const active = pathname === item.href;
                         return (
-                          <button
+                          <Button variant="plain"
                             type="button"
                             key={item.href}
                             onClick={() => {
@@ -689,7 +691,7 @@ export function StaffDashboardView() {
                             }`}
                           >
                             {item.label}
-                          </button>
+                          </Button>
                         );
                       })}
                   </div>
@@ -801,12 +803,12 @@ export function StaffDashboardView() {
                   Các số liệu được tổng hợp tại trang tổng quan theo quyền của
                   tài khoản.
                 </p>
-                <button
+                <Button variant="plain" type="submit"
                   className="mt-4 text-sm font-semibold text-brand-700"
                   onClick={() => router.push(dashboardPath)}
                 >
                   Mở tổng quan
-                </button>
+                </Button>
               </section>
             )}
           </div>

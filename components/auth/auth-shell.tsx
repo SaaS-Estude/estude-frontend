@@ -59,7 +59,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
               Mỗi ngày học tốt hơn, theo cách của bạn.
             </h1>
             <p className="mt-6 max-w-lg text-base leading-7 text-blue-100 xl:text-lg">
-              EStude giúp sinh viên tổ chức việc học, kết nối lớp học và tiến
+              EStude giúp học sinh tổ chức việc học, kết nối lớp học và tiến
               gần hơn đến mục tiêu của mình.
             </p>
 

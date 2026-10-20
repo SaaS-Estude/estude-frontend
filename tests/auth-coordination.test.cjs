@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -39,6 +38,7 @@ function fixture() {
   }
   function tab(portal = 'admin', options = {}) {
     const context = vm.createContext({
+      URLSearchParams,
       process: { env: {} },
       window: { location: { host: `${portal}.school.localhost`, pathname: '/' } },
       navigator: options.noLocks ? {} : navigator,

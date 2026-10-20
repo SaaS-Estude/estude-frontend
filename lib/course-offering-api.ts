@@ -1,4 +1,5 @@
 import { authenticatedRequest } from "@/lib/auth-api";
+import type { GradePolicy } from "@/types/gradebook";
 
 export type CourseStatus = "DRAFT" | "OPEN" | "CLOSED" | "ARCHIVED";
 export type CourseEnrollmentMode = "CLASS_ROSTER" | "MANUAL";
@@ -45,8 +46,10 @@ export const courseOfferingApi = {
   get: (id: string) => authenticatedRequest<CourseOffering>(path(id)),
   members: (id: string) => authenticatedRequest<CourseMembers>(`${path(id)}/members`),
   create: (input: { termId: string; primaryClassId: string; subjectId: string;
-    sectionKey?: string; displayNameOverride?: string; enrollmentMode: CourseEnrollmentMode }) =>
-    authenticatedRequest<CourseOffering>("/course-offerings", json("POST", input)),
+    displayNameOverride?: string; teachers?: Array<{ teacherId: string; role: CourseTeacherRole }>; gradebook?: GradePolicy }) =>
+    authenticatedRequest<CourseOffering>("/course-offerings", json("POST", { ...input, sectionKey: "MAIN", enrollmentMode: "CLASS_ROSTER" })),
+  update: (id: string, displayNameOverride: string) =>
+    authenticatedRequest<CourseOffering>(path(id), json("PATCH", { displayNameOverride })),
   assignTeacher: (id: string, teacherId: string, role: CourseTeacherRole) =>
     authenticatedRequest(`${path(id)}/teachers`, json("POST", { teacherId, role })),
   replacePrimary: (id: string, teacherId: string) =>

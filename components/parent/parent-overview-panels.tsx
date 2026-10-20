@@ -25,6 +25,9 @@ import {
 import { toVietnameseSubjectName } from "@/lib/subject-localization";
 import type { ParentOverview } from "@/types/engagement";
 import type { ParentSection } from "./parent-shell";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/form-control";
+
 
 export function useParentOverview(enabled = true, studentId?: string) {
   const [overview, setOverview] = useState<ParentOverview | null>(null);
@@ -349,7 +352,7 @@ export function ParentOverviewPanels({
                             {date(item.createdAt)} · {time(item.createdAt)}
                           </time>
                           {!read ? (
-                            <button
+                            <Button variant="plain"
                               type="button"
                               disabled={!!savingId}
                               onClick={() => void markRead(item.id)}
@@ -358,7 +361,7 @@ export function ParentOverviewPanels({
                               {savingId === item.id
                                 ? "Đang lưu…"
                                 : "Đánh dấu đã đọc"}
-                            </button>
+                            </Button>
                           ) : null}
                         </div>
                       </div>
@@ -390,7 +393,7 @@ export function ParentOverviewPanels({
           {!summary && students.length > 1 ? (
             <label className="mb-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
               Học sinh
-              <select
+              <Select
                 aria-label="Lọc điểm danh theo học sinh"
                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
                 value={studentFilter}
@@ -402,7 +405,7 @@ export function ParentOverviewPanels({
                     {name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           ) : null}
           {attendance.length ? (
@@ -493,7 +496,7 @@ function Panel({
           <p className="mt-0.5 text-[11px] text-slate-400">{description}</p>
         </div>
         {action ? (
-          <button
+          <Button variant="plain"
             type="button"
             onClick={action}
             aria-label={`Xem tất cả: ${title}`}
@@ -501,7 +504,7 @@ function Panel({
           >
             <span className="hidden sm:inline">Xem tất cả</span>
             <ArrowUpRight className="size-3.5" />
-          </button>
+          </Button>
         ) : null}
       </header>
       <div className="p-4 sm:p-5">{children}</div>

@@ -2,6 +2,9 @@
 
 import { Eye, EyeOff, type LucideIcon } from 'lucide-react';
 import { forwardRef, useState, type InputHTMLAttributes } from 'react';
+import { Input } from "@/components/ui/form-control";
+import { Button } from "@/components/ui/button";
+
 
 interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -31,7 +34,7 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
             }`}
             aria-hidden="true"
           />
-          <input
+          <Input
             {...props}
             ref={ref}
             type={inputType}
@@ -46,7 +49,7 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
             } ${className}`}
           />
           {isPassword ? (
-            <button
+            <Button variant="plain"
               type="button"
               onClick={() => setShowPassword((current) => !current)}
               className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-300"
@@ -57,7 +60,7 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
               ) : (
                 <Eye className="size-5" />
               )}
-            </button>
+            </Button>
           ) : null}
         </div>
         {error ? (

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -44,7 +44,7 @@ async function render(t, expired = false) {
     } };
     if (id === '@/components/assessment/assessment-shell') return { AssessmentShell: Box, PageHeading: Box, LoadingPanel: Box, ErrorPanel: Box };
     if (id === '@/components/ui/button') return { Button: (props) => React.createElement('button', props) };
-    if (id === '@/components/ui/form-control') return { Input: Box, Textarea: Box };
+    if (id === '@/components/ui/form-control') return { ...require("./helpers/register-ui.cjs").formControls,  Input: Box, Textarea: Box };
     if (id === '@/components/ui/modal') return { Modal: (props) => props.open ? React.createElement('div', { 'data-modal': true }, props.footer) : null };
     if (id === '@/components/assessment/question-image-viewer') return { QuestionImageViewer: Box };
     if (id === '@/types/assessment') return { QUESTION_TYPE_LABELS: {} };

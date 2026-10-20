@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/data-table";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
 import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
-import { CustomSelect, Input } from "@/components/ui/form-control";
+import { CustomSelect, Input, Checkbox } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { usePermissions } from "@/context/permissions-context";
@@ -477,7 +477,7 @@ export function QuestionBankPage() {
               <h2 className="text-sm font-bold text-slate-800">Thư mục câu hỏi</h2>
               <p className="text-xs text-slate-500">Tối đa 3 cấp</p>
             </div>
-            {can("questions.create") ? <button type="button" className="rounded-lg p-2 text-brand-600 hover:bg-blue-50" title="Tạo thư mục gốc" aria-label="Tạo thư mục gốc" onClick={() => openCreateFolder(null)}><Plus className="size-4" /></button> : null}
+            {can("questions.create") ? <Button variant="plain" type="button" className="rounded-lg p-2 text-brand-600 hover:bg-blue-50" title="Tạo thư mục gốc" aria-label="Tạo thư mục gốc" onClick={() => openCreateFolder(null)}><Plus className="size-4" /></Button> : null}
           </div>
           <div className="overflow-y-auto p-2">
             <QuestionFolderTree
@@ -505,7 +505,7 @@ export function QuestionBankPage() {
               <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
                 <tr>
                   <TableHead className="w-14 text-center">
-                    <input
+                    <Checkbox
                       type="checkbox"
                       checked={allPageQuestionsSelected}
                       onChange={toggleCurrentPageSelection}
@@ -547,7 +547,7 @@ export function QuestionBankPage() {
                           className="text-center"
                           onClick={(event) => event.stopPropagation()}
                         >
-                          <input
+                          <Checkbox
                             type="checkbox"
                             checked={selectedIds.includes(question.id)}
                             onChange={() =>
@@ -768,7 +768,7 @@ export function QuestionBankPage() {
             onValueChange={(value) => void changeTargetSubject(value)}
           />
           <div className="grid grid-cols-3 gap-2 rounded-xl bg-slate-100 p-1">
-            <button
+            <Button variant="plain"
               type="button"
               className={`rounded-lg px-3 py-2 text-sm font-bold transition ${
                 moveMode === "none"
@@ -778,8 +778,8 @@ export function QuestionBankPage() {
               onClick={() => setMoveMode("none")}
             >
               Không chủ đề
-            </button>
-            <button
+            </Button>
+            <Button variant="plain"
               type="button"
               disabled={!moveTopics.length || loadingMoveTopics}
               className={`rounded-lg px-3 py-2 text-sm font-bold transition ${
@@ -790,8 +790,8 @@ export function QuestionBankPage() {
               onClick={() => setMoveMode("existing")}
             >
               Chủ đề có sẵn
-            </button>
-            <button
+            </Button>
+            <Button variant="plain"
               type="button"
               className={`rounded-lg px-3 py-2 text-sm font-bold transition ${
                 moveMode === "new"
@@ -801,7 +801,7 @@ export function QuestionBankPage() {
               onClick={() => setMoveMode("new")}
             >
               Tạo chủ đề mới
-            </button>
+            </Button>
           </div>
           {loadingMoveTopics ? (
             <p className="flex items-center gap-2 py-3 text-sm text-slate-500">

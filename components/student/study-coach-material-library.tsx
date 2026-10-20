@@ -4,7 +4,7 @@ import { FileText, LoaderCircle, Plus, RotateCcw, Trash2, UploadCloud, XCircle }
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/form-control";
+import { Select, FileInput } from "@/components/ui/form-control";
 import { useActionNotification } from "@/components/ui/action-notification";
 import { academicDataService } from "@/lib/assessment-api";
 import { studyCoachService } from "@/lib/study-coach-api";
@@ -208,7 +208,7 @@ export function StudyCoachMaterialLibrary({ capabilities }: { capabilities: Stud
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-bold text-slate-700" htmlFor="study-material-file">
               Tệp PDF (tối đa 10 MB)
-              <input ref={fileInputRef} id="study-material-file" type="file" accept="application/pdf,.pdf" disabled={busy} aria-describedby="study-material-file-help study-material-file-error" onChange={(event) => selectFile(event.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:font-bold file:text-brand-700" />
+              <FileInput ref={fileInputRef} id="study-material-file" type="file" accept="application/pdf,.pdf" disabled={busy} aria-describedby="study-material-file-help study-material-file-error" onChange={(event) => selectFile(event.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:font-bold file:text-brand-700" />
               <span id="study-material-file-help" className="mt-1 block text-xs font-normal text-slate-500">Hiện hỗ trợ tài liệu PDF.</span>
               {fileError ? <span id="study-material-file-error" role="alert" className="mt-1 block text-xs font-semibold text-rose-700">{fileError}</span> : null}
             </label>

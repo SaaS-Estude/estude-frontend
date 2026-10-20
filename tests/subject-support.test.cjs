@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -107,7 +107,7 @@ async function render(t, options = {}) {
           React.createElement("p", null, label),
       };
     if (id === "@/components/ui/form-control")
-      return {
+      return { ...require("./helpers/register-ui.cjs").formControls,
         Input: (props) => React.createElement("input", props),
         Textarea: (props) => React.createElement("textarea", props),
       };

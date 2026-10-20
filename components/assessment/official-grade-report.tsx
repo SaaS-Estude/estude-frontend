@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { gradebookService } from "@/lib/gradebook-api";
 import type { GradeMark, GradeOutcome, GradeReport } from "@/types/gradebook";
+import { Select } from "@/components/ui/form-control";
+
 
 export function formatGrade(mark: GradeMark) {
   return mark === null
@@ -107,7 +109,7 @@ export function OfficialGradeReport({
       <div className="my-4 flex flex-wrap gap-3">
         <label className="grid gap-1 text-xs">
           Năm học
-          <select
+          <Select
             aria-label="Năm học sổ điểm"
             className={selectClass}
             value={yearId}
@@ -126,11 +128,11 @@ export function OfficialGradeReport({
                 {item.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="grid gap-1 text-xs">
           Lớp
-          <select
+          <Select
             aria-label="Lớp sổ điểm"
             className={selectClass}
             value={classId}
@@ -141,11 +143,11 @@ export function OfficialGradeReport({
                 {item.code} · {item.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="grid gap-1 text-xs">
           Học kỳ
-          <select
+          <Select
             aria-label="Học kỳ sổ điểm"
             className={selectClass}
             value={termId}
@@ -157,7 +159,7 @@ export function OfficialGradeReport({
                 {item.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </div>
       <p className="mb-3 font-semibold">

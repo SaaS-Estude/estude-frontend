@@ -27,6 +27,8 @@ import {
   type ParentSection,
 } from "@/components/parent/parent-shell";
 import type { User } from "@/types/auth";
+import { Button } from "@/components/ui/button";
+
 
 export function ParentDashboard({ studentId }: { studentId?: string }) {
   const { user } = useAuth();
@@ -130,7 +132,7 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
               : "Chọn con để mở không gian học tập riêng, theo dõi điểm số và thông tin từ nhà trường."}
           </p>
         </div>
-        <button
+        <Button variant="plain"
           type="button"
           disabled={refreshing || loadingChildren}
           onClick={() => {
@@ -143,7 +145,7 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
             className={`size-3.5 ${refreshing ? "animate-spin" : ""}`}
           />
           Làm mới
-        </button>
+        </Button>
       </div>
 
       {studentId && !loadingChildren && !childrenError && !selectedStudent ? (
@@ -173,13 +175,13 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
               </p>
             </div>
           </div>
-          <button
+          <Button variant="plain"
             type="button"
             onClick={() => router.push("/parent/dashboard")}
             className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-brand-600 hover:bg-brand-50"
           >
             Chọn học sinh khác
-          </button>
+          </Button>
         </div>
       ) : null}
       {studentId && section === "overview" && selectedStudent ? (
@@ -218,7 +220,7 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
               target: "notifications" as const,
             },
           ].map(({ label, value, detail, icon: Icon, tone, target }) => (
-            <button
+            <Button variant="plain"
               key={label}
               type="button"
               onClick={() => navigate(target)}
@@ -241,7 +243,7 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
               <p className="mt-1 hidden text-[11px] text-slate-400 sm:block">
                 {detail}
               </p>
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}
@@ -281,7 +283,7 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
           ) : children.length ? (
             <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
               {children.map((student) => (
-                <button
+                <Button variant="plain"
                   key={student.id}
                   type="button"
                   onClick={() => openStudent(student.id)}
@@ -314,7 +316,7 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
                     </span>
                   </span>
                   <ArrowRight className="size-4 shrink-0 text-slate-300 group-hover:text-brand-600" />
-                </button>
+                </Button>
               ))}
             </div>
           ) : (

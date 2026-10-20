@@ -212,3 +212,21 @@ main > div > div.pb-8 > div.mb-6:first-child {
     background: rgb(var(--brand-600, 37 99 235));
   }
 }
+
+/* Shared native semantics with a consistent checkbox/radio appearance. */
+.project-checkbox:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m3 8 3 3 7-7'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+.project-checkbox:indeterminate {
+  background-color: rgb(var(--brand-600, 37 99 235));
+  background-image: linear-gradient(white, white);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 60% 2px;
+}
+.project-checkbox[type='radio']:checked {
+  background-image: radial-gradient(circle, white 0 35%, transparent 40%);
+}

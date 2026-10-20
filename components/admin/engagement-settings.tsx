@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { notificationService } from "@/lib/engagement-api";
 import { Button } from "@/components/ui/button";
+import { Select, Input, Textarea } from "@/components/ui/form-control";
+
 
 export function AttendancePolicyPanel() {
   return <section className="mx-auto max-w-4xl space-y-4 rounded-2xl border bg-white p-6">
@@ -36,11 +38,11 @@ export function SystemNotificationComposer() {
       } catch (cause) { setError(cause instanceof Error ? cause.message : "Không thể gửi thông báo"); }
       finally { setBusy(false); }
     }}>
-      <label className="grid gap-1">Người nhận<select className="rounded border p-2" value={targetRole} onChange={(event) => setRole(event.target.value)} disabled={busy}>
+      <label className="grid gap-1">Người nhận<Select className="rounded border p-2" value={targetRole} onChange={(event) => setRole(event.target.value)} disabled={busy}>
         <option value="">Tất cả tài khoản đang hoạt động</option><option value="TEACHER">Giáo viên</option><option value="STUDENT">Học sinh</option><option value="PARENT">Phụ huynh</option>
-      </select></label>
-      <label className="grid gap-1">Tiêu đề thông báo<input className="rounded border p-2" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={160} required disabled={busy} /></label>
-      <label className="grid gap-1">Nội dung thông báo<textarea className="rounded border p-2" value={message} onChange={(event) => setMessage(event.target.value)} maxLength={5000} required disabled={busy} /></label>
+      </Select></label>
+      <label className="grid gap-1">Tiêu đề thông báo<Input className="rounded border p-2" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={160} required disabled={busy} /></label>
+      <label className="grid gap-1">Nội dung thông báo<Textarea className="rounded border p-2" value={message} onChange={(event) => setMessage(event.target.value)} maxLength={5000} required disabled={busy} /></label>
       <Button type="submit" permission="notifications.broadcast" disabled={busy || !title.trim() || !message.trim()}>{busy ? "Đang gửi..." : "Gửi thông báo hệ thống"}</Button>
     </form>
     {result ? <p role="status" className="text-green-700">{result}</p> : null}

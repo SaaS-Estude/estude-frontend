@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -74,7 +74,7 @@ function loadPage(getAttempt) {
     if (id === "@/components/ui/data-table")
       return new Proxy({}, { get: () => passthrough("div") });
     if (id === "@/components/ui/form-control")
-      return { Textarea: passthrough("textarea") };
+      return { ...require("./helpers/register-ui.cjs").formControls,  Textarea: passthrough("textarea") };
     if (id === "@/components/ui/modal") return { Modal: passthrough() };
     if (id === "@/lib/search-keyword")
       return {

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -47,7 +47,7 @@ function mocks(api, auth = {}, router = {}) {
     "@/lib/portal": { getCurrentPortal: () => "student" },
     "@/context/auth-context": { useAuth: () => auth },
     "next/navigation": { useRouter: () => router },
-    "@/components/ui/form-control": {
+    "@/components/ui/form-control": { ...require("./helpers/register-ui.cjs").formControls,
       Input: (props) => React.createElement("input", props),
     },
     "@/components/ui/button": {

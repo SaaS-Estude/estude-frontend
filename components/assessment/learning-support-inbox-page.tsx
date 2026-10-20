@@ -26,6 +26,8 @@ import type {
   LearningSupportRequest,
   LearningSupportStatus,
 } from "@/types/assessment";
+import { Input, Textarea } from "@/components/ui/form-control";
+
 
 const statusMeta: Record<
   LearningSupportStatus,
@@ -208,7 +210,7 @@ export function LearningSupportInboxPage() {
 
         <div className="flex flex-wrap gap-2">
           {filters.map((item) => (
-            <button
+            <Button variant="plain"
               type="button"
               key={item.value}
               onClick={() => setFilter(item.value)}
@@ -219,7 +221,7 @@ export function LearningSupportInboxPage() {
               }`}
             >
               {item.label} {inbox ? `(${inbox.counts[item.count]})` : ""}
-            </button>
+            </Button>
           ))}
           {inbox?.unreadCount ? (
             <span className="ml-auto rounded-full bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">
@@ -232,7 +234,7 @@ export function LearningSupportInboxPage() {
           <section className="border-b border-slate-200 lg:border-b-0 lg:border-r">
             <label className="relative block border-b border-slate-100 p-3">
               <Search className="pointer-events-none absolute left-6 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <input
+              <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Tìm học sinh hoặc nội dung"
@@ -246,7 +248,7 @@ export function LearningSupportInboxPage() {
                 </div>
               ) : visibleItems.length ? (
                 visibleItems.map((item) => (
-                  <button
+                  <Button variant="plain"
                     type="button"
                     key={item.id}
                     onClick={() => void openRequest(item.id)}
@@ -283,7 +285,7 @@ export function LearningSupportInboxPage() {
                         </div>
                       </div>
                     </div>
-                  </button>
+                  </Button>
                 ))
               ) : (
                 <div className="p-8 text-center text-sm text-slate-500">
@@ -359,7 +361,7 @@ export function LearningSupportInboxPage() {
                     <MessageCircleReply className="size-4" /> Phản hồi học sinh
                   </label>
                   <div className="flex items-end gap-2">
-                    <textarea
+                    <Textarea
                       value={reply}
                       onChange={(event) => setReply(event.target.value)}
                       rows={2}

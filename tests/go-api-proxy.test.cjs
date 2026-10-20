@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
@@ -51,6 +50,7 @@ test('keeps school Host, auth, idempotency, JSON body and host-only cookies', as
     assert.equal(req.headers.cookie, 'refresh=fixture');
     assert.equal(req.headers.authorization, 'Bearer fixture');
     assert.equal(req.headers['idempotency-key'], 'unique-action');
+    assert.equal(req.headers['x-course-offering-id'], 'f296a6b4-c5ca-490c-a3ea-2a6d8790edf4');
     assert.equal(req.headers['x-tenant-slug'], undefined);
     assert.equal(req.headers['x-forwarded-host'], undefined);
     assert.equal(req.headers['x-forwarded-for'], undefined);
@@ -70,6 +70,7 @@ test('keeps school Host, auth, idempotency, JSON body and host-only cookies', as
     method: 'POST',
     headers: { Cookie: 'refresh=fixture', Authorization: 'Bearer fixture',
       'Idempotency-Key': 'unique-action', 'Content-Type': 'application/json',
+      'X-Course-Offering-ID': 'f296a6b4-c5ca-490c-a3ea-2a6d8790edf4',
       'X-Tenant-Slug': 'forged', 'X-Forwarded-Host': 'admin.other.test', 'X-Forwarded-For': '1.2.3.4' },
     body: JSON.stringify({ accountName: 'student', password: 'fixture' }),
   }));

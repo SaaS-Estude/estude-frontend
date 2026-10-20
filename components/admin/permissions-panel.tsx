@@ -12,7 +12,7 @@ import {
 import { authenticatedRequest } from "@/lib/auth-api";
 import { usePermissions } from "@/context/permissions-context";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/form-control";
+import { Input, Checkbox } from "@/components/ui/form-control";
 import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
 
 interface Group {
@@ -238,7 +238,7 @@ export function PermissionsPanel() {
             ["history", "Lịch sử"],
           ] as [typeof tab, string][]
         ).map(([value, label]) => (
-          <button
+          <Button variant="plain" type="submit"
             key={value}
             role="tab"
             aria-selected={tab === value}
@@ -246,7 +246,7 @@ export function PermissionsPanel() {
             className={`rounded-lg px-4 py-2 text-sm font-bold ${tab === value ? "bg-brand-600 text-white" : "bg-white text-slate-600"}`}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
       {error && (
@@ -292,7 +292,7 @@ export function PermissionsPanel() {
                             .includes(groupSearch.toLocaleLowerCase("vi")),
                       )
                       .map((group) => (
-                        <button
+                        <Button variant="plain" type="submit"
                           key={group.id}
                           disabled={busy}
                           onClick={() => choose(group)}
@@ -303,7 +303,7 @@ export function PermissionsPanel() {
                             {group.permissions.length} quyền
                             {group.defaultFor ? " · Mặc định" : ""}
                           </span>
-                        </button>
+                        </Button>
                       ))}
                   </div>
                 ),
@@ -397,22 +397,22 @@ export function PermissionsPanel() {
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button variant="plain" type="submit"
                 className={`rounded-lg px-3 py-2 text-sm ${!category ? "bg-brand-600 text-white" : "bg-slate-50"}`}
                 onClick={() => setCategory("")}
               >
                 Tất cả module
-              </button>
+              </Button>
               {[
                 ...new Set(catalog.features.map((feature) => feature.category)),
               ].map((name) => (
-                <button
+                <Button variant="plain" type="submit"
                   key={name}
                   onClick={() => setCategory(name)}
                   className={`rounded-lg px-3 py-2 text-sm ${category === name ? "bg-brand-600 text-white" : "bg-slate-50"}`}
                 >
                   {name}
-                </button>
+                </Button>
               ))}
             </div>
             <Input
@@ -443,7 +443,7 @@ export function PermissionsPanel() {
                       {actions.map((action) => (
                         <td key={action} className="p-3 text-center">
                           {feature.actions.includes(action) ? (
-                            <input
+                            <Checkbox
                               type="checkbox"
                               aria-label={`${feature.name}: ${catalog.actions[action]}`}
                               className="size-4 accent-brand-600"
@@ -484,7 +484,7 @@ export function PermissionsPanel() {
             ) : (
               <div className="max-h-[60vh] space-y-2 overflow-auto">
                 {accounts.map((account) => (
-                  <button
+                  <Button variant="plain" type="submit"
                     key={account.id}
                     disabled={busy}
                     className={`w-full rounded-lg border p-3 text-left ${selected?.id === account.id ? "border-brand-400 bg-blue-50" : "border-slate-100"}`}
@@ -500,7 +500,7 @@ export function PermissionsPanel() {
                       {account.accountName} · {account.role} ·{" "}
                       {account.custom ? "Gán riêng" : "Nhóm mặc định"}
                     </span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -524,7 +524,7 @@ export function PermissionsPanel() {
                       key={group.id}
                       className="flex items-center gap-3 text-sm"
                     >
-                      <input
+                      <Checkbox
                         type="checkbox"
                         disabled={busy}
                         className="size-4 accent-brand-600"

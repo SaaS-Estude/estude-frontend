@@ -13,7 +13,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/form-control";
+import { Input, FileInput } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { useActionNotification } from "@/components/ui/action-notification";
 import { useAuth } from "@/context/auth-context";
@@ -22,7 +22,7 @@ import { ApiError, authApi } from "@/lib/auth-api";
 const roleLabels = {
   ADMIN: "Quản trị viên",
   TEACHER: "Giảng viên",
-  STUDENT: "Sinh viên",
+  STUDENT: "Học sinh",
   PARENT: "Phụ huynh",
 } as const;
 
@@ -148,7 +148,7 @@ export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => 
           </div>
           <h3 className="mt-4 font-extrabold text-slate-900">{user.fullName}</h3>
           <p className="mt-1 text-sm font-semibold text-brand-700">{roleLabels[user.role]}</p>
-          <input
+          <FileInput
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"

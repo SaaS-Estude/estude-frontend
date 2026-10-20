@@ -42,6 +42,8 @@ import type {
   StudyPracticeSet,
 } from "@/types/assessment";
 
+
+
 export function StudentStudyAnalysisPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -822,7 +824,7 @@ export function PracticeSection({
             Chọn chế độ luyện tập
           </p>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <button
+            <Button variant="plain"
               type="button"
               onClick={() => {
                 setMode("EASY");
@@ -838,8 +840,8 @@ export function PracticeSection({
                 Có gợi ý cách giải để bạn tự suy luận. Bạn có thể làm lại để
                 củng cố kiến thức.
               </p>
-            </button>
-            <button
+            </Button>
+            <Button variant="plain"
               type="button"
               onClick={() => {
                 setMode("HARD");
@@ -855,7 +857,7 @@ export function PracticeSection({
                 Có giới hạn thời gian, không gợi ý và không hiện đáp án khi bạn
                 chọn.
               </p>
-            </button>
+            </Button>
           </div>
           {!started ? (
             <div className="mt-4 flex justify-end">
@@ -971,7 +973,7 @@ export function PracticeSection({
                       ? "border-brand-500 bg-brand-50 text-brand-800 ring-2 ring-brand-100"
                       : "border-slate-200 text-slate-700 hover:border-brand-300";
                   return (
-                    <button
+                    <Button variant="plain"
                       type="button"
                       key={option.id}
                       disabled={locked}
@@ -982,7 +984,7 @@ export function PracticeSection({
                         {option.label}
                       </span>
                       {option.text}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -1082,7 +1084,7 @@ function PracticeQuestionRunner({
             {question.options.map((option) => {
               const selected = answers[question.id]?.includes(option.id);
               return (
-                <button
+                <Button variant="plain"
                   key={option.id}
                   type="button"
                   disabled={locked}
@@ -1095,7 +1097,7 @@ function PracticeQuestionRunner({
                   <span className="text-sm font-semibold text-slate-700">
                     {option.text}
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -1161,14 +1163,14 @@ function PracticeQuestionRunner({
           {practice.questions.map((item, itemIndex) => {
             const answered = Boolean(answers[item.id]?.length);
             return (
-              <button
+              <Button variant="plain"
                 key={item.id}
                 type="button"
                 onClick={() => onGoTo(itemIndex)}
                 className={`grid size-10 place-items-center rounded-lg text-xs font-black ${itemIndex === questionIndex ? "bg-brand-600 text-white" : answered ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
               >
                 {itemIndex + 1}
-              </button>
+              </Button>
             );
           })}
         </div>

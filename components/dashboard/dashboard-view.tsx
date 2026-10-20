@@ -12,6 +12,8 @@ import { getRecentStudentCourseAccesses } from "@/lib/student-recent-courses";
 import { getVietnameseSubjectName } from "@/lib/subject-localization";
 import type { StudentCourse } from "@/types/assessment";
 
+
+
 function formatRecentAccess(value: string) {
   const elapsed = Date.now() - new Date(value).getTime();
   if (elapsed < 60_000) return "Vừa truy cập";
@@ -100,7 +102,7 @@ export function StudentDashboardView() {
           {!coursesLoading ? (
             <div className="grid gap-3 p-4 md:grid-cols-3">
               {footerCourses.map(({ course, visitedAt }) => (
-                <button
+                <Button variant="plain" type="submit"
                   key={`${course.classId}:${course.subjectId}`}
                   onClick={() =>
                     router.push(
@@ -123,7 +125,7 @@ export function StudentDashboardView() {
                       ? formatRecentAccess(visitedAt)
                       : "Môn học của bạn"}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           ) : null}

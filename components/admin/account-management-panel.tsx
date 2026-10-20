@@ -33,7 +33,7 @@ import {
 import { DataTableFooter } from "@/components/ui/data-table-footer";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
-import { CustomSelect, Input } from "@/components/ui/form-control";
+import { CustomSelect, Input, FileInput } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { usePermissions } from "@/context/permissions-context";
@@ -53,14 +53,14 @@ type CreateRole = Extract<UserRole, "TEACHER" | "STUDENT" | "PARENT">;
 const roleLabels: Record<UserRole, string> = {
   ADMIN: "Quản trị viên",
   TEACHER: "Giáo viên",
-  STUDENT: "Sinh viên",
+  STUDENT: "Học sinh",
   PARENT: "Phụ huynh",
 };
 
 const roleFilterOptions = [
   { value: "", label: "Tất cả vai trò" },
   { value: "TEACHER", label: "Giáo viên" },
-  { value: "STUDENT", label: "Sinh viên" },
+  { value: "STUDENT", label: "Học sinh" },
   { value: "ADMIN", label: "Quản trị viên" },
   { value: "PARENT", label: "Phụ huynh" },
 ];
@@ -75,7 +75,7 @@ const statusFilterOptions = [
 
 const importRoleOptions = [
   { value: "TEACHER", label: "Giáo viên" },
-  { value: "STUDENT", label: "Sinh viên" },
+  { value: "STUDENT", label: "Học sinh" },
   { value: "PARENT", label: "Phụ huynh" },
 ];
 
@@ -903,7 +903,7 @@ export function AccountManagementPanel() {
               </span>
               <span className="mt-1 text-xs text-slate-400">Tối đa 10 MB</span>
             </span>
-            <input
+            <FileInput
               ref={fileInputRef}
               type="file"
               accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

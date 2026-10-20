@@ -25,7 +25,7 @@ import {
   TableLoadingBarRow,
 } from "@/components/ui/data-table";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
-import { CustomSelect, Input } from "@/components/ui/form-control";
+import { CustomSelect, Input, FileInput, Checkbox } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { useActionNotification } from "@/components/ui/action-notification";
 import { academicDataService } from "@/lib/assessment-api";
@@ -381,7 +381,7 @@ export function SubjectManagementPanel() {
               </span>
               <span className="mt-1 text-xs text-slate-400">Tối đa 10 MB</span>
             </span>
-            <input
+            <FileInput
               ref={fileInputRef}
               type="file"
               accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -498,7 +498,7 @@ export function SubjectManagementPanel() {
             }
           />
           <label className="flex items-center gap-2 text-sm font-semibold">
-            <input
+            <Checkbox
               type="checkbox"
               checked={form.isActive}
               onChange={(event) =>

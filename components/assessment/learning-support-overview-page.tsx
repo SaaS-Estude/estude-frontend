@@ -31,6 +31,8 @@ import {
 } from "@/lib/search-keyword";
 import { toVietnameseSubjectName } from "@/lib/subject-localization";
 import type { LearningSupportOverview } from "@/types/assessment";
+import { Input } from "@/components/ui/form-control";
+
 
 type SupportScope = LearningSupportOverview["scopes"][number];
 
@@ -196,7 +198,7 @@ export function LearningSupportOverviewPage() {
               <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
                 <label className="relative min-w-0 flex-1">
                   <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                  <input
+                  <Input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Tìm theo lớp, mã lớp hoặc môn học"
@@ -274,7 +276,7 @@ export function LearningSupportOverviewPage() {
               </div>
             )}
             <p className="px-1 text-xs text-slate-500">
-              Số lượt cần hỗ trợ được cộng theo từng môn/lớp; một sinh viên học nhiều môn có thể xuất hiện nhiều lần.
+              Số lượt cần hỗ trợ được cộng theo từng môn/lớp; một học sinh học nhiều môn có thể xuất hiện nhiều lần.
             </p>
           </>
         ) : null}
@@ -301,7 +303,7 @@ function ScopeRow({ scope }: { scope: SupportScope }) {
           {toVietnameseSubjectName(scope.subjectName)}
         </h3>
         <p className="mt-1 text-xs text-slate-500">
-          {scope.studentCount} sinh viên · {scope.examCount} bài kiểm tra
+          {scope.studentCount} học sinh · {scope.examCount} bài kiểm tra
         </p>
       </div>
 

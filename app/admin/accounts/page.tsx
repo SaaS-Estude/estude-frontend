@@ -4,7 +4,7 @@ import { StaffDashboardView } from "@/components/dashboard/staff-dashboard-view"
 
 export const metadata: Metadata = {
   title: "Quản lý tài khoản",
-  description: "Import và quản lý tài khoản giáo viên, sinh viên EStude.",
+  description: "Import và quản lý tài khoản giáo viên, học sinh EStude.",
 };
 
 export default function AdminAccountsPage() {

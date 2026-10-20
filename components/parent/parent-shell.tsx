@@ -23,6 +23,8 @@ import { BrandLogo } from "@/components/brand-logo";
 import { ProfileModal } from "@/components/auth/profile-modal";
 import { useAuth } from "@/context/auth-context";
 import { getRoleSessionSettings } from "@/lib/role-routes";
+import { Button } from "@/components/ui/button";
+
 
 export type ParentSection =
   "overview" | "grades" | "attendance" | "exams" | "notifications";
@@ -143,7 +145,7 @@ export function ParentShell({
       <header
         className={`fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur transition-[padding] duration-300 sm:px-6 ${collapsed ? "lg:pl-[96px]" : "lg:pl-[290px]"}`}
       >
-        <button
+        <Button variant="plain"
           ref={menuTriggerRef}
           type="button"
           aria-label="Mở menu phụ huynh"
@@ -153,7 +155,7 @@ export function ParentShell({
           className="grid size-9 shrink-0 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden"
         >
           <Menu className="size-5" />
-        </button>
+        </Button>
         <div className="min-w-0">
           <p className="hidden text-[11px] font-medium text-slate-400 sm:block">
             {studentName ?? "Cổng phụ huynh"}
@@ -166,7 +168,7 @@ export function ParentShell({
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-3">
           {!childrenOnly ? (
-            <button
+            <Button variant="plain"
               type="button"
               aria-label={
                 unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"
@@ -180,11 +182,11 @@ export function ParentShell({
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               ) : null}
-            </button>
+            </Button>
           ) : null}
           <div className="hidden h-8 w-px bg-slate-200 sm:block" />
           <div className="relative" ref={accountRef}>
-            <button
+            <Button variant="plain"
               type="button"
               aria-label="Tài khoản phụ huynh"
               aria-haspopup="menu"
@@ -213,13 +215,13 @@ export function ParentShell({
               <ChevronDown
                 className={`size-4 text-slate-400 transition ${accountOpen ? "rotate-180" : ""}`}
               />
-            </button>
+            </Button>
             {accountOpen ? (
               <div
                 role="menu"
                 className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10"
               >
-                <button
+                <Button variant="plain"
                   type="button"
                   role="menuitem"
                   onClick={() => {
@@ -230,8 +232,8 @@ export function ParentShell({
                 >
                   <UserRound className="size-4" />
                   Hồ sơ cá nhân
-                </button>
-                <button
+                </Button>
+                <Button variant="plain"
                   type="button"
                   role="menuitem"
                   onClick={() => router.push(getRoleSessionSettings(user.role))}
@@ -239,9 +241,9 @@ export function ParentShell({
                 >
                   <Settings className="size-4" />
                   Phiên đăng nhập
-                </button>
+                </Button>
                 <div className="my-1 border-t border-slate-100" />
-                <button
+                <Button variant="plain"
                   type="button"
                   role="menuitem"
                   disabled={signingOut}
@@ -254,7 +256,7 @@ export function ParentShell({
                     <LogOut className="size-4" />
                   )}
                   Đăng xuất
-                </button>
+                </Button>
               </div>
             ) : null}
           </div>
@@ -262,7 +264,7 @@ export function ParentShell({
       </header>
 
       {mobileOpen ? (
-        <button
+        <Button variant="plain"
           type="button"
           aria-label="Đóng nền menu"
           onClick={() => setMobileOpen(false)}
@@ -279,7 +281,7 @@ export function ParentShell({
           >
             <BrandLogo withShadow={false} />
           </div>
-          <button
+          <Button variant="plain"
             ref={closeMenuRef}
             type="button"
             aria-label="Đóng menu phụ huynh"
@@ -287,7 +289,7 @@ export function ParentShell({
             className="ml-auto grid size-8 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden"
           >
             <X className="size-5" />
-          </button>
+          </Button>
         </div>
         <nav
           aria-label="Điều hướng phụ huynh"
@@ -298,7 +300,7 @@ export function ParentShell({
           >
             {childrenOnly ? "Không gian gia đình" : "Thông tin học sinh"}
           </p>
-          <button
+          <Button variant="plain"
             type="button"
             onClick={() => {
               router.push("/parent/dashboard");
@@ -312,10 +314,10 @@ export function ParentShell({
             <span className={collapsed ? "lg:hidden" : ""}>
               {childrenOnly ? "Học sinh của bạn" : "Chọn học sinh khác"}
             </span>
-          </button>
+          </Button>
           {!childrenOnly &&
             parentSections.map(({ id, label, icon: Icon }) => (
-              <button
+              <Button variant="plain"
                 key={id}
                 type="button"
                 aria-current={section === id ? "page" : undefined}
@@ -332,7 +334,7 @@ export function ParentShell({
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 ) : null}
-              </button>
+              </Button>
             ))}
         </nav>
         <div
@@ -344,7 +346,7 @@ export function ParentShell({
             Kết nối với nhà trường, theo dõi từng bước tiến bộ của con.
           </p>
         </div>
-        <button
+        <Button variant="plain"
           type="button"
           aria-label={
             collapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng"
@@ -357,7 +359,7 @@ export function ParentShell({
           ) : (
             <ChevronLeft className="size-4" />
           )}
-        </button>
+        </Button>
       </aside>
       <main
         id="parent-main"

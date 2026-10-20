@@ -8,6 +8,8 @@ import { useAuth } from '@/context/auth-context';
 import { getRoleLogin, getRoleSessionSettings } from '@/lib/role-routes';
 import { MODULE_LINKS } from '@/lib/permissions';
 import type { UserRole } from '@/types/auth';
+import { Button } from "@/components/ui/button";
+
 
 function RoleLoadingScreen() {
   return (
@@ -60,9 +62,9 @@ export function RoleGate({
   if (!isAllowed) {
     const available = MODULE_LINKS.find((item) => canVisit(item.href));
     return <main className="grid min-h-screen place-items-center bg-slate-50 p-6"><div className="text-center"><h1 className="text-xl font-bold">Bạn chưa được cấp quyền truy cập</h1><p className="mt-3 text-slate-500">Liên hệ người quản lý để được gán nhóm quyền phù hợp.</p><div className="mt-5 flex flex-wrap justify-center gap-4">
-      {available && <button className="text-brand-600" onClick={() => router.push(available.href)}>Mở {available.label}</button>}
-      <button className="text-brand-600" onClick={() => router.push(getRoleSessionSettings(user.role))}>Phiên đăng nhập</button>
-      <button className="text-slate-600" onClick={() => { void signOut().finally(() => router.replace('/login')); }}>Đăng xuất</button>
+      {available && <Button variant="plain" type="submit" className="text-brand-600" onClick={() => router.push(available.href)}>Mở {available.label}</Button>}
+      <Button variant="plain" type="submit" className="text-brand-600" onClick={() => router.push(getRoleSessionSettings(user.role))}>Phiên đăng nhập</Button>
+      <Button variant="plain" type="submit" className="text-slate-600" onClick={() => { void signOut().finally(() => router.replace('/login')); }}>Đăng xuất</Button>
     </div></div></main>;
   }
 

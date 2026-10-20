@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { authenticatedRequest } from "@/lib/auth-api";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/form-control";
+
 type Policy = {
   revision: number;
   absenceLimit: number;
@@ -94,7 +96,7 @@ export function ReportPolicyPanel() {
           ).map((v) => (
             <label key={v.key} className="text-sm font-semibold">
               {v.label}
-              <input
+              <Input
                 type="number"
                 min={v.min}
                 max={v.max}
@@ -117,13 +119,13 @@ export function ReportPolicyPanel() {
         >
           Lưu ngưỡng cảnh báo
         </Button>
-        <button
+        <Button variant="plain" type="submit"
           disabled={busy}
           onClick={() => void load()}
           className="text-sm text-brand-700"
         >
           Tải lại cấu hình
-        </button>
+        </Button>
       </div>
       <p className="mt-3 text-xs text-slate-500">
         Điểm theo thang 10; ngưỡng có nguy cơ phải lớn hơn hoặc bằng ngưỡng điểm

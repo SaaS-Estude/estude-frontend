@@ -3,7 +3,7 @@ import { RoleGate } from '@/components/auth/role-gate';
 import { StudentDashboardView } from '@/components/dashboard/dashboard-view';
 
 export const metadata: Metadata = {
-  title: 'Không gian sinh viên',
+  title: 'Không gian học sinh',
   description: 'Theo dõi và thực hiện các bài kiểm tra được giao.',
 };
 

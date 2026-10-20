@@ -16,6 +16,9 @@ import { FormField } from '@/components/auth/form-field';
 import { useAuth } from '@/context/auth-context';
 import { ApiError } from '@/lib/auth-api';
 import { getRoleHome } from '@/lib/role-routes';
+import { Checkbox } from "@/components/ui/form-control";
+import { Button } from "@/components/ui/button";
+
 
 interface RegisterErrors {
   fullName?: string;
@@ -193,7 +196,7 @@ export function RegisterForm() {
 
         <div>
           <label className="flex cursor-pointer items-start gap-2.5 text-sm leading-5 text-slate-600">
-            <input
+            <Checkbox
               type="checkbox"
               checked={acceptTerms}
               onChange={(event) => {
@@ -205,12 +208,12 @@ export function RegisterForm() {
             />
             <span>
               Tôi đồng ý với{' '}
-              <button
+              <Button variant="plain"
                 type="button"
                 className="font-semibold text-brand-600 hover:text-brand-800"
               >
                 Điều khoản sử dụng
-              </button>{' '}
+              </Button>{' '}
               và Chính sách bảo mật.
             </span>
           </label>
@@ -219,7 +222,7 @@ export function RegisterForm() {
           ) : null}
         </div>
 
-        <button
+        <Button variant="plain"
           type="submit"
           disabled={isSubmitting || isInitializing}
           className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3.5 font-bold text-white shadow-lg shadow-brand-600/20 transition hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 focus:outline-none focus:ring-4 focus:ring-brand-200"
@@ -228,7 +231,7 @@ export function RegisterForm() {
             <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
           ) : null}
           {isSubmitting ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-slate-500">

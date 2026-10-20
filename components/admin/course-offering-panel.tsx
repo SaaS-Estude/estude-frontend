@@ -1,16 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { Eye, LoaderCircle, Pencil, Plus, Search } from "lucide-react";
+import { ClassGradebookConfig } from "./class-gradebook-config";
+import { CourseOfferingDetails } from "./course-offering-details";
+import { defaultGradePolicy, GradebookPolicyFields } from "./gradebook-policy-fields";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { CustomSelect, Input } from "@/components/ui/form-control";
+import { Table, TableBody, TableCell, TableEmptyRow, TableHead, TableHeader, TableLoadingBarRow } from "@/components/ui/data-table";
+import { DataTableFooter } from "@/components/ui/data-table-footer";
+import { matchesSearchKeyword, normalizeSearchKeyword } from "@/lib/search-keyword";
 import { academicDataService } from "@/lib/assessment-api";
 import { ApiError, authenticatedRequest } from "@/lib/auth-api";
-import { courseOfferingApi, type CourseEnrollmentMode, type CourseMembers, type CourseOffering, type CourseTeacherRole } from "@/lib/course-offering-api";
+import { courseOfferingApi, type CourseMembers, type CourseOffering, type CourseTeacherRole } from "@/lib/course-offering-api";
 import type { AcademicYear, ClassRoster, SchoolClass, Subject, Term } from "@/types/assessment";
 import type { UsersPage } from "@/types/users";
 import type { User } from "@/types/auth";
+import type { GradePolicy } from "@/types/gradebook";
+
+
 
 const inputClass = "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500";
-const labelClass = "grid gap-1.5 text-sm font-semibold text-slate-700";
+const courseStatusLabels = {DRAFT:"Bản nháp",OPEN:"Đang mở",CLOSED:"Đã đóng",ARCHIVED:"Đã lưu trữ"};
+const termStatusLabels: Record<string,string> = {UPCOMING:"Sắp diễn ra",ACTIVE:"Đang diễn ra",COMPLETED:"Đã kết thúc",LOCKED:"Đã khóa"};
 const errorText = (error: unknown) => error instanceof ApiError ? error.message : "Thao tác không thành công";
 
 export function CourseOfferingPanel() {
@@ -27,24 +41,52 @@ export function CourseOfferingPanel() {
   const [termId, setTermId] = useState("");
   const [classId, setClassId] = useState("");
   const [subjectId, setSubjectId] = useState("");
-  const [sectionKey, setSectionKey] = useState("MAIN");
-  const [enrollmentMode, setEnrollmentMode] = useState<CourseEnrollmentMode>("CLASS_ROSTER");
   const [selectedId, setSelectedId] = useState("");
+  const [selectedMode, setSelectedMode] = useState<"view" | "edit">("view");
+  const [title, setTitle] = useState("");
   const [teacherId, setTeacherId] = useState("");
   const [teacherRole, setTeacherRole] = useState<CourseTeacherRole>("PRIMARY_TEACHER");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createTitle, setCreateTitle] = useState("");
+  const [createTeachers, setCreateTeachers] = useState([{ key: 0, teacherId: "", role: "PRIMARY_TEACHER" as CourseTeacherRole }]);
+  const nextTeacherKey = useRef(1);
+  const [createPolicy, setCreatePolicy] = useState<GradePolicy>(defaultGradePolicy);
+  const [search, setSearch] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
+  const [termFilter, setTermFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [loading, setLoading] = useState(true);
+  const [membersLoading, setMembersLoading] = useState(false);
 
   const selected = courses.find((course) => course.id === selectedId);
   const yearTerms = useMemo(() => terms.filter((term) => term.academicYearId === yearId && !term.deletedAt), [terms, yearId]);
   const yearClasses = useMemo(() => classes.filter((schoolClass) => schoolClass.academicYearId === yearId && schoolClass.isActive && !schoolClass.deletedAt), [classes, yearId]);
   const activeSubjects = useMemo(() => subjects.filter((subject) => subject.isActive && !subject.deletedAt), [subjects]);
+  const filterTerms = terms.filter((term) => !term.deletedAt && (!yearFilter || term.academicYearId === yearFilter));
+  const filteredCourses = useMemo(() => courses.filter((course) => {
+    if (yearFilter && course.academicYearId !== yearFilter || termFilter && course.termId !== termFilter || statusFilter && course.status !== statusFilter) return false;
+    const schoolClass = course.schoolClass ?? classes.find((row) => row.id === course.primaryClassId);
+    const subject = course.subject ?? subjects.find((row) => row.id === course.subjectId);
+    return matchesSearchKeyword(normalizeSearchKeyword(course.displayName, schoolClass?.name, schoolClass?.code, subject?.name, subject?.vietnameseName), search);
+  }), [courses, yearFilter, termFilter, statusFilter, classes, subjects, search]);
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / pageSize));
+  const pagedCourses = filteredCourses.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
   const refresh = useCallback(async () => {
-    const rows = await courseOfferingApi.list();
-    setCourses(rows);
-    setSelectedId((current) => current && rows.some((row) => row.id === current) ? current : rows[0]?.id ?? "");
+    setLoading(true);
+    try {
+      const rows = await courseOfferingApi.list();
+      setCourses(rows);
+      setSelectedId((current) => rows.some((row) => row.id === current) ? current : "");
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -78,14 +120,18 @@ export function CourseOfferingPanel() {
 
   useEffect(() => {
     if (!selected) { setMembers(null); setRoster(null); return; }
+    setMembers(null); setRoster(null); setMembersLoading(true);
+    setTitle(selected.displayNameOverride ?? "");
     let active = true;
     Promise.all([courseOfferingApi.members(selected.id), academicDataService.getClassRoster(selected.primaryClassId)])
       .then(([memberRows, classRoster]) => { if (active) { setMembers(memberRows); setRoster(classRoster); } })
-      .catch((cause: unknown) => { if (active) setError(errorText(cause)); });
+      .catch((cause: unknown) => { if (active) setError(errorText(cause)); })
+      .finally(() => { if (active) setMembersLoading(false); });
     return () => { active = false; };
   }, [selected]);
 
   async function act(action: () => Promise<unknown>, success: string) {
+    if (selectedMode !== "edit") return;
     setBusy(true); setError(""); setMessage("");
     try {
       await action();
@@ -96,83 +142,171 @@ export function CourseOfferingPanel() {
     finally { setBusy(false); }
   }
 
+  const alreadyAdded = courses.some((course) => course.termId === termId && course.primaryClassId === classId && course.subjectId === subjectId);
+  const chosenTeachers = createTeachers.filter((row) => row.teacherId);
+  const teachersValid = new Set(chosenTeachers.map((row) => row.teacherId)).size === chosenTeachers.length && chosenTeachers.filter((row) => row.role === "PRIMARY_TEACHER").length <= 1;
+  const policyValid = Number.isInteger(createPolicy.annualPeriods) && createPolicy.annualPeriods >= 35 && createPolicy.annualPeriods <= 1000;
+  const canCreate = readiness.dbPrepared && Boolean(termId && classId && subjectId) && !alreadyAdded && teachersValid && policyValid;
+  const defaultCreateTitle = [subjects.find((row) => row.id === subjectId)?.vietnameseName || subjects.find((row) => row.id === subjectId)?.name, classes.find((row) => row.id === classId)?.name, terms.find((row) => row.id === termId)?.name].filter(Boolean).join(" - ");
+
+  function openCreate() {
+    setCreateError("");
+    setCreateTitle("");
+    setCreateTeachers([{ key: nextTeacherKey.current++, teacherId: "", role: "PRIMARY_TEACHER" }]);
+    setCreatePolicy(defaultGradePolicy);
+    setCreateOpen(true);
+  }
+
+  function openCourse(course: CourseOffering, mode: "view" | "edit") {
+    setError(""); setMessage(""); setTeacherId(""); setTeacherRole("PRIMARY_TEACHER");
+    setSelectedMode(mode); setSelectedId(course.id);
+  }
+
+  async function createCourse(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || !canCreate) return;
+    setBusy(true); setCreateError(""); setError(""); setMessage("");
+    try {
+      const course = await courseOfferingApi.create({ termId, primaryClassId: classId, subjectId, displayNameOverride: createTitle.trim(), teachers: chosenTeachers.map(({ teacherId, role }) => ({ teacherId, role })), gradebook: createPolicy });
+      setCourses((current) => [course, ...current.filter((row) => row.id !== course.id)]);
+      setSelectedId("");
+      setSearch(""); setYearFilter(""); setTermFilter(""); setStatusFilter(""); setPage(1);
+      setCreateOpen(false);
+      setMessage("Đã thêm môn học cho lớp");
+    } catch (cause) { setCreateError(errorText(cause)); }
+    finally { setBusy(false); }
+  }
+
   const activeTeachers = members?.teachers.filter((teacher) => !teacher.effectiveTo) ?? [];
   const activeEnrollmentIds = new Set(members?.enrollments.filter((row) => row.status === "ACTIVE").map((row) => row.studentId) ?? []);
 
-  return <div className="space-y-5">
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-xl font-extrabold text-slate-900">Lớp môn học theo học kỳ</h2>
-      <p className="mt-1 text-sm text-slate-600">Subject là danh mục; CourseOffering mới là môn dạy cho một lớp hoặc nhóm trong một học kỳ. Dữ liệu cũ chưa được tự gán Course.</p>
-      {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
-      {message && <p role="status" className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
-      {!readiness.dbPrepared && <p role="status" className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Chế độ xem trước: database chưa được chuẩn bị cho CourseOffering. Mọi thao tác ghi đang bị khóa; dữ liệu lớp môn học cũ chưa được chuyển đổi.</p>}
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
-        <label className={labelClass}>Năm học<select className={inputClass} value={yearId} onChange={(event) => setYearId(event.target.value)}>
-          {years.map((year) => <option key={year.id} value={year.id}>{year.name}</option>)}
-        </select></label>
-        <label className={labelClass}>Học kỳ<select className={inputClass} value={termId} onChange={(event) => setTermId(event.target.value)}>
-          {yearTerms.map((term) => <option key={term.id} value={term.id}>{term.name} · {term.status}</option>)}
-        </select></label>
-        <label className={labelClass}>Lớp<select className={inputClass} value={classId} onChange={(event) => setClassId(event.target.value)}>
-          {yearClasses.map((schoolClass) => <option key={schoolClass.id} value={schoolClass.id}>{schoolClass.name}</option>)}
-        </select></label>
-        <label className={labelClass}>Môn danh mục<select className={inputClass} value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>
-          {activeSubjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.vietnameseName || subject.name}</option>)}
-        </select></label>
-        <label className={labelClass}>Chế độ ghi danh<select className={inputClass} value={enrollmentMode} onChange={(event) => setEnrollmentMode(event.target.value as CourseEnrollmentMode)}>
-          <option value="CLASS_ROSTER">Cả lớp (CLASS_ROSTER)</option><option value="MANUAL">Chọn học sinh trong lớp (MANUAL)</option>
-        </select></label>
-        <label className={labelClass}>Mã nhóm<input className={inputClass} value={sectionKey} maxLength={24} onChange={(event) => setSectionKey(event.target.value.toUpperCase())} /></label>
+  return <div className="w-full">
+    <div className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+        <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(200px,1fr)_160px_160px_170px]">
+          <Input icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo môn hoặc lớp" aria-label="Tìm môn học theo lớp" />
+          <CustomSelect value={yearFilter} options={[{ value: "", label: "Tất cả năm học" }, ...years.map((year) => ({ value: year.id, label: year.name }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(value) => { setYearFilter(value); setTermFilter(""); setPage(1); }} />
+          <CustomSelect value={termFilter} options={[{ value: "", label: "Tất cả học kỳ" }, ...filterTerms.map((term) => ({ value: term.id, label: yearFilter ? term.name : `${term.name} · ${years.find((year) => year.id === term.academicYearId)?.name ?? ""}` }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo học kỳ" onValueChange={(value) => { setTermFilter(value); setPage(1); }} />
+          <CustomSelect value={statusFilter} options={[{ value: "", label: "Tất cả trạng thái" }, ...Object.entries(courseStatusLabels).map(([value, label]) => ({ value, label }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái" onValueChange={(value) => { setStatusFilter(value); setPage(1); }} />
+        </div>
+        <div className="flex shrink-0 justify-end"><Button permission="course_offerings.create" className="!h-[42px] !rounded-lg" disabled={busy} onClick={openCreate}><Plus className="size-4" />Thêm môn cho lớp</Button></div>
       </div>
-      <Button className="mt-4" disabled={busy || !readiness.dbPrepared || !termId || !classId || !subjectId || !/^[A-Z0-9_-]{1,24}$/.test(sectionKey)}
-        onClick={() => void act(() => courseOfferingApi.create({ termId, primaryClassId: classId, subjectId, enrollmentMode, sectionKey }), "Đã tạo Course DRAFT")}>Tạo lớp môn học</Button>
+    </div>
+
+    <section className="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
+      {!selected && error && <p role="alert" className="m-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+      {!selected && message && <p role="status" className="m-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
+      {!readiness.dbPrepared && <p role="status" className="m-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Đang kiểm tra dữ liệu môn học theo lớp. Nếu thông báo còn hiển thị, hãy tải lại trang hoặc kiểm tra dịch vụ backend.</p>}
+      <div className="overflow-x-auto">
+        <Table className="min-w-[1100px]" aria-label="Danh sách môn học theo lớp">
+          <TableHeader className="!bg-brand-600 !text-white"><tr>
+            <TableHead className="w-14 text-center">#</TableHead><TableHead>Môn học</TableHead><TableHead>Lớp</TableHead><TableHead>Năm học</TableHead><TableHead>Học kỳ</TableHead><TableHead className="text-center">Học sinh</TableHead><TableHead>Trạng thái</TableHead><TableHead className="text-right">Thao tác</TableHead>
+          </tr></TableHeader>
+          <TableBody>
+            {loading && <TableLoadingBarRow colSpan={8} />}
+            {!loading && !pagedCourses.length && <TableEmptyRow colSpan={8} message={courses.length ? "Không tìm thấy môn học phù hợp" : "Chưa có môn học theo lớp. Bấm Thêm môn cho lớp để bắt đầu."} />}
+            {!loading && pagedCourses.map((course, index) => {
+              const schoolClass = course.schoolClass ?? classes.find((row) => row.id === course.primaryClassId);
+              const subject = course.subject ?? subjects.find((row) => row.id === course.subjectId);
+              const statusClass = { DRAFT: "bg-slate-100 text-slate-600", OPEN: "bg-emerald-50 text-emerald-700", CLOSED: "bg-amber-50 text-amber-700", ARCHIVED: "bg-slate-100 text-slate-500" }[course.status];
+              return <tr key={course.id} className="transition hover:bg-slate-50/70">
+                <TableCell className="text-center text-xs text-slate-400">{(page - 1) * pageSize + index + 1}</TableCell>
+                <TableCell><span className="block font-bold text-slate-900">{course.displayNameOverride || subject?.vietnameseName || subject?.name || course.displayName}</span></TableCell>
+                <TableCell className="font-bold text-brand-700">{schoolClass?.name ?? "--"}</TableCell>
+                <TableCell>{years.find((year) => year.id === course.academicYearId)?.name ?? "--"}</TableCell>
+                <TableCell>{course.term?.name ?? terms.find((term) => term.id === course.termId)?.name ?? "--"}</TableCell>
+                <TableCell className="text-center">{course.activeStudentCount}</TableCell>
+                <TableCell><span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${statusClass}`}>{courseStatusLabels[course.status]}</span></TableCell>
+                <TableCell><div className="flex justify-end gap-1">
+                  <Button permission="course_offerings.update" variant="ghost" size="sm" disabled={busy || course.status === "ARCHIVED"} aria-label={`Chỉnh sửa ${course.displayName}`} title="Chỉnh sửa môn học" onClick={() => openCourse(course, "edit")}><Pencil className="size-4" /></Button>
+                  <Button permission="course_offerings.read" variant="ghost" size="sm" disabled={busy} aria-label={`Xem ${course.displayName}`} title="Xem chi tiết môn học" onClick={() => openCourse(course, "view")}><Eye className="size-4" /></Button>
+                </div></TableCell>
+              </tr>;
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      <DataTableFooter rowCount={pagedCourses.length} totalItems={filteredCourses.length} itemLabel="môn học theo lớp" page={page} totalPages={totalPages} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />
     </section>
 
-    <section className="grid gap-5 lg:grid-cols-[minmax(250px,1fr)_minmax(0,2fr)]">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="font-extrabold">Course Offerings ({courses.length})</h3>
-        <div className="mt-3 space-y-2">{courses.map((course) => <button type="button" key={course.id} onClick={() => setSelectedId(course.id)}
-          className={`w-full rounded-xl border p-3 text-left text-sm ${selectedId === course.id ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:bg-slate-50"}`}>
-          <span className="block font-bold">{course.displayName}</span>
-          <span className="text-slate-600">{course.sectionKey} · {course.status} · {course.activeStudentCount} học sinh</span>
-        </button>)}{!courses.length && <p className="text-sm text-slate-500">Chưa có CourseOffering. Danh mục Subject không tự tạo Course.</p>}</div>
-      </div>
+    <Modal open={createOpen} title="Thêm môn cho lớp" description="Thiết lập môn học, phân công giáo viên và cấu hình sổ điểm trong một lần." onClose={() => { if (!busy) setCreateOpen(false); }} width="max-w-5xl" bodyClassName="max-h-[70vh] overflow-y-auto" footer={<>
+      <Button variant="outline" disabled={busy} onClick={() => setCreateOpen(false)}>Hủy</Button>
+      <Button permission="course_offerings.create" type="submit" form="course-offering-create-form" disabled={busy || !canCreate}>{busy && <LoaderCircle className="size-4 animate-spin" />}{busy ? "Đang thêm..." : "Thêm môn cho lớp"}</Button>
+    </>}>
+      <form id="course-offering-create-form" onSubmit={(event) => void createCourse(event)}>
+      {createError && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{createError}</p>}
+      <fieldset disabled={busy} className="grid gap-4 sm:grid-cols-2">
+        <CustomSelect label="Năm học" value={yearId} disabled={busy} options={years.map((year) => ({ value: year.id, label: year.name }))} onValueChange={setYearId} />
+        <CustomSelect label="Học kỳ" value={termId} disabled={busy} options={yearTerms.map((term) => ({ value: term.id, label: `${term.name} · ${termStatusLabels[term.status] ?? term.status}` }))} onValueChange={setTermId} />
+        <CustomSelect label="Lớp" value={classId} disabled={busy} searchable searchPlaceholder="Tìm lớp học..." options={yearClasses.map((schoolClass) => ({ value: schoolClass.id, label: schoolClass.name }))} onValueChange={setClassId} />
+        <CustomSelect label="Môn học" value={subjectId} disabled={busy} searchable searchPlaceholder="Tìm môn học..." options={activeSubjects.map((subject) => ({ value: subject.id, label: subject.vietnameseName || subject.name }))} onValueChange={setSubjectId} />
+      </fieldset>
+      <p className="mt-3 text-sm text-slate-500">Môn học áp dụng cho toàn bộ học sinh trong lớp.</p>
+      {alreadyAdded && <p role="status" className="mt-3 text-sm text-amber-700">Môn này đã được thêm cho lớp trong học kỳ đã chọn.</p>}
+      {!activeSubjects.length && <p className="mt-3 text-sm text-amber-700">Chưa có môn học hoạt động. <Link className="underline" href="/admin/subjects">Thêm môn học</Link> trước khi thêm môn cho lớp.</p>}
+      <label className="mt-4 block text-sm font-bold text-slate-700">Tên hiển thị môn học
+        <Input className="mt-2 w-full" value={createTitle} maxLength={120} placeholder={defaultCreateTitle || "Tự động theo môn, lớp và học kỳ"} disabled={busy} onChange={(event) => setCreateTitle(event.target.value)} />
+      </label>
+      <p className="mt-1 text-xs text-slate-500">Để trống để dùng tên tự động.</p>
+      <section className="mt-5 border-t border-slate-100 pt-4" aria-label="Phân công giáo viên">
+        <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-slate-900">Giáo viên</h3><Button variant="outline" size="sm" disabled={busy} onClick={() => setCreateTeachers((rows) => [...rows, { key: nextTeacherKey.current++, teacherId: "", role: "CO_TEACHER" }])}><Plus className="size-4" />Thêm giáo viên</Button></div>
+        <div className="mt-3 space-y-3">{createTeachers.map((row, index) => <div key={row.key} className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <CustomSelect label={`Giáo viên ${index + 1}`} value={row.teacherId} placeholder="Chọn giáo viên" searchable searchPlaceholder="Tìm giáo viên..." disabled={busy} options={teachers.map((teacher) => ({ value: teacher.id, label: teacher.fullName, disabled: createTeachers.some((other) => other.key !== row.key && other.teacherId === teacher.id) }))} onValueChange={(value) => setCreateTeachers((rows) => rows.map((other) => other.key === row.key ? { ...other, teacherId: value } : other))} />
+          <CustomSelect label={`Vai trò giáo viên ${index + 1}`} value={row.role} disabled={busy} options={[{ value: "PRIMARY_TEACHER", label: "Giáo viên chính", disabled: createTeachers.some((other) => other.key !== row.key && other.teacherId && other.role === "PRIMARY_TEACHER") }, { value: "CO_TEACHER", label: "Đồng giảng" }]} onValueChange={(value) => setCreateTeachers((rows) => rows.map((other) => other.key === row.key ? { ...other, role: value as CourseTeacherRole } : other))} />
+          <Button variant="ghost" disabled={busy} aria-label={`Bỏ giáo viên ${index + 1}`} onClick={() => setCreateTeachers((rows) => rows.length === 1 ? [{ ...row, teacherId: "", role: "PRIMARY_TEACHER" }] : rows.filter((other) => other.key !== row.key))}>Bỏ</Button>
+        </div>)}</div>
+        {!teachersValid && <p role="alert" className="mt-2 text-sm text-rose-700">Không chọn trùng giáo viên và chỉ phân công một giáo viên chính.</p>}
+        <p className="mt-2 text-xs text-slate-500">Có thể phân công sau. Cần có giáo viên chính trước khi bắt đầu giảng dạy.</p>
+      </section>
+      <section className="mt-5 border-t border-slate-100 pt-4" aria-label="Cấu hình sổ điểm">
+        <h3 className="font-bold text-slate-900">Cấu hình sổ điểm</h3>
+        <div className="mt-3 flex flex-wrap items-end gap-3 rounded-xl border border-blue-100 bg-blue-50/40 p-4"><GradebookPolicyFields policy={createPolicy} onChange={setCreatePolicy} disabled={busy} /></div>
+        <p className="mt-2 text-xs text-slate-500">Sổ điểm được tạo cùng môn học, theo lớp và học kỳ đã chọn.</p>
+      </section>
+      <p className="mt-4 text-xs text-slate-500">Môn học được lưu ở trạng thái bản nháp. Sau khi thêm, vào cấu hình để bắt đầu giảng dạy.</p>
+      </form>
+    </Modal>
 
-      {selected && <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div><h3 className="font-extrabold">{selected.displayName}</h3><p className="text-sm text-slate-600">{selected.status} · {selected.enrollmentMode} · {selected.sectionKey}</p></div>
+    <Modal open={Boolean(selected)} title={`${selectedMode === "view" ? "Xem" : "Chỉnh sửa"} môn học${selected ? `: ${selected.displayName}` : ""}`} description={selectedMode === "view" ? "Thông tin môn học, giáo viên, học sinh và sổ điểm." : "Quản lý giáo viên, học sinh và sổ điểm của môn học."} onClose={() => { if (!busy) setSelectedId(""); }} width="max-w-5xl" bodyClassName="max-h-[76vh] overflow-y-auto">
+      {error && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+      {message && <p role="status" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
+      {membersLoading && <p className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" />Đang tải thông tin môn học...</p>}
+      {selected && !membersLoading && members && selectedMode === "view" && <CourseOfferingDetails course={selected} members={members} roster={roster} subjectName={selected.subject?.vietnameseName || selected.subject?.name || subjects.find((row) => row.id === selected.subjectId)?.vietnameseName || subjects.find((row) => row.id === selected.subjectId)?.name || "--"} className={selected.schoolClass?.name ?? classes.find((row) => row.id === selected.primaryClassId)?.name ?? "--"} yearName={years.find((row) => row.id === selected.academicYearId)?.name ?? "--"} termName={selected.term?.name ?? terms.find((row) => row.id === selected.termId)?.name ?? "--"} statusLabel={courseStatusLabels[selected.status]} />}
+      {selected && !membersLoading && members && selectedMode === "edit" && <div className="space-y-4">
+        <div><h3 className="font-extrabold">{selected.displayName}</h3><p className="text-sm text-slate-600">{courseStatusLabels[selected.status]} · {selected.enrollmentMode === "CLASS_ROSTER" ? "Cả lớp" : "Chọn học sinh"}</p></div>
+        {selected.status === "DRAFT" && <div className="flex flex-wrap gap-2"><Input aria-label="Tên hiển thị môn học" className={`${inputClass} flex-1`} placeholder={selected.displayName} value={title} maxLength={120} onChange={(e)=>setTitle(e.target.value)} /><Button permission="course_offerings.update" disabled={busy} onClick={()=>void act(()=>courseOfferingApi.update(selected.id,title),"Đã lưu tên môn học")}>Lưu tên</Button></div>}
         <div className="flex flex-wrap gap-2">
-          {selected.status === "DRAFT" && <Button disabled={busy || !readiness.dbPrepared || !selected.readyForOpen || selected.term?.status !== "ACTIVE" || !activeTeachers.some((row) => row.role === "PRIMARY_TEACHER")}
-            onClick={() => void act(() => courseOfferingApi.transition(selected.id, "open"), "Đã mở Course")}>Mở Course</Button>}
-          {selected.status === "OPEN" && <Button disabled={busy || !readiness.dbPrepared} onClick={() => void act(() => courseOfferingApi.transition(selected.id, "close"), "Đã đóng Course")}>Đóng Course</Button>}
-          {selected.status === "CLOSED" && <Button disabled={busy || !readiness.dbPrepared} onClick={() => void act(() => courseOfferingApi.transition(selected.id, "archive"), "Đã lưu trữ Course")}>Lưu trữ</Button>}
+          {selected.status === "DRAFT" && <Button permission="course_offerings.lifecycle" disabled={busy || !readiness.dbPrepared || !selected.readyForOpen || selected.term?.status !== "ACTIVE" || !activeTeachers.some((row) => row.role === "PRIMARY_TEACHER")}
+            onClick={() => void act(() => courseOfferingApi.transition(selected.id, "open"), "Đã bắt đầu giảng dạy môn học")}>Bắt đầu giảng dạy</Button>}
+          {selected.status === "OPEN" && <Button permission="course_offerings.lifecycle" disabled={busy || !readiness.dbPrepared} onClick={() => void act(() => courseOfferingApi.transition(selected.id, "close"), "Đã kết thúc giảng dạy môn học")}>Kết thúc giảng dạy</Button>}
+          {selected.status === "CLOSED" && <Button permission="course_offerings.lifecycle" disabled={busy || !readiness.dbPrepared} onClick={() => void act(() => courseOfferingApi.transition(selected.id, "archive"), "Đã lưu trữ môn học")}>Lưu trữ</Button>}
         </div>
-        {selected.status === "DRAFT" && selected.term?.status !== "ACTIVE" && <p className="text-xs text-amber-700">Chỉ mở Course khi học kỳ ACTIVE.</p>}
-        {selected.status === "DRAFT" && !selected.readyForOpen && <p className="text-xs text-amber-700">Chưa thể mở: Content, Assignment, Exam, Gradebook, Progress và Attendance chưa chuyển sang Course ID.</p>}
+        {selected.status === "DRAFT" && selected.term?.status !== "ACTIVE" && <p className="text-xs text-amber-700">Chỉ bắt đầu giảng dạy khi học kỳ đang diễn ra.</p>}
+        {selected.status === "DRAFT" && !selected.readyForOpen && <p className="text-xs text-amber-700">Dịch vụ chưa sẵn sàng bắt đầu giảng dạy. Hãy tải lại trang sau khi cập nhật backend.</p>}
         <div className="border-t border-slate-100 pt-4">
           <h4 className="font-bold">Giáo viên</h4>
           <ul className="mt-2 space-y-1 text-sm">{activeTeachers.map((row) => <li key={row.id} className="flex items-center justify-between gap-2">
             <span>{row.user?.fullName || row.teacherId} · {row.role === "PRIMARY_TEACHER" ? "Giáo viên chính" : "Đồng giảng"}</span>
-            {(row.role !== "PRIMARY_TEACHER" || selected.status !== "OPEN") && <button className="text-rose-700" disabled={busy || !readiness.dbPrepared}
-              onClick={() => void act(() => courseOfferingApi.endTeacher(selected.id, row.teacherId), "Đã kết thúc phân công")}>Kết thúc</button>}
+            {(row.role !== "PRIMARY_TEACHER" || selected.status !== "OPEN") && <Button variant="plain" type="submit" className="text-rose-700" disabled={busy || !readiness.dbPrepared || selected.status === "ARCHIVED"}
+              onClick={() => void act(() => courseOfferingApi.endTeacher(selected.id, row.teacherId), "Đã kết thúc phân công")}>Kết thúc</Button>}
           </li>)}</ul>
-          <div className="mt-3 flex flex-wrap gap-2"><select aria-label="Chọn giáo viên" className={`${inputClass} max-w-56`} value={teacherId} onChange={(event) => setTeacherId(event.target.value)}>
-            <option value="">Chọn giáo viên</option>{teachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.fullName}</option>)}
-          </select><select aria-label="Vai trò giáo viên" className={`${inputClass} max-w-48`} value={teacherRole} onChange={(event) => setTeacherRole(event.target.value as CourseTeacherRole)}>
-            <option value="PRIMARY_TEACHER">Giáo viên chính</option><option value="CO_TEACHER">Đồng giảng</option>
-          </select><Button disabled={busy || !readiness.dbPrepared || !teacherId || selected.status === "ARCHIVED"} onClick={() => void act(() =>
+          <div className="mt-3 flex flex-wrap gap-2"><CustomSelect ariaLabel="Chọn giáo viên" className="w-full sm:w-56" value={teacherId} placeholder="Chọn giáo viên" searchable searchPlaceholder="Tìm giáo viên..." disabled={busy || selected.status === "ARCHIVED"} options={teachers.map((teacher) => ({ value: teacher.id, label: teacher.fullName }))} onValueChange={setTeacherId} />
+          <CustomSelect ariaLabel="Vai trò giáo viên" className="w-full sm:w-48" value={teacherRole} disabled={busy || selected.status === "ARCHIVED"} options={[{ value: "PRIMARY_TEACHER", label: "Giáo viên chính" }, { value: "CO_TEACHER", label: "Đồng giảng" }]} onValueChange={(value) => setTeacherRole(value as CourseTeacherRole)} />
+          <Button permission="course_offerings.assign" disabled={busy || !readiness.dbPrepared || !teacherId || selected.status === "ARCHIVED"} onClick={() => void act(() =>
             teacherRole === "PRIMARY_TEACHER" && activeTeachers.some((row) => row.role === "PRIMARY_TEACHER")
               ? courseOfferingApi.replacePrimary(selected.id, teacherId)
               : courseOfferingApi.assignTeacher(selected.id, teacherId, teacherRole), "Đã cập nhật giáo viên")}>Phân công</Button></div>
         </div>
+        {classes.find((row)=>row.id===selected.primaryClassId) && <ClassGradebookConfig key={selected.id} schoolClass={classes.find((row)=>row.id===selected.primaryClassId)!} course={selected} />}
         <div className="border-t border-slate-100 pt-4"><h4 className="font-bold">Học sinh ({selected.activeStudentCount})</h4>
-          {selected.enrollmentMode === "CLASS_ROSTER" ? <p className="mt-1 text-sm text-slate-600">Snapshot khi mở Course; học sinh vào/rời lớp sau đó được đồng bộ từ nghiệp vụ lớp.</p>
+          {selected.enrollmentMode === "CLASS_ROSTER" ? <div><p className="mt-1 text-sm text-slate-600">Danh sách được lấy khi bắt đầu giảng dạy và tự cập nhật khi học sinh vào hoặc rời lớp.</p><ul className="mt-2 max-h-64 space-y-1 overflow-auto text-sm">{members?.enrollments.filter((row)=>row.status==="ACTIVE").map((row)=><li key={row.id} className="rounded-lg border border-slate-100 p-2">{row.user?.fullName ?? row.studentId}<span className="ml-2 text-xs text-slate-500">{row.user?.accountName}</span></li>)}</ul></div>
             : <div className="mt-2 max-h-64 space-y-2 overflow-auto">{roster?.students.map((student) => <div key={student.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 p-2 text-sm">
-                <span>{student.fullName}</span>{activeEnrollmentIds.has(student.id) ? <button className="text-rose-700" disabled={busy || !readiness.dbPrepared}
-                  onClick={() => void act(() => courseOfferingApi.withdraw(selected.id, student.id), "Đã rút học sinh khỏi Course")}>Rút</button>
-                  : <button className="text-blue-700" disabled={busy || !readiness.dbPrepared || selected.status === "CLOSED" || selected.status === "ARCHIVED"}
-                    onClick={() => void act(() => courseOfferingApi.enroll(selected.id, student.id), "Đã ghi danh học sinh")}>Ghi danh</button>}</div>)}</div>}
+                <span>{student.fullName}</span>{activeEnrollmentIds.has(student.id) ? <Button variant="plain" type="submit" className="text-rose-700" disabled={busy || !readiness.dbPrepared || selected.status === "CLOSED" || selected.status === "ARCHIVED"}
+                  onClick={() => void act(() => courseOfferingApi.withdraw(selected.id, student.id), "Đã rút học sinh khỏi môn học")}>Rút</Button>
+                  : <Button variant="plain" type="submit" className="text-blue-700" disabled={busy || !readiness.dbPrepared || selected.status === "CLOSED" || selected.status === "ARCHIVED"}
+                    onClick={() => void act(() => courseOfferingApi.enroll(selected.id, student.id), "Đã ghi danh học sinh")}>Ghi danh</Button>}</div>)}</div>}
         </div>
       </div>}
-    </section>
+    </Modal>
   </div>;
 }

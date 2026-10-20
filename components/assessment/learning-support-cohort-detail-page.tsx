@@ -174,7 +174,7 @@ export function LearningSupportCohortDetailPage() {
                     </h1>
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500">
                       <span className="inline-flex items-center gap-1.5">
-                        <UsersRound className="size-4" /> {total} sinh viên
+                        <UsersRound className="size-4" /> {total} học sinh
                       </span>
                       {createdAt ? (
                         <span className="inline-flex items-center gap-1.5">
@@ -184,7 +184,7 @@ export function LearningSupportCohortDetailPage() {
                     </div>
                     <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
                       Đợt này gồm {total} lộ trình cá nhân cùng mục tiêu hỗ trợ.
-                      Mỗi sinh viên có nhiệm vụ, bài luyện và tiến độ riêng dựa
+                      Mỗi học sinh có nhiệm vụ, bài luyện và tiến độ riêng dựa
                       trên kết quả học tập của mình.
                     </p>
                   </div>
@@ -205,7 +205,7 @@ export function LearningSupportCohortDetailPage() {
                 <div>
                   <h2 className="font-black text-slate-900">Tiến độ của đợt</h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    {completed}/{total} sinh viên đạt ngưỡng
+                    {completed}/{total} học sinh đạt ngưỡng
                   </p>
                 </div>
                 <strong className="text-2xl text-brand-700">{completionPercent}%</strong>
@@ -213,7 +213,7 @@ export function LearningSupportCohortDetailPage() {
               <div
                 className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-100"
                 role="img"
-                aria-label={`Hoàn thành ${completed} trên ${total} sinh viên`}
+                aria-label={`Hoàn thành ${completed} trên ${total} học sinh`}
               >
                 <div
                   className="h-full rounded-full bg-brand-600 transition-all"
@@ -247,7 +247,7 @@ export function LearningSupportCohortDetailPage() {
                 <div>
                   <h2 className="font-black text-slate-900">Lộ trình cá nhân</h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    Mỗi dòng là một lộ trình riêng được giao cho một sinh viên.
+                    Mỗi dòng là một lộ trình riêng được giao cho một học sinh.
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">

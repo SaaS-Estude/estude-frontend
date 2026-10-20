@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Table, TableBody, TableCell, TableEmptyRow, TableHead, TableHeader, TableLoadingBarRow } from "@/components/ui/data-table";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
-import { CustomSelect, Input } from "@/components/ui/form-control";
+import { CustomSelect, Input, Checkbox } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { useActionNotification } from "@/components/ui/action-notification";
 import { academicDataService } from "@/lib/assessment-api";
@@ -115,7 +115,7 @@ export function ClassManagementPanel() {
       <DataTableFooter rowCount={pagedClasses.length} totalItems={filteredClasses.length} itemLabel="lớp học" page={page} totalPages={totalPages} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />
     </section>
     <Modal open={isModalOpen} title={editingClass ? "Chỉnh sửa lớp học" : "Thêm lớp học"} description="Lớp học luôn thuộc một năm học cụ thể." onClose={() => setIsModalOpen(false)} width={editingClass ? "max-w-5xl" : "max-w-lg"} bodyClassName={editingClass ? "max-h-[78vh] overflow-y-auto" : undefined} footer={<Button permission={editingClass ? "classes.update" : "classes.create"} type="submit" form="class-form" disabled={saving}>{saving ? <LoaderCircle className="size-4 animate-spin" /> : null}{editingClass ? "Lưu thay đổi" : "Thêm lớp học"}</Button>}>
-      <form id="class-form" onSubmit={(event) => void handleSubmit(event)} className="grid gap-4"><CustomSelect label="Năm học" value={form.academicYearId} options={yearOptions} onValueChange={(value) => setForm({ ...form, academicYearId: value })} /><div className="grid gap-4 sm:grid-cols-2"><Input label="Mã lớp" required value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} /><Input label="Tên lớp" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div><label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} />Đang hoạt động</label></form>
+      <form id="class-form" onSubmit={(event) => void handleSubmit(event)} className="grid gap-4"><CustomSelect label="Năm học" value={form.academicYearId} options={yearOptions} onValueChange={(value) => setForm({ ...form, academicYearId: value })} /><div className="grid gap-4 sm:grid-cols-2"><Input label="Mã lớp" required value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} /><Input label="Tên lớp" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div><label className="flex items-center gap-2 text-sm font-semibold"><Checkbox type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} />Đang hoạt động</label></form>
       {editingClass ? <ClassStudentAssignmentContent classId={editingClass.id} /> : null}
     </Modal>
     <Modal open={Boolean(configuringClass)} title={`Cấu hình sổ điểm ${configuringClass?.name ?? ""}`} onClose={() => setConfiguringClass(null)} width="max-w-3xl">

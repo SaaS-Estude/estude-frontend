@@ -20,6 +20,8 @@ import type {
   LearningSupportRequest,
   LearningTask,
 } from "@/types/assessment";
+import { Input } from "@/components/ui/form-control";
+
 
 const planStatus: Record<LearningPlan["status"], { label: string; tone: string }> = {
   DRAFT: { label: "Bản nháp", tone: "bg-slate-100 text-slate-700" },
@@ -288,7 +290,7 @@ export function StudentLearningPlansPage({ detail = false }: { detail?: boolean 
                                   ) : null}
                                   {sentTaskId === task.id ? <p role="status" className="mb-2 text-xs font-semibold text-emerald-700">Đã gửi yêu cầu đến giáo viên, trang vẫn giữ nguyên vị trí hiện tại.</p> : null}
                                   <div className="flex gap-2">
-                                    <input className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-blue-100" value={note[task.id] ?? ""} onChange={(event) => { setSentTaskId(null); setNote((current) => ({ ...current, [task.id]: event.target.value })); }} placeholder={supportThread ? "Gửi thêm nội dung cho giáo viên" : "Mô tả nội dung bạn đang gặp khó khăn"} />
+                                    <Input className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-blue-100" value={note[task.id] ?? ""} onChange={(event) => { setSentTaskId(null); setNote((current) => ({ ...current, [task.id]: event.target.value })); }} placeholder={supportThread ? "Gửi thêm nội dung cho giáo viên" : "Mô tả nội dung bạn đang gặp khó khăn"} />
                                     <Button size="sm" variant="outline" disabled={busy || !(note[task.id] ?? "").trim()} onClick={() => void sendSupportRequest(plan.id, task.id)}>Gửi</Button>
                                   </div>
                                 </div>

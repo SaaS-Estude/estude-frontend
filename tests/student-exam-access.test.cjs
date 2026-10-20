@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+require("./helpers/register-ui.cjs");
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -28,7 +28,7 @@ async function render(t, exam, catalog = false) {
       examAttemptService: { startExam: async (id) => { calls.push(['start', id]); return { id: 'attempt' }; } } };
     if (id === '@/components/assessment/assessment-shell') return { AssessmentShell: Box, PageHeading: Box, LoadingPanel: Box, ErrorPanel: Box };
     if (id === '@/components/ui/button') return { Button: (props) => React.createElement('button', props) };
-    if (id === '@/components/ui/form-control') return { Input: Box, Textarea: Box };
+    if (id === '@/components/ui/form-control') return { ...require("./helpers/register-ui.cjs").formControls,  Input: Box, Textarea: Box };
     if (id === '@/components/ui/modal') return { Modal: () => null };
     if (id === '@/components/assessment/question-image-viewer') return { QuestionImageViewer: Box };
     if (id === '@/lib/study-analysis-loader') return { loadOrCreateStudentStudyAnalysis: async () => null };

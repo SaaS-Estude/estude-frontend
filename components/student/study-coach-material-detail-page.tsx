@@ -9,6 +9,8 @@ import { studyCoachService } from "@/lib/study-coach-api";
 import { formatFileSize, materialError, materialLifecycleLabels, materialLifecycleTones, publicFailureMessage } from "@/lib/study-coach-view";
 import type { StudyCoachCapabilities, StudyCoachMaterial } from "@/types/study-coach";
 
+
+
 export function StudyCoachMaterialDetailPage() {
   const { materialId } = useParams<{ materialId: string }>();
   const router = useRouter();
@@ -106,7 +108,7 @@ export function StudyCoachMaterialDetailPage() {
     : "";
   const failure = publicFailureMessage(material?.failureCode ?? null);
   return <StudentShell>
-    <button type="button" onClick={() => router.push("/student/study-coach")} className="inline-flex items-center gap-1 text-sm font-bold text-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-100"><ArrowLeft className="size-4" /> Quay lại Study Coach</button>
+    <Button variant="plain" type="button" onClick={() => router.push("/student/study-coach")} className="inline-flex items-center gap-1 text-sm font-bold text-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-100"><ArrowLeft className="size-4" /> Quay lại Study Coach</Button>
     {loading ? <DetailSkeleton /> : error && !material ? <StatePanel message={error} onRetry={() => void load()} /> : material && capabilities ? <div data-testid="material-detail">
       <header className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-card sm:p-8">
         <p className="text-xs font-black uppercase tracking-wider text-brand-600">Tài liệu Study Coach</p>
@@ -131,6 +133,6 @@ export function StudyCoachMaterialDetailPage() {
 }
 
 function Meta({ label, value }: { label: string; value: string }) { return <div><dt className="text-xs font-bold uppercase tracking-wide text-slate-400">{label}</dt><dd className="mt-1 break-words font-bold text-slate-800">{value}</dd></div>; }
-function Action({ label, icon: Icon, onClick }: { label: string; icon: typeof Map; onClick: () => void }) { return <button type="button" onClick={onClick} className="min-h-24 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-card hover:border-brand-300 focus:outline-none focus:ring-4 focus:ring-blue-100"><Icon className="size-5 text-brand-600" /><span className="mt-3 block font-black text-slate-900">{label}</span></button>; }
+function Action({ label, icon: Icon, onClick }: { label: string; icon: typeof Map; onClick: () => void }) { return <Button variant="plain" type="button" onClick={onClick} className="min-h-24 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-card hover:border-brand-300 focus:outline-none focus:ring-4 focus:ring-blue-100"><Icon className="size-5 text-brand-600" /><span className="mt-3 block font-black text-slate-900">{label}</span></Button>; }
 function DetailSkeleton() { return <div className="mt-4 animate-pulse rounded-3xl border border-slate-200 bg-white p-8" aria-label="Đang tải chi tiết tài liệu"><div className="h-4 w-28 rounded bg-slate-100" /><div className="mt-4 h-8 w-2/3 rounded bg-slate-100" /><div className="mt-8 grid grid-cols-2 gap-4"><div className="h-16 rounded bg-slate-100" /><div className="h-16 rounded bg-slate-100" /></div></div>; }
 function StatePanel({ message, onRetry }: { message: string; onRetry: () => void }) { return <section className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-6" role="alert"><h1 className="text-xl font-black text-rose-800">Không thể mở tài liệu</h1><p className="mt-2 text-sm text-rose-700">{message}</p><Button variant="outline" className="mt-4" onClick={onRetry}><RotateCcw className="size-4" /> Thử lại</Button></section>; }

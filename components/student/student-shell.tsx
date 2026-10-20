@@ -31,6 +31,8 @@ import {
   notificationService,
 } from "@/lib/engagement-api";
 import type { PortalNotification } from "@/types/engagement";
+import { Button } from "@/components/ui/button";
+
 
 interface StudentNavItem {
   icon: ComponentType<{ className?: string }>;
@@ -98,7 +100,7 @@ function StudentShellLoading() {
       <div className="text-center">
         <LoaderCircle className="mx-auto size-8 animate-spin text-brand-600" />
         <p className="mt-3 text-sm font-medium text-slate-500">
-          Đang tải không gian sinh viên...
+          Đang tải không gian học sinh...
         </p>
       </div>
     </main>
@@ -218,7 +220,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
 
           <nav
             className="hidden h-full items-center gap-1 lg:flex"
-            aria-label="Điều hướng sinh viên"
+            aria-label="Điều hướng học sinh"
           >
             {studentNavItems
               .filter((item) => !item.href || canVisit(item.href))
@@ -226,7 +228,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
                 const active = isNavItemActive(pathname, href);
 
                 return (
-                  <button
+                  <Button variant="plain"
                     type="button"
                     key={label}
                     onClick={() => href && router.push(href)}
@@ -240,13 +242,13 @@ export function StudentShell({ children }: { children: ReactNode }) {
                     {active ? (
                       <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-brand-600" />
                     ) : null}
-                  </button>
+                  </Button>
                 );
               })}
           </nav>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            <button
+            <Button variant="plain"
               type="button"
               onClick={() => setIsNotificationPopupOpen(true)}
               className="relative grid size-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
@@ -262,10 +264,10 @@ export function StudentShell({ children }: { children: ReactNode }) {
                   {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
                 </span>
               ) : null}
-            </button>
+            </Button>
 
             <div ref={accountMenuRef} className="relative">
-              <button
+              <Button variant="plain"
                 type="button"
                 onClick={() => setIsAccountMenuOpen((current) => !current)}
                 className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition hover:bg-slate-50"
@@ -293,14 +295,14 @@ export function StudentShell({ children }: { children: ReactNode }) {
                 <ChevronDown
                   className={`size-4 text-slate-400 transition-transform ${isAccountMenuOpen ? "rotate-180" : ""}`}
                 />
-              </button>
+              </Button>
 
               {isAccountMenuOpen ? (
                 <div
                   role="menu"
                   className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/15"
                 >
-                  <button
+                  <Button variant="plain"
                     type="button"
                     role="menuitem"
                     onClick={() => {
@@ -310,8 +312,8 @@ export function StudentShell({ children }: { children: ReactNode }) {
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
                   >
                     <CircleUserRound className="size-4" /> Hồ sơ cá nhân
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="plain"
                     type="button"
                     role="menuitem"
                     onClick={() => {
@@ -321,8 +323,8 @@ export function StudentShell({ children }: { children: ReactNode }) {
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
                   >
                     <CircleHelp className="size-4" /> Trợ giúp
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="plain"
                     type="button"
                     role="menuitem"
                     onClick={() => {
@@ -332,9 +334,9 @@ export function StudentShell({ children }: { children: ReactNode }) {
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
                   >
                     <Settings className="size-4" /> Cài đặt
-                  </button>
+                  </Button>
                   <div className="my-1 border-t border-slate-100" />
-                  <button
+                  <Button variant="plain"
                     type="button"
                     role="menuitem"
                     onClick={() => void handleSignOut()}
@@ -347,7 +349,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
                       <LogOut className="size-4" />
                     )}
                     {isSigningOut ? "Đang đăng xuất..." : "Đăng xuất"}
-                  </button>
+                  </Button>
                 </div>
               ) : null}
             </div>
@@ -379,14 +381,14 @@ export function StudentShell({ children }: { children: ReactNode }) {
             const active = isNavItemActive(pathname, href);
 
             return (
-              <button
+              <Button variant="plain"
                 type="button"
                 key={label}
                 onClick={() => href && router.push(href)}
                 className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold ${active ? "text-brand-700" : "text-slate-400"}`}
               >
                 <Icon className="size-5" /> {label}
-              </button>
+              </Button>
             );
           })}
       </nav>

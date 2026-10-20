@@ -34,7 +34,7 @@ export const MODULE_LINKS = [
     permission: "academic.read",
   },
   { href: "/admin/subjects", label: "Danh mục môn học", permission: "subjects.read" },
-  { href: "/admin/course-offerings", label: "Lớp môn học", permission: "course_offerings.read" },
+  { href: "/admin/course-offerings", label: "Môn học theo lớp", permission: "course_offerings.read" },
   { href: "/admin/classes", label: "Lớp học", permission: "classes.read" },
   {
     href: "/admin/subject-assignments",

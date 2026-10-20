@@ -7,7 +7,7 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
 import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
 import { Table, TableBody, TableCell, TableEmptyRow, TableHead, TableHeader, TableLoadingBarRow } from "@/components/ui/data-table";
-import { CustomSelect, Textarea } from "@/components/ui/form-control";
+import { CustomSelect, Textarea, Input } from "@/components/ui/form-control";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, authenticatedRequest } from "@/lib/auth-api";
@@ -101,24 +101,24 @@ function UserLookup({
       <label className="mb-2 block text-sm font-bold text-slate-700">{label}</label>
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-        <input
+        <Input
           value={open ? query : value ? `${value.fullName} · ${value.accountName}` : ""}
           onFocus={() => { setOpen(true); setQuery(""); }}
           onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
           placeholder={`Tìm ${role === "PARENT" ? "phụ huynh" : "học sinh"} theo tên hoặc tài khoản`}
           className="h-11 w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-9 text-sm text-slate-800 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-blue-100"
         />
-        {value ? <button type="button" aria-label={`Bỏ chọn ${label.toLowerCase()}`} onClick={() => { onChange(null); setQuery(""); setOpen(false); }} className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700">×</button> : null}
+        {value ? <Button variant="plain" type="button" aria-label={`Bỏ chọn ${label.toLowerCase()}`} onClick={() => { onChange(null); setQuery(""); setOpen(false); }} className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700">×</Button> : null}
       </div>
       {open ? (
         <div className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
           {loading ? <p className="flex items-center gap-2 px-3 py-3 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" /> Đang tìm kiếm…</p> : null}
           {!loading && !results.length ? <p className="px-3 py-3 text-sm text-slate-500">Không tìm thấy tài khoản phù hợp.</p> : null}
           {!loading && results.map((user) => (
-            <button key={user.id} type="button" onClick={() => { if (onSelect) onSelect(user); else onChange(user); setOpen(false); setQuery(""); }} className="block w-full px-3 py-2.5 text-left hover:bg-blue-50">
+            <Button variant="plain" key={user.id} type="button" onClick={() => { if (onSelect) onSelect(user); else onChange(user); setOpen(false); setQuery(""); }} className="block w-full px-3 py-2.5 text-left hover:bg-blue-50">
               <span className="block text-sm font-semibold text-slate-800">{user.fullName}</span>
               <span className="block text-xs text-slate-500">{user.accountName}{role === "STUDENT" ? ` · ${classLabel(user)}` : ""}</span>
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}
@@ -407,7 +407,7 @@ export function ParentStudentLinksPanel() {
           <UserLookup label="Phụ huynh" role="PARENT" value={parent} onChange={setParent} />
           <div>
             <UserLookup label="Học sinh" role="STUDENT" value={null} onChange={() => undefined} onSelect={(student) => setStudents((current) => current.some((item) => item.id === student.id) ? current : [...current, student])} />
-            {students.length ? <div className="mt-2 flex flex-wrap gap-2">{students.map((student) => <span key={student.id} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1.5 text-sm font-semibold text-brand-700">{student.fullName}<button type="button" aria-label={`Bỏ chọn ${student.fullName}`} onClick={() => setStudents((current) => current.filter((item) => item.id !== student.id))}>×</button></span>)}</div> : <p className="mt-2 text-xs text-slate-500">Có thể chọn nhiều học sinh.</p>}
+            {students.length ? <div className="mt-2 flex flex-wrap gap-2">{students.map((student) => <span key={student.id} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1.5 text-sm font-semibold text-brand-700">{student.fullName}<Button variant="plain" type="button" aria-label={`Bỏ chọn ${student.fullName}`} onClick={() => setStudents((current) => current.filter((item) => item.id !== student.id))}>×</Button></span>)}</div> : <p className="mt-2 text-xs text-slate-500">Có thể chọn nhiều học sinh.</p>}
           </div>
         </div>
         <CustomSelect
