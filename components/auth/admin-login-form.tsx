@@ -24,6 +24,7 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<LoginErrors>({});
   const [apiError, setApiError] = useState("");
+  const [passwordChanged, setPasswordChanged] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const roleName = role === "ADMIN"
     ? "quản trị viên"
@@ -32,6 +33,10 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
       : role === "PARENT"
         ? "phụ huynh"
         : "sinh viên";
+
+  useEffect(() => {
+    setPasswordChanged(new URLSearchParams(window.location.search).get("password") === "changed");
+  }, []);
 
   useEffect(() => {
     if (!isInitializing && user && !user.requiresFirstLoginSetup) {
@@ -99,6 +104,7 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
         </div>
 
         <form className="mt-7 space-y-5" onSubmit={handleSubmit} noValidate>
+          {passwordChanged && <AuthNotice type="success" message="Đã đổi mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới; các phiên cũ đã được thu hồi." />}
           {apiError ? <AuthNotice message={apiError} /> : null}
 
           <FormField

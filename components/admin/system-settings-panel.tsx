@@ -1,5 +1,6 @@
 "use client";
 import { ReportPolicyPanel } from "@/components/admin/report-policy-panel";
+import { ChangePasswordForm } from "@/components/auth/change-password-form";
 
 import { useEffect, useState } from "react";
 import {
@@ -679,6 +680,7 @@ export function SystemSettingsPanel({
             </span>
             <ChevronRight className="size-4" />
           </button>
+          {section === "security" && <ChangePasswordForm role="ADMIN" />}
         </section>
       </div>
     </div>

@@ -228,3 +228,66 @@ test("restoring a first-login session renders the mandatory popup before loading
     await act(async () => ui.unmount());
   }
 });
+
+test("school admin self-change requires current password, confirmation and a different new password", async (t) => {
+  let writes = 0;
+  const { ChangePasswordForm } = load("components/auth/change-password-form.tsx", mocks({
+    changePassword: async () => { writes++; },
+  }));
+  const ui = await render(t, ChangePasswordForm, { role: "ADMIN" });
+  await fill(ui, "Mật khẩu mới", "New@12345");
+  await fill(ui, "Nhập lại mật khẩu mới", "Other@12345");
+  await submit(ui);
+  assert.equal(writes, 0);
+  await fill(ui, "Mật khẩu hiện tại", "New@12345");
+  await fill(ui, "Nhập lại mật khẩu mới", "New@12345");
+  await submit(ui);
+  assert.match(textOf(ui.toJSON()), /phải khác mật khẩu hiện tại/);
+  assert.equal(writes, 0);
+});
+
+test("school admin self-change keeps errors visible and redirects only after the server succeeds", async (t) => {
+  const calls = [], redirects = [];
+  let fail = true;
+  const { ChangePasswordForm } = load("components/auth/change-password-form.tsx", mocks({
+    changePassword: async (...args) => {
+      calls.push(args);
+      if (fail) throw new Error("Mật khẩu hiện tại không đúng");
+    },
+  }, {}, { replace: (url) => redirects.push(url) }));
+  const ui = await render(t, ChangePasswordForm, { role: "ADMIN" });
+  await fill(ui, "Mật khẩu hiện tại", "Current@12345");
+  await fill(ui, "Mật khẩu mới", "New@12345");
+  await fill(ui, "Nhập lại mật khẩu mới", "New@12345");
+  await submit(ui);
+  assert.match(textOf(ui.toJSON()), /Mật khẩu hiện tại không đúng/);
+  assert.deepEqual(redirects, []);
+  fail = false;
+  await submit(ui);
+  assert.deepEqual(calls[1], ["Current@12345", "New@12345", "New@12345"]);
+  assert.deepEqual(redirects, ["/admin/login?password=changed"]);
+  assert.equal(input(ui, "Mật khẩu hiện tại").props.value, "");
+});
+
+test("school admin self-change serializes double submissions while the server is saving", async (t) => {
+  let writes = 0, finish;
+  const { ChangePasswordForm } = load("components/auth/change-password-form.tsx", mocks({
+    changePassword: () => {
+      writes++;
+      return new Promise((resolve) => { finish = resolve; });
+    },
+  }, {}, { replace() {} }));
+  const ui = await render(t, ChangePasswordForm, { role: "ADMIN" });
+  await fill(ui, "Mật khẩu hiện tại", "Current@12345");
+  await fill(ui, "Mật khẩu mới", "New@12345");
+  await fill(ui, "Nhập lại mật khẩu mới", "New@12345");
+  let saving;
+  await act(async () => {
+    const handler = ui.root.findByType("form").props.onSubmit;
+    saving = handler({ preventDefault() {} });
+    await handler({ preventDefault() {} });
+  });
+  assert.equal(writes, 1);
+  assert.equal(ui.root.findByType("fieldset").props.disabled, true);
+  await act(async () => { finish(); await saving; });
+});

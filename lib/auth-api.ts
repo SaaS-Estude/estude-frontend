@@ -351,6 +351,16 @@ export function authenticatedBlobRequest(
 }
 
 export const authApi = {
+  async changePassword(currentPassword: string, newPassword: string, confirmNewPassword: string): Promise<void> {
+    await authenticatedRequest<Record<string, never>>(portalAuthPath("change-password"), {
+      method: "PATCH",
+      body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword }),
+    });
+    // The server revoked every session; prevent an in-flight refresh or another
+    // tab from restoring this credential generation after a successful change.
+    invalidateSession();
+    unauthorizedHandler?.();
+  },
   requestPasswordReset(accountName: string): Promise<OtpChallenge> {
     return request<OtpChallenge>(portalAuthPath("password-reset/request"), {
       method: "POST",

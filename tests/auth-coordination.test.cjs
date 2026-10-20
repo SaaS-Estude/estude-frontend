@@ -112,3 +112,14 @@ test('login reopens a logged-out tab with coordinated cookie rotation', async ()
   await a.authApi.login({}); await a.authApi.refresh();
   assert.ok(a.token());
 });
+
+test('successful password change clears local access and broadcasts logout to sibling admin tabs', async () => {
+  const f = fixture(), a = f.tab('admin'), b = f.tab('admin');
+  await a.authApi.login({});
+  await b.authApi.refresh();
+  await a.authApi.changePassword('Current@123', 'New@12345', 'New@12345');
+  await new Promise(resolve => setTimeout(resolve, 1));
+  assert.equal(a.token(), null);
+  assert.equal(b.token(), null);
+  await assert.rejects(b.authApi.refresh(), /đăng nhập/);
+});
