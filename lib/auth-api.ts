@@ -375,7 +375,7 @@ export const authApi = {
   },
   requestFirstLoginOtp(email: string): Promise<OtpChallenge> {
     return authenticatedRequest<OtpChallenge>(
-      "/auth/student/first-login/request-otp",
+      portalAuthPath("first-login/request-otp"),
       { method: "POST", body: JSON.stringify({ email }) },
     );
   },
@@ -383,7 +383,7 @@ export const authApi = {
     payload: ResetPasswordPayload & { email: string },
   ): Promise<Record<string, never>> {
     return authenticatedRequest<Record<string, never>>(
-      "/auth/student/first-login/complete",
+      portalAuthPath("first-login/complete"),
       { method: "POST", body: JSON.stringify(payload) },
     );
   },

@@ -44,6 +44,7 @@ function mocks(api, auth = {}, router = {}) {
   return {
     "@/lib/auth-api": { authApi: api },
     "@/lib/account-security": load("lib/account-security.ts", {}),
+    "@/lib/portal": { getCurrentPortal: () => "student" },
     "@/context/auth-context": { useAuth: () => auth },
     "next/navigation": { useRouter: () => router },
     "@/components/ui/form-control": {
@@ -132,7 +133,8 @@ test("recovery awaits the server, validates passwords and keeps the form on an i
   assert.equal(ui.root.findAllByType("input").length, 0);
 });
 
-test("first login verifies the exact email, invalidates the code after editing email, and logs out only after success", async (t) => {
+for (const role of ["STUDENT", "TEACHER", "PARENT"]) {
+test(`${role} first login verifies the exact email, invalidates the code after editing email, and logs out only after success`, async (t) => {
   const requests = [];
   const completions = [];
   const redirects = [];
@@ -152,7 +154,7 @@ test("first login verifies the exact email, invalidates the code after editing e
         },
       },
       {
-        user: { role: "STUDENT", requiresFirstLoginSetup: true },
+        user: { role, requiresFirstLoginSetup: true },
         isInitializing: false,
         signOut: async () => {
           logouts++;
@@ -180,6 +182,10 @@ test("first login verifies the exact email, invalidates the code after editing e
     await new Promise(setImmediate);
   });
   await fill(ui, "Mã xác thực", "123456");
+  await fill(ui, "Mật khẩu mới", "111111");
+  await fill(ui, "Nhập lại mật khẩu mới", "111111");
+  await submit(ui);
+  assert.equal(completions.length, 0);
   await fill(ui, "Mật khẩu mới", "New@12345");
   await fill(ui, "Nhập lại mật khẩu mới", "New@12345");
   await submit(ui);
@@ -188,12 +194,14 @@ test("first login verifies the exact email, invalidates the code after editing e
   fail = false;
   await submit(ui);
   assert.equal(logouts, 1);
-  assert.deepEqual(redirects, ["/student/login?setup=complete"]);
+  assert.deepEqual(redirects, [`/${role.toLowerCase()}/login?setup=complete`]);
   assert.equal(completions[0].email, "new@example.test");
   assert.deepEqual(requests, ["first@example.test", "new@example.test"]);
 });
+}
 
-test("restoring a first-login session renders the mandatory popup before loading student workspace data", async (t) => {
+for (const role of ["STUDENT", "TEACHER", "PARENT"]) {
+test(`restoring ${role} first-login session renders the mandatory popup before loading workspace data`, async (t) => {
   for (const pending of [true, false]) {
     let dataLoads = 0;
     const { AuthProvider, useAuth } = load("context/auth-context.tsx", {
@@ -206,12 +214,12 @@ test("restoring a first-login session renders the mandatory popup before loading
           setUnauthorizedHandler() {},
           refresh: async () => {},
           me: async () => ({
-            role: "STUDENT",
+            role,
             requiresFirstLoginSetup: pending,
           }),
         },
       },
-      "@/lib/portal": { getCurrentPortalRole: () => "STUDENT" },
+      "@/lib/portal": { getCurrentPortalRole: () => role },
     });
     function Workspace() {
       const { user, isInitializing } = useAuth();
@@ -228,6 +236,7 @@ test("restoring a first-login session renders the mandatory popup before loading
     await act(async () => ui.unmount());
   }
 });
+}
 
 test("school admin self-change requires current password, confirmation and a different new password", async (t) => {
   let writes = 0;

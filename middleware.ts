@@ -14,6 +14,7 @@ function isPortalPath(pathname: string, portal: AuthPortal): boolean {
   // Login identity stays portal-specific. Feature access is resolved by RBAC, not the host.
   if (/^\/(admin|teacher|student|parent)\//.test(pathname) && !pathname.endsWith('/login') && !pathname.endsWith('/forgot-password')) return true;
   if (pathname === "/dashboard") return true;
+  if (pathname.startsWith("/first-login/")) return portal !== "admin";
 
   if (portal === "student") {
     return (
@@ -41,7 +42,9 @@ export function middleware(request: NextRequest) {
 
   const internalLoginPath = portal === "student" ? LOGIN_PATH : `/${portal}/login`;
   if (request.nextUrl.pathname === internalLoginPath && internalLoginPath !== LOGIN_PATH) {
-    return NextResponse.redirect(new URL(LOGIN_PATH, request.url));
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = LOGIN_PATH;
+    return NextResponse.redirect(loginUrl);
   }
 
   if (request.nextUrl.pathname === LOGIN_PATH) {

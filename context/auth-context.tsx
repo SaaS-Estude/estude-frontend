@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {user?.role === 'STUDENT' && user.requiresFirstLoginSetup ? (
+      {user?.requiresFirstLoginSetup ? (
         <FirstLoginSetupForm modal />
       ) : children}
     </AuthContext.Provider>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { authApi } from "@/lib/auth-api";
 import { newPasswordError } from "@/lib/account-security";
+import { getCurrentPortal } from "@/lib/portal";
 import { AuthNotice } from "./auth-notice";
 import { Input } from "@/components/ui/form-control";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,11 @@ export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const lock = useRef(false);
-  const needed = user?.role === "STUDENT" && user.requiresFirstLoginSetup;
+  const needed = user?.requiresFirstLoginSetup;
+  const loginPath = `/${user?.role.toLowerCase() ?? getCurrentPortal()}/login`;
   useEffect(() => {
-    if (!modal && !isInitializing && !user) router.replace("/student/login");
-  }, [modal, isInitializing, user, router]);
+    if (!modal && !isInitializing && !user) router.replace(loginPath);
+  }, [modal, isInitializing, user, router, loginPath]);
   useEffect(() => {
     if (!cooldown) return;
     const timer = window.setTimeout(
@@ -85,7 +87,7 @@ export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
         confirmNewPassword: confirmation,
       });
       await signOut().catch(() => undefined);
-      router.replace("/student/login?setup=complete");
+      router.replace(`${loginPath}?setup=complete`);
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -128,8 +130,8 @@ export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
           Thiết lập tài khoản lần đầu
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Đổi mật khẩu mặc định và xác thực email khôi phục trước khi bắt đầu
-          học.
+          Đổi mật khẩu mặc định và xác thực email khôi phục trước khi sử dụng
+          hệ thống.
         </p>
         <form className="mt-6 space-y-4" onSubmit={submit}>
           {error ? <AuthNotice message={error} /> : null}
