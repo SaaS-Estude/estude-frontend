@@ -1,5 +1,6 @@
 "use client";
 import { assessmentPurposeLabels, type AssessmentPurpose } from "@/lib/internal-results";
+import { answerReleaseLabel } from "@/lib/exam-answer-release";
 
 import Link from "next/link";
 import {courseOfferingApi,type CourseOffering} from "@/lib/course-offering-api";
@@ -1750,8 +1751,11 @@ export function ExamWizardPage({
                     <option value="NEVER">Không phát hành</option>
                     <option value="AFTER_SUBMIT">Ngay sau khi học sinh nộp (có thể lộ đáp án khi Exam còn mở)</option>
                     <option value="AFTER_EXAM_END">Sau khi Exam đóng (khuyến nghị)</option>
-                    <option value="AFTER_RESULT_PUBLISHED">Sau khi giáo viên công bố điểm</option>
+                    <option value="AFTER_RESULT_PUBLISHED">Sau khi giáo viên công bố điểm và bài thi kết thúc</option>
                   </Select>
+                  <span className="mt-2 block text-xs font-normal leading-5 text-slate-500">
+                    Phân tích AI cho học sinh được mở cùng đáp án. Hiển thị điểm ngay sau khi nộp là thiết lập riêng.
+                  </span>
                 </label>
               </div>
             </div>
@@ -2283,6 +2287,7 @@ export function ExamDetailPage() {
               <div className="flex items-center justify-between gap-3"><dt className="text-slate-500">Xáo trộn câu hỏi</dt><dd className="font-semibold text-slate-700">{exam.settings.shuffleQuestions ? "Có" : "Không"}</dd></div>
               <div className="flex items-center justify-between gap-3"><dt className="text-slate-500">Xáo trộn đáp án</dt><dd className="font-semibold text-slate-700">{exam.settings.shuffleAnswers ? "Có" : "Không"}</dd></div>
               <div className="flex items-center justify-between gap-3"><dt className="text-slate-500">Hiện điểm sau khi nộp</dt><dd className="font-semibold text-slate-700">{exam.settings.showScoreImmediately ? "Có" : "Không"}</dd></div>
+              <div className="flex items-start justify-between gap-3"><dt className="text-slate-500">Mở đáp án và phân tích AI</dt><dd className="text-right font-semibold text-slate-700">{answerReleaseLabel(exam.settings)}</dd></div>
             </dl>
           </div>
           <div className="border-t border-slate-100 p-3">

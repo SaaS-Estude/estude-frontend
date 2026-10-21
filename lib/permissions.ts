@@ -67,6 +67,7 @@ export const MODULE_LINKS = [
     label: "Lớp được phân công",
     permission: "teaching.read",
   },
+  { href: "/teacher/online-sessions", label: "Buổi học online", permission: "online_sessions.read" },
   {
     href: "/teacher/students",
     label: "Học sinh được phân công",

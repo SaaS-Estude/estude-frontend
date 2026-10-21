@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input, Select, Textarea } from "@/components/ui/form-control";
 import { OnlineSessionEditor } from "./session-editor";
+import { MeetingPasscode } from "./meeting-passcode";
 import { onlineSessionApi, type OnlineRole, type OnlineSession, type SessionHistory } from "@/lib/online-sessions-api";
 import { canEnterOnline, onlineLiveState, onlineStateLabels, onlineTime } from "@/lib/online-session-view";
 import { courseOfferingApi, type CourseOffering } from "@/lib/course-offering-api";
@@ -22,6 +23,7 @@ export function OnlineSessionPanel({ role, courseId, classId }: { role: OnlineRo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [access, setAccess] = useState<{ id: string; revision: number; passcode: string; roomUrl?: string } | null>(null);
   const [editing, setEditing] = useState<OnlineSession | "new" | null>(null);
   const [changing, setChanging] = useState<{ row: OnlineSession; remove: boolean } | null>(null);
   const [reason, setReason] = useState("");
@@ -49,8 +51,8 @@ export function OnlineSessionPanel({ role, courseId, classId }: { role: OnlineRo
     return () => { active = false; };
   }, [role, classId, courseId]);
   const load = useCallback(async () => {
-    if (!selectedCourse && role !== "admin") { setRows([]); setLoading(false); return; }
     const request = ++requestNumber.current;
+    if (!selectedCourse && role !== "admin") { setRows([]); setLoading(false); return; }
     setLoading(true); setError("");
     try { const data = await onlineSessionApi.list(role, selectedCourse || undefined); if (request !== requestNumber.current) return; setRows(data); if (data[0]) { offset.current = Date.parse(data[0].serverNow) - Date.now(); setClock(Date.now() + offset.current); } }
     catch (cause) { if (request === requestNumber.current) { setRows([]); setError(message(cause)); } }
@@ -62,8 +64,8 @@ export function OnlineSessionPanel({ role, courseId, classId }: { role: OnlineRo
   async function join(row: OnlineSession) {
     // Open synchronously so browsers don't block the authenticated async result.
     const tab = window.open("about:blank", "_blank"); if (tab) tab.opener = null;
-    try { const access = await onlineSessionApi.join(role, row.id); if (tab) tab.location.href = access.url; else window.location.assign(access.url); }
-    catch (cause) { tab?.close(); throw cause; }
+    try { const access = await onlineSessionApi.join(role, row.id); setAccess({ id: row.id, revision: row.revision, passcode: access.meetingPasscode ?? "", roomUrl: tab ? undefined : access.url }); if (tab) tab.location.href = access.url; else if (!access.meetingPasscode) window.location.assign(access.url); }
+    catch (cause) { setAccess(null); tab?.close(); throw cause; }
   }
   const current = courses.find((row) => row.id === selectedCourse);
   const visible = rows.filter((row) => (!state || onlineLiveState(row, clock) === state) && (!classFilter || row.classId === classFilter) && (!subjectFilter || row.subjectName === subjectFilter) && (!termFilter || row.termId === termFilter) && (!teacherFilter || row.organizerId === teacherFilter) && `${row.title} ${row.courseName} ${row.organizerName}`.toLocaleLowerCase("vi").includes(search.toLocaleLowerCase("vi")));
@@ -71,7 +73,7 @@ export function OnlineSessionPanel({ role, courseId, classId }: { role: OnlineRo
   return <section className="space-y-4">
     <header className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="flex items-center gap-2 text-xl font-extrabold text-slate-950"><Video className="size-5 text-brand-600" />Buổi học online</h2><p className="mt-1 text-sm text-slate-500">Học và rèn luyện cùng giáo viên qua Zoom hoặc Google Meet.</p></div><div className="flex gap-2"><Button aria-label="Tải lại buổi học" variant="outline" disabled={loading || busy} onClick={() => void load()}><RefreshCw className="size-4" /></Button>{role !== "student" && can("online_sessions.create") ? <Button disabled={!selectedCourse || busy} onClick={() => setEditing("new")}><Plus className="size-4" />Tạo buổi học</Button> : null}</div></header>
     <div className="flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-white p-3">
-      {role === "admin" ? <Select aria-label="Lớp môn học của buổi học online" className="min-w-52 flex-1" value={selectedCourse} onChange={(e) => { setSelectedCourse(e.target.value); setEditing(null); }}><option value="">{role === "admin" ? "Tất cả lớp môn học" : "Chọn lớp môn học"}</option>{courses.map((row) => <option key={row.id} value={row.id}>{row.displayName}</option>)}</Select> : null}
+      {role !== "student" ? <Select aria-label="Lớp môn học của buổi học online" className="min-w-52 flex-1" value={selectedCourse} disabled={Boolean(courseId)} onChange={(e) => { setSelectedCourse(e.target.value); setEditing(null); }}><option value="">{role === "admin" ? "Tất cả lớp môn học" : "Chọn lớp môn học"}</option>{courses.map((row) => <option key={row.id} value={row.id}>{row.displayName}</option>)}</Select> : null}
       <Input aria-label="Tìm buổi học online" className="min-w-48 flex-1" placeholder="Tìm buổi học, giáo viên…" value={search} onChange={(e) => setSearch(e.target.value)} />
       <Select aria-label="Trạng thái buổi học" value={state} onChange={(e) => setState(e.target.value)}><option value="">Tất cả trạng thái</option>{Object.entries(onlineStateLabels).filter(([key]) => role !== "student" || key !== "DRAFT").map(([key, label]) => <option key={key} value={key}>{label}</option>)}</Select>
       {role === "admin" ? <><Select aria-label="Lọc lớp" value={classFilter} onChange={(e) => setClassFilter(e.target.value)}><option value="">Tất cả lớp</option>{choices("classId").map(([id, name]) => <option key={id} value={id}>{name}</option>)}</Select><Select aria-label="Lọc môn" value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}><option value="">Tất cả môn</option>{choices("subjectName").map(([id, name]) => <option key={id} value={id}>{name}</option>)}</Select><Select aria-label="Lọc học kỳ" value={termFilter} onChange={(e) => setTermFilter(e.target.value)}><option value="">Tất cả học kỳ</option>{[...new Set(rows.map((row) => row.termId))].map((id) => <option key={id} value={id}>{courses.find((row) => row.termId === id)?.term?.name ?? "Học kỳ"}</option>)}</Select><Select aria-label="Lọc giáo viên" value={teacherFilter} onChange={(e) => setTeacherFilter(e.target.value)}><option value="">Tất cả giáo viên</option>{choices("organizerId").map(([id, name]) => <option key={id} value={id}>{name}</option>)}</Select></> : null}
@@ -79,7 +81,9 @@ export function OnlineSessionPanel({ role, courseId, classId }: { role: OnlineRo
     {error ? <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : null}
     {loading ? <p role="status" className="p-5 text-center text-sm text-slate-500">Đang tải buổi học…</p> : !visible.length ? <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center"><CalendarClock className="mx-auto mb-3 size-8 text-slate-300" /><p className="text-sm text-slate-500">{!selectedCourse && role === "teacher" ? "Chọn lớp môn học để xem và tạo buổi học online." : "Chưa có buổi học phù hợp."}</p></div> : <div className="grid gap-4 lg:grid-cols-2">{visible.map((row) => {
       const liveState = onlineLiveState(row, clock);
+      const passcode = access?.id === row.id && access.revision === row.revision && canEnterOnline(row, clock) ? access.passcode : "";
       return <article key={row.id} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><div className="flex items-center justify-between gap-3"><span className="text-xs font-bold text-slate-500">{row.platform === "MEET" ? "Google Meet" : "Zoom"}</span><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${liveState === "LIVE" ? "bg-emerald-50 text-emerald-700" : liveState === "CANCELLED" ? "bg-rose-50 text-rose-700" : "bg-blue-50 text-brand-700"}`}>{onlineStateLabels[liveState]}</span></div><h3 className="mt-3 text-lg font-extrabold text-slate-900">{row.title}</h3><p className="mt-1 text-xs text-slate-500">{row.courseName} · {row.organizerName}</p><p className="mt-4 flex items-start gap-2 text-sm font-semibold text-slate-700"><CalendarClock className="mt-0.5 size-4 shrink-0 text-brand-600" /><span>{onlineTime(row.startsAt)} – {onlineTime(row.endsAt)}</span></p>{row.description ? <p className="mt-3 whitespace-pre-wrap text-sm text-slate-600">{row.description}</p> : null}<p className="mt-3 text-xs text-slate-500">{row.audience === "ALL" ? "Cả lớp môn học" : "Nhóm học sinh được mời"}</p>{row.status === "CANCELLED" ? <p className="mt-2 text-sm text-rose-600">Lý do hủy: {row.cancelReason}</p> : null}
+        {passcode ? <MeetingPasscode key={passcode} value={passcode} roomUrl={access?.roomUrl} /> : null}
         <div className="mt-auto flex flex-wrap gap-2 pt-5">{canEnterOnline(row, clock) ? <Button disabled={busy} onClick={() => void run(() => join(row))}><ExternalLink className="size-4" />Vào học</Button> : row.status === "SCHEDULED" && liveState !== "ENDED" ? <span className="self-center text-xs text-slate-500">Vào học từ {onlineTime(row.joinOpensAt)}</span> : null}{role !== "student" ? <>{row.canEdit && liveState !== "ENDED" ? <Button variant="outline" disabled={busy} onClick={() => setEditing(row)}>Chỉnh sửa</Button> : null}{row.canCancel && liveState !== "ENDED" ? <Button variant="ghost" disabled={busy} onClick={() => { setReason(""); setChanging({ row, remove: false }); }}>Hủy buổi</Button> : null}{row.status === "DRAFT" && row.canEdit ? <Button variant="ghost" disabled={busy} onClick={() => setChanging({ row, remove: true })}>Xóa bản nháp</Button> : null}<Button variant="ghost" disabled={busy} onClick={() => void run(async () => setHistory(await onlineSessionApi.history(role, row.id)))}>Lịch sử</Button></> : null}</div>
       </article>;
     })}</div>}

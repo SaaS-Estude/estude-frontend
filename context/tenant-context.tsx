@@ -7,13 +7,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { tenantPalette } from "@/lib/tenant-branding";
+import { tenantPalette, applyTenantFavicon } from "@/lib/tenant-branding";
 type Tenant = {
   id: string;
   slug: string;
   name: string;
   portal: string;
-  branding: { displayName: string; primaryColor: string; timezone: string };
+  branding: { logoUrl?: string; displayName: string; primaryColor: string; timezone: string };
 };
 const TenantContext = createContext<Tenant | null>(null);
 export const useTenant = () => useContext(TenantContext);
@@ -76,6 +76,9 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         root.style.removeProperty(`--brand-${shade}`);
     };
   }, [tenant]);
+  useEffect(() => {
+    if (tenant?.branding.logoUrl?.startsWith("/api/v1/tenant/logo?")) return applyTenantFavicon(tenant.branding.logoUrl);
+  }, [tenant?.branding.logoUrl]);
   return (
     <TenantContext.Provider value={tenant}>
       {error ? (

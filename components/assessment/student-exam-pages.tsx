@@ -1178,6 +1178,11 @@ export function StudentResultPage() {
         }
         setAttempt(loadedAttempt);
         if (!FEATURES.examAnalysis) { setAnalysisLoading(false); return; }
+        if (loadedAttempt.answersReleased === false) {
+          setAnalysisError(loadedAttempt.answerReleaseMessage || "Đáp án chưa được mở để phân tích AI.");
+          setAnalysisLoading(false);
+          return;
+        }
         try {
           const loadedAnalysis = await loadOrCreateStudentStudyAnalysis(
             params.id,
@@ -1210,7 +1215,17 @@ export function StudentResultPage() {
     setAnalysisLoading(true);
     setAnalysisError("");
     try {
-      setAnalysis(await examAttemptService.retryStudyAnalysis(params.id));
+      const wasBlocked = attempt?.answersReleased === false;
+      const latestAttempt = await examAttemptService.getAttempt(params.id);
+      setAttempt(latestAttempt);
+      if (latestAttempt.answersReleased === false) {
+        setAnalysis(null);
+        setAnalysisError(latestAttempt.answerReleaseMessage || "Đáp án chưa được mở để phân tích AI.");
+        return;
+      }
+      setAnalysis(await (wasBlocked
+        ? loadOrCreateStudentStudyAnalysis(params.id)
+        : examAttemptService.retryStudyAnalysis(params.id)));
     } catch (cause) {
       setAnalysisError(
         cause instanceof Error
@@ -1378,7 +1393,7 @@ export function StudentResultPage() {
             <div>
               <p className="font-black">Cảnh báo kết quả dưới trung bình</p>
               <p className="mt-1 leading-6">
-                {!FEATURES.examAnalysis ? "Điểm của bạn đang dưới 5/10. Hãy xem lại bài làm và trao đổi với giáo viên để ôn tập." : assessmentOnly
+                {!FEATURES.examAnalysis || !analysis ? "Điểm của bạn đang dưới 5/10. Hãy xem lại bài làm và trao đổi với giáo viên để ôn tập." : assessmentOnly
                   ? "Điểm của bạn đang dưới 5/10. Đây là chỉ báo nguy cơ từ bài kiểm tra; môn học chưa có tài liệu để tạo lộ trình ôn tập."
                   : "Điểm của bạn đang dưới 5/10. AI đã ưu tiên các chủ đề còn yếu để tạo lộ trình ôn tập phù hợp."}
               </p>
@@ -1400,6 +1415,8 @@ export function StudentResultPage() {
               <p className="font-black text-violet-900">
                 {analysisLoading
                   ? "Đang kiểm tra dữ liệu môn học"
+                  : attempt.answersReleased === false
+                    ? "Chờ mở đáp án để phân tích AI"
                   : assessmentOnly
                     ? "Chỉ có đánh giá nguy cơ từ bài kiểm tra"
                     : optionalReview
@@ -1442,7 +1459,7 @@ export function StudentResultPage() {
               className="mt-4 w-full"
               onClick={() => void retryStudyAnalysis()}
             >
-              Thử phân tích lại
+              {attempt.answersReleased === false ? "Kiểm tra lại quyền phân tích" : "Thử phân tích lại"}
             </Button>
           )}
         </div>

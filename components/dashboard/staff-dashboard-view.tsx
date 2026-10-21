@@ -28,6 +28,7 @@ import {
   School,
   UserRoundPlus,
   UsersRound,
+  Video,
   X,
 } from "lucide-react";
 import { BrandLogo, TenantName } from "@/components/brand-logo";
@@ -69,6 +70,7 @@ const staffNavItems = [
     href: "/teacher/courses",
   },
   { icon: School, label: "Lớp học được phân công", href: "/teacher/classes" },
+  { icon: Video, label: "Buổi học online", href: "/teacher/online-sessions" },
   { icon: UsersRound, label: "Học sinh", href: "/teacher/students" },
   { icon: Library, label: "Thư viện tài liệu", href: "/teacher/materials" },
   {
@@ -284,7 +286,7 @@ export function StaffDashboardView() {
       : "TEACHER";
   const isAcademicDataPage = pathname === "/admin/academic-data";
   const isSubjectsPage = pathname === "/admin/subjects";
-  const isOnlineSessionsPage = pathname === "/admin/online-sessions";
+  const isOnlineSessionsPage = pathname === "/admin/online-sessions" || pathname === "/teacher/online-sessions";
   const isCourseOfferingsPage = pathname === "/admin/course-offerings";
   const isClassesPage = pathname === "/admin/classes";
   const isParentStudentLinksPage = pathname === "/admin/parent-student-links";
@@ -764,7 +766,7 @@ export function StaffDashboardView() {
             ) : isSubjectsPage ? (
               <SubjectManagementPanel />
             ) : isOnlineSessionsPage ? (
-              <OnlineSessionPanel role="admin" />
+              <OnlineSessionPanel role={user.role === "TEACHER" ? "teacher" : "admin"} />
             ) : isCourseOfferingsPage ? (
               <CourseOfferingPanel />
             ) : isClassesPage ? (

@@ -6,7 +6,7 @@ export interface TenantContext {
   slug: string;
   name: string;
   portal: 'admin' | 'teacher' | 'student' | 'parent';
-  branding: { displayName: string; primaryColor: string; timezone: string; revision: number };
+  branding: { logoUrl?: string; displayName: string; primaryColor: string; timezone: string; revision: number };
 }
 
 export async function loadTenantContext(fetcher: typeof fetch = fetch): Promise<TenantContext> {

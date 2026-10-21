@@ -25,3 +25,38 @@ export function tenantPalette(value: string): Record<string, string> {
     ]),
   );
 }
+
+
+// Next can replace favicon links during navigation. Keep every icon for this
+// document on the current school's same-origin image, and restore on cleanup.
+export function applyTenantFavicon(url: string): () => void {
+  const previous = new Map<HTMLLinkElement, {href: string | null; type: string | null; sizes: string | null}>();
+  let created: HTMLLinkElement | null = null;
+  function update() {
+    const icons = Array.from(document.head.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]'));
+    if (!icons.length) {
+      if (!created) { created = document.createElement("link"); created.rel = "icon"; }
+      if (!created.isConnected) document.head.appendChild(created);
+      icons.push(created);
+    }
+    for (const icon of icons) {
+      if (!previous.has(icon)) previous.set(icon, {href:icon.getAttribute("href"),type:icon.getAttribute("type"),sizes:icon.getAttribute("sizes")});
+      if (icon.getAttribute("href") !== url) icon.setAttribute("href", url);
+      if (icon.getAttribute("type") !== "image/png") icon.setAttribute("type", "image/png");
+      if (icon.hasAttribute("sizes")) icon.removeAttribute("sizes");
+    }
+  }
+  update();
+  const observer = new MutationObserver(update);
+  observer.observe(document.head, {childList:true,subtree:true,attributes:true,attributeFilter:["href","rel","type","sizes"]});
+  return () => {
+    observer.disconnect();
+    for (const [icon, attributes] of previous) {
+      if (icon === created) { icon.remove(); continue; }
+      for (const [key,value] of Object.entries(attributes)) {
+        if (value === null) icon.removeAttribute(key);
+        else icon.setAttribute(key,value);
+      }
+    }
+  };
+}

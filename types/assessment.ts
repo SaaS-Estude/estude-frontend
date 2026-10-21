@@ -625,6 +625,8 @@ export interface ExamManualGrade {
 }
 
 export interface ExamAttempt {
+  answersReleased?: boolean;
+  answerReleaseMessage?: string;
   reviewRequired?: boolean;
   canResume?: boolean;
   historyOnly?: boolean;

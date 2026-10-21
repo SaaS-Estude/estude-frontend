@@ -23,6 +23,7 @@ import {
   School,
   Settings,
   UsersRound,
+  Video,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -116,6 +117,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
       label: "Học sinh",
       icon: UsersRound,
     },
+    { href: "/teacher/online-sessions", label: "Buổi học online", icon: Video },
     {
       href: "/teacher/materials",
       label: "Thư viện tài liệu",

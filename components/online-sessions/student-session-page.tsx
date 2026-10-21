@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, CalendarClock, ExternalLink, Video } from "lucide-react";
 import { StudentShell } from "@/components/student/student-shell";
 import { Button } from "@/components/ui/button";
+import { MeetingPasscode } from "./meeting-passcode";
 import {
   onlineSessionApi,
   type OnlineSession,
@@ -22,6 +23,7 @@ export function StudentOnlineSessionPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [access, setAccess] = useState<{ id: string; revision: number; passcode: string; roomUrl?: string } | null>(null);
   const [clock, setClock] = useState(Date.now());
   const offset = useRef(0);
   const lock = useRef(false);
@@ -66,9 +68,11 @@ export function StudentOnlineSessionPage() {
     if (tab) tab.opener = null;
     try {
       const access = await onlineSessionApi.join("student", row.id);
+      setAccess({ id: row.id, revision: row.revision, passcode: access.meetingPasscode ?? "", roomUrl: tab ? undefined : access.url });
       if (tab) tab.location.href = access.url;
-      else window.location.assign(access.url);
+      else if (!access.meetingPasscode) window.location.assign(access.url);
     } catch (cause) {
+      setAccess(null);
       tab?.close();
       setError(
         cause instanceof Error ? cause.message : "Không vào được buổi học",
@@ -147,6 +151,7 @@ export function StudentOnlineSessionPage() {
                   <ExternalLink className="size-4" />
                   {busy ? "Đang mở phòng…" : "Vào học"}
                 </Button>
+                {access?.id === row.id && access.revision === row.revision && access.passcode && canEnterOnline(row, clock) ? <MeetingPasscode key={access.passcode} value={access.passcode} roomUrl={access.roomUrl} /> : null}
                 <p className="mt-3 text-sm text-slate-500">
                   {clock >= Date.parse(row.endsAt)
                     ? "Buổi học đã kết thúc."

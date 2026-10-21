@@ -86,7 +86,7 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
   return (
     <main className="grid min-h-screen place-items-center bg-white px-4 py-10">
       <section className="w-full max-w-[420px] rounded-2xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-900/[0.06] sm:p-8">
-        <BrandLogo />
+        <BrandLogo wrapTenantName />
 
         <div className="mt-8 text-center">
           <h1 className="text-2xl font-extrabold tracking-tight text-brand-600">

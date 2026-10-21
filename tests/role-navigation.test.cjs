@@ -45,4 +45,7 @@ test("online session detail and management routes require explicit role permissi
  assert.equal(canVisitRoute("/student/online-sessions/session-id", "PARENT", ["online_sessions.read"]), false);
  assert.equal(canVisitRoute("/admin/online-sessions", "ADMIN", ["online_sessions.manage"]), true);
  assert.equal(canVisitRoute("/admin/online-sessions", "TEACHER", ["online_sessions.manage"]), false);
+ assert.equal(canVisitRoute("/teacher/online-sessions", "TEACHER", ["online_sessions.read"]), true);
+ assert.equal(canVisitRoute("/teacher/online-sessions", "TEACHER", []), false);
+ assert.equal(canVisitRoute("/teacher/online-sessions", "STUDENT", ["online_sessions.read"]), false);
 });
