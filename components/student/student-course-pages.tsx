@@ -1,9 +1,11 @@
 "use client";
 
+import { OnlineSessionPanel } from "@/components/online-sessions/session-panel";
 import { FEATURES } from "@/lib/features";
 
 import {
   ArrowLeft,
+  CalendarClock,
   BookOpen,
   BrainCircuit,
   CheckCircle2,
@@ -216,7 +218,7 @@ export function StudentCoursesPage() {
   );
 }
 
-type CourseSection = "overview" | "materials" | "exams" | "review" | "chat";
+type CourseSection = "online" | "overview" | "materials" | "exams" | "review" | "chat";
 
 export function StudentCourseDetailPage() {
   const params = useParams<{ classId: string; subjectId: string }>();
@@ -356,6 +358,7 @@ export function StudentCourseDetailPage() {
             </div>
             <nav className="flex gap-1 overflow-x-auto border-t border-slate-100 px-4 sm:px-6" aria-label="Nội dung môn học">
               <CourseTab active={visibleSection === "overview"} icon={BookOpen} label="Tổng quan" onClick={() => setActiveSection("overview")} />
+              {can("online_sessions.read") && course.courseOfferingId ? <CourseTab active={visibleSection === "online"} icon={CalendarClock} label="Buổi học online" onClick={() => setActiveSection("online")} /> : null}
               <CourseTab active={visibleSection === "materials"} icon={FileText} label="Tài liệu" count={materials.length} onClick={() => setActiveSection("materials")} />
               <CourseTab active={visibleSection === "exams"} icon={ClipboardCheck} label="Bài kiểm tra" count={exams.length} onClick={() => setActiveSection("exams")} />
               {FEATURES.examAnalysis ? <CourseTab active={visibleSection === "review"} icon={BrainCircuit} label="Ôn tập" onClick={() => setActiveSection("review")} /> : null}
@@ -366,7 +369,7 @@ export function StudentCourseDetailPage() {
           <div className="mt-4">
             {visibleSection === "overview" ? (
               <CourseOverview course={course} examCount={exams.length} completedExamCount={completedExams} availableExamCount={availableExams} materialCount={materials.length} onOpenMaterials={() => setActiveSection("materials")} progress={progress} progressError={progressError} onRefreshProgress={refreshProgress} />
-            ) : visibleSection === "materials" ? (
+            ) : visibleSection === "online" && course.courseOfferingId ? <OnlineSessionPanel role="student" courseId={course.courseOfferingId} /> : visibleSection === "materials" ? (
               <CourseMaterials items={materials} error={materialError} onPreview={openPreview} onDownload={downloadMaterial} />
             ) : visibleSection === "exams" ? (
               <section>

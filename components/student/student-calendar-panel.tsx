@@ -12,13 +12,14 @@ import { Button } from "@/components/ui/button";
 
 
 const labels: Record<string, string> = {
+  LIVE: "Đang diễn ra", CANCELLED: "Đã hủy",
   UPCOMING: "Sắp mở", OPEN: "Đang mở", OVERDUE: "Quá hạn · còn nhận nộp",
   CLOSED: "Đã khóa", SUBMITTED: "Đã nộp", EXCUSED: "Được miễn",
   PRESENT: "Có mặt", ABSENT: "Vắng", LATE: "Đi trễ", LEAVE: "Nghỉ có phép", UNDER_REVIEW: "Đang rà soát",
   IN_PROGRESS: "Đang làm", FINALIZED: "Đã hoàn tất", ENDED: "Đã kết thúc",
 };
 
-const typeLabels = { EXAM: "Bài kiểm tra", ASSIGNMENT_DEADLINE: "Hạn bài tập", LESSON_AVAILABLE: "Mở bài học", ATTENDANCE: "Điểm danh" };
+const typeLabels = { ONLINE_SESSION: "Buổi học online", EXAM: "Bài kiểm tra", ASSIGNMENT_DEADLINE: "Hạn bài tập", LESSON_AVAILABLE: "Mở bài học", ATTENDANCE: "Điểm danh" };
 
 export function StudentCalendarPanel({ showDetails = true }: { showDetails?: boolean }) {
   const router = useRouter();
@@ -76,7 +77,7 @@ export function StudentCalendarPanel({ showDetails = true }: { showDetails?: boo
       {daily.map((event) => <Button variant="plain" type="submit" key={`${event.type}:${event.sourceId}`} onClick={() => router.push(event.sourceUrl)} className="mt-3 block w-full rounded-xl border border-slate-200 p-3 text-left hover:bg-blue-50/30">
         <span className="block text-xs text-slate-500">{event.subject.name} · {event.schoolClass.code}</span>
         <span className="mt-1 block font-bold">{event.title}</span>
-        <span className="mt-1 block text-xs text-slate-600">{new Date(event.startAt).toLocaleString('vi-VN', { timeZone: zone })}{event.type === 'EXAM' && event.endAt ? ` – ${new Date(event.endAt).toLocaleString('vi-VN', { timeZone: zone })}` : ''} · {labels[event.status] ?? event.status}</span>
+        <span className="mt-1 block text-xs text-slate-600">{new Date(event.startAt).toLocaleString('vi-VN', { timeZone: zone })}{(event.type === 'EXAM' || event.type === 'ONLINE_SESSION') && event.endAt ? ` – ${new Date(event.endAt).toLocaleString('vi-VN', { timeZone: zone })}` : ''} · {labels[event.status] ?? event.status}</span>
         {event.hasPersonalSchedule ? <span className="mt-1 block text-xs text-brand-700">Lịch riêng giáo viên đã cấp cho bạn</span> : null}
         {event.historyOnly ? <span className="mt-1 block text-xs text-amber-700">Chỉ xem lịch sử{event.canResume ? ' hoặc tiếp tục lượt đang làm' : ''}; không mở lượt mới.</span> : null}
         <span className="mt-1 block text-xs text-slate-500">{event.canResume ? 'Tiếp tục bài đang làm' : event.canStart ? 'Có thể mở lượt làm bài mới' : event.canSubmit ? 'Còn nhận bài nộp' : 'Xem chi tiết và lịch sử'}</span>

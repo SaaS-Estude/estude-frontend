@@ -1,5 +1,5 @@
 export type CalendarEvent = {
-  type: 'ASSIGNMENT_DEADLINE' | 'EXAM' | 'LESSON_AVAILABLE' | 'ATTENDANCE';
+  type: 'ONLINE_SESSION' | 'ASSIGNMENT_DEADLINE' | 'EXAM' | 'LESSON_AVAILABLE' | 'ATTENDANCE';
   sourceId: string;
   title: string;
   startAt: string;

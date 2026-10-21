@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { CourseWorkspacePicker } from "./course-workspace-picker";
+import { OnlineSessionPanel } from "@/components/online-sessions/session-panel";
 import { CourseContentPanel } from "@/components/teacher/course-content-panel";
 import { useActionNotification } from "@/components/ui/action-notification";
 import { ClassChatPanel } from "@/components/class-chat/class-chat-panel";
@@ -34,10 +35,11 @@ import type { ClassRoster, Exam, ExamListAiAnalysis, TeacherAssignedClass } from
 import { Input } from "@/components/ui/form-control";
 
 
-type ClassTab = "topics" | "students" | "exams" | "grades" | "chat";
+type ClassTab = "online" | "topics" | "students" | "exams" | "grades" | "chat";
 
 const classTabs: Array<{ id: ClassTab; label: string }> = [
   { id: "topics", label: "Chủ đề môn học" },
+  { id: "online", label: "Buổi học online" },
   { id: "students", label: "Danh sách học sinh" },
   { id: "exams", label: "Bài kiểm tra" },
   { id: "grades", label: "Điểm số" },
@@ -181,7 +183,8 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
             {classTabs.filter((tab) =>
               (tab.id !== "chat" || canReadChat)
               && (tab.id !== "exams" || canReadExams)
-              && (Boolean(schoolClass?.subjects.length) || !(["topics", "exams", "grades"] as ClassTab[]).includes(tab.id)),
+              && (tab.id !== "online" || can("online_sessions.read"))
+              && (Boolean(schoolClass?.subjects.length) || !(["topics", "online", "exams", "grades"] as ClassTab[]).includes(tab.id)),
             ).map((tab) => (
               <Button variant="plain"
                 key={tab.id}
@@ -279,6 +282,7 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
             </section>
           ) : null}
 
+      {visibleTab === "online" ? <OnlineSessionPanel role="teacher" classId={classId} /> : null}
       {visibleTab === "topics" && schoolClass ? <CourseContentPanel schoolClass={schoolClass} /> : null}
         </div>
       </div>

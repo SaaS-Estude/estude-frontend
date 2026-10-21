@@ -38,3 +38,11 @@ test("Admin pages keep their permissions and Teacher pages remain role-bound", (
   assert.equal(canVisitRoute("/teacher/classes", "TEACHER", []), false);
   assert.equal(canVisitRoute("/teacher/settings/sessions", "TEACHER", []), true);
 });
+
+test("online session detail and management routes require explicit role permissions", () => {
+ assert.equal(canVisitRoute("/student/online-sessions/session-id", "STUDENT", ["online_sessions.read"]), true);
+ assert.equal(canVisitRoute("/student/online-sessions/session-id", "STUDENT", ["learning.read"]), false);
+ assert.equal(canVisitRoute("/student/online-sessions/session-id", "PARENT", ["online_sessions.read"]), false);
+ assert.equal(canVisitRoute("/admin/online-sessions", "ADMIN", ["online_sessions.manage"]), true);
+ assert.equal(canVisitRoute("/admin/online-sessions", "TEACHER", ["online_sessions.manage"]), false);
+});

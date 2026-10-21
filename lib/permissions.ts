@@ -34,6 +34,7 @@ export const MODULE_LINKS = [
     permission: "academic.read",
   },
   { href: "/admin/subjects", label: "Danh mục môn học", permission: "subjects.read" },
+  { href: "/admin/online-sessions", label: "Buổi học online", permission: "online_sessions.manage" },
   { href: "/admin/course-offerings", label: "Môn học theo lớp", permission: "course_offerings.read" },
   { href: "/admin/classes", label: "Lớp học", permission: "classes.read" },
   {
@@ -132,6 +133,7 @@ export const MODULE_LINKS = [
 
 export function routePermission(path: string): string | null {
   if (path === "/help") return null;
+  if (path.startsWith("/student/online-sessions/")) return "online_sessions.read";
   if (path.endsWith("/settings/sessions")) return null;
   if (
     path === "/student/study-coach" ||

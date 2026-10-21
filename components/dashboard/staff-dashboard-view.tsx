@@ -45,6 +45,7 @@ import {
   SystemSettingsPanel,
   type SystemSettingsSection,
 } from "@/components/admin/system-settings-panel";
+import { OnlineSessionPanel } from "@/components/online-sessions/session-panel";
 import { CourseOfferingPanel } from "@/components/admin/course-offering-panel";
 import { ParentStudentLinksPanel } from "@/components/admin/parent-student-links-panel";
 import { TeacherAssignedClassesPanel } from "@/components/teacher/assigned-classes-panel";
@@ -255,6 +256,7 @@ export function StaffDashboardView() {
             label: "Môn học theo lớp",
             href: "/admin/course-offerings",
           },
+          { icon: BookOpenCheck, label: "Buổi học online", href: "/admin/online-sessions" },
           {
             icon: UsersRound,
             label: "Lớp học",
@@ -282,6 +284,7 @@ export function StaffDashboardView() {
       : "TEACHER";
   const isAcademicDataPage = pathname === "/admin/academic-data";
   const isSubjectsPage = pathname === "/admin/subjects";
+  const isOnlineSessionsPage = pathname === "/admin/online-sessions";
   const isCourseOfferingsPage = pathname === "/admin/course-offerings";
   const isClassesPage = pathname === "/admin/classes";
   const isParentStudentLinksPage = pathname === "/admin/parent-student-links";
@@ -705,6 +708,7 @@ export function StaffDashboardView() {
               isAccountsPage ||
               isUsersPage ||
               isSubjectsPage ||
+              isOnlineSessionsPage ||
               isCourseOfferingsPage ||
               isClassesPage ||
               isParentStudentLinksPage ||
@@ -759,6 +763,8 @@ export function StaffDashboardView() {
               />
             ) : isSubjectsPage ? (
               <SubjectManagementPanel />
+            ) : isOnlineSessionsPage ? (
+              <OnlineSessionPanel role="admin" />
             ) : isCourseOfferingsPage ? (
               <CourseOfferingPanel />
             ) : isClassesPage ? (
