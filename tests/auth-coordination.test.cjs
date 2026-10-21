@@ -50,14 +50,14 @@ function fixture() {
       if (cache.has(file)) return cache.get(file);
       const exports = {};
       const source = ts.transpileModule(fs.readFileSync(path.resolve(file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-      const require = id => id === '@/lib/portal' ? { getCurrentPortal: () => portal } : id === '@/lib/auth-coordination' ? load('lib/auth-coordination.ts') : (() => { throw Error(id); })();
+      const require = id => id === '@/lib/portal' ? { getCurrentPortal: () => portal } : id === '@/lib/auth-coordination' ? load('lib/auth-coordination.ts') : id === '@/lib/class-chat-history' ? load('lib/class-chat-history.ts') : (() => { throw Error(id); })();
       vm.runInContext(`(function(exports,require){${source}\n})`, context)(exports, require);
       cache.set(file, exports); return exports;
     }
     const api = load('lib/auth-api.ts');
     let token = null;
     api.subscribeAccessToken(value => { token = value; });
-    return { ...api, token: () => token };
+    return { ...api, chatCache: load('lib/class-chat-history.ts'), token: () => token };
   }
   return { tab, stats: () => ({ refreshes, maxActive }), gate(value) { gate = value; } };
 }
@@ -81,6 +81,8 @@ test('logout propagates to a sibling tab and blocks an in-flight refresh from re
   const f = fixture(), a = f.tab(), b = f.tab();
   await a.authApi.login({ accountName: 'a', password: 'fixture' });
   await b.authApi.refresh();
+  a.chatCache.rememberRecentChat('room', [], false);
+  b.chatCache.rememberRecentChat('room', [], false);
   let release; f.gate(new Promise(resolve => { release = resolve; }));
   const pending = b.authApi.refresh();
   const denied = assert.rejects(pending, /fixture|đăng nhập|kết thúc/);
@@ -89,6 +91,8 @@ test('logout propagates to a sibling tab and blocks an in-flight refresh from re
   await logout;
   await denied;
   assert.equal(a.token(), null); assert.equal(b.token(), null);
+  assert.equal(a.chatCache.readRecentChat('room'), undefined);
+  assert.equal(b.chatCache.readRecentChat('room'), undefined);
   await assert.rejects(b.authApi.refresh(), /đăng nhập/);
 });
 

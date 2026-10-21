@@ -22,6 +22,7 @@ import { InternalGradebookPanel } from "./internal-gradebook-panel";
 import { AcademicGradeActions } from "./academic-grade-actions";
 
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 
 
 const field =
@@ -79,10 +80,11 @@ export function LegacyGradebookPanel({
   const filterPopupRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [entryMode, setEntryMode] = useState<"manual" | "excel">("manual");
+  const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importPreview, setImportPreview] = useState<GradeImportPreview | null>(null);
   const [importBusy, setImportBusy] = useState("");
+  const [importError, setImportError] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
@@ -196,10 +198,11 @@ export function LegacyGradebookPanel({
     };
   }, [schoolClass.id, termId, subjectId, refresh]);
   useEffect(() => {
-    setEntryMode("manual");
+    setImportOpen(false);
     setImportFile(null);
     setImportPreview(null);
-  }, [subjectId, termId]);
+    setImportError("");
+  }, [schoolClass.id, subjectId, termId]);
   const historicalReadOnly = view?.year?.status === "COMPLETED" || view?.schoolClass?.isActive === false;
   const baseLocked =
     !canWrite ||
@@ -219,6 +222,20 @@ export function LegacyGradebookPanel({
   const totalPages = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pagedStudents = filteredStudents.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  function openImport() {
+    setFilterOpen(false);
+    setImportFile(null);
+    setImportPreview(null);
+    setImportError("");
+    setImportOpen(true);
+  }
+  function closeImport() {
+    if (importBusy) return;
+    setImportOpen(false);
+    setImportFile(null);
+    setImportPreview(null);
+    setImportError("");
+  }
   async function save() {
     if (!view?.book || !editing || locked) return;
     if (!validMarks(marks, view.book.assessmentMode)) {
@@ -246,9 +263,9 @@ export function LegacyGradebookPanel({
     }
   }
   async function downloadTemplate() {
-    if (!view?.book) return;
+    if (!view?.book || importBusy) return;
     setImportBusy("download");
-    setError("");
+    setImportError("");
     try {
       const blob = await gradebookService.downloadImportTemplate(view.book.id);
       const url = URL.createObjectURL(blob);
@@ -260,39 +277,39 @@ export function LegacyGradebookPanel({
       anchor.remove();
       URL.revokeObjectURL(url);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không tải được tệp mẫu");
+      setImportError(cause instanceof Error ? cause.message : "Không tải được tệp mẫu");
     } finally {
       setImportBusy("");
     }
   }
   async function previewExcel() {
-    if (!view?.book || !importFile) return;
+    if (!view?.book || !importFile || locked || importBusy) return;
     setImportBusy("preview");
-    setError("");
+    setImportError("");
     setNotice("");
     setImportPreview(null);
     try {
       setImportPreview(await gradebookService.previewImport(view.book.id, importFile));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không kiểm tra được tệp Excel");
+      setImportError(cause instanceof Error ? cause.message : "Không kiểm tra được tệp Excel");
     } finally {
       setImportBusy("");
     }
   }
   async function importExcel() {
-    if (!view?.book || !importPreview || importPreview.errors.length || !importPreview.changedRows) return;
+    if (!view?.book || !importPreview || importPreview.errors.length || !importPreview.changedRows || locked || importBusy || importPreview.revision !== view.book.revision) return;
     setImportBusy("save");
-    setError("");
+    setImportError("");
     try {
       const result = await gradebookService.saveBulk(view.book.id, importPreview.revision,
         importPreview.rows.map(({ studentId, marks, comment }) => ({ studentId, marks, comment })));
       setImportPreview(null);
       setImportFile(null);
-      setEntryMode("manual");
+      setImportOpen(false);
       setRefresh((value) => value + 1);
-      setNotice(`Đã nhập điểm cho ${result.count} học sinh.`);
+      setNotice(`Đã nhập điểm nháp cho ${result.count} học sinh. Chọn Công bố điểm học kỳ để học sinh thấy.`);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không nhập được điểm từ Excel");
+      setImportError(cause instanceof Error ? cause.message : "Không nhập được điểm từ Excel");
     } finally {
       setImportBusy("");
     }
@@ -307,7 +324,7 @@ export function LegacyGradebookPanel({
         {view?.book?.assessmentMode === "COMMENT" ? (
           <Select
             aria-label={label}
-            className={`${field} w-24 px-1`}
+            className={`${field} mx-auto !h-12 !w-44 min-w-44 !px-3 !text-base font-semibold`}
             disabled={locked}
             value={value ?? ""}
             onChange={(event) =>
@@ -321,7 +338,7 @@ export function LegacyGradebookPanel({
         ) : (
           <Input
             aria-label={label}
-            className={`${field} w-16 px-2 text-center`}
+            className={`${field} mx-auto block !h-12 !w-24 min-w-24 !px-3 text-center !text-base font-semibold tabular-nums`}
             disabled={locked}
             type="number"
             min={0}
@@ -360,7 +377,7 @@ export function LegacyGradebookPanel({
           <Button variant="plain" type="button" className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled={saving || Boolean(editing) || loading} onClick={() => { setNotice(""); setRefresh((value) => value + 1); }}>
             <RefreshCw className="size-4" />Tải lại
           </Button>
-          <Button variant="plain" type="button" aria-pressed={entryMode === "excel"} className={`inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold disabled:opacity-50 ${entryMode === "excel" ? "bg-brand-600 text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`} disabled={!view?.book || loading || Boolean(editing) || Boolean(importBusy)} onClick={() => setEntryMode((mode) => mode === "excel" ? "manual" : "excel")}>
+          <Button variant="plain" type="button" aria-haspopup="dialog" aria-expanded={importOpen} className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-600 px-3 text-sm font-bold text-white disabled:opacity-50" disabled={!view?.book || locked || loading || Boolean(editing) || Boolean(importBusy)} onClick={openImport}>
             <FileSpreadsheet className="size-4" />Import Excel
           </Button>
           {compactFilters && filterOpen ? (
@@ -405,12 +422,18 @@ export function LegacyGradebookPanel({
         <>
           <AcademicGradeActions key={view.book.id} view={view} disabled={baseLocked || Boolean(editing)} onChanged={(message) => { setNotice(message); setRefresh((value) => value + 1); }} onError={setError} />
           {legacyManualLocked ? <p className="m-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Một cột TX/GK/CK đang lấy điểm từ bài tập hoặc bài kiểm tra. Sửa điểm ở hoạt động gốc; bảng nhập tay/Excel bên dưới chỉ để xem.</p> : null}
-          {view.book && entryMode === "excel" ? <div className="m-3 space-y-4 rounded-xl border border-slate-200 bg-white p-4">
-            <div><h3 className="font-bold text-slate-900">Nhập điểm từ Excel</h3><p className="mt-1 text-sm text-slate-500">Tải tệp mẫu của lớp này, điền điểm vào các cột, sau đó kiểm tra dữ liệu trước khi lưu. Ô trống được xem là chưa đánh giá.</p></div>
+          <Modal open={importOpen} title="Nhập điểm từ Excel" description={[schoolClass.name, schoolClass.subjects.find((subject) => subject.id === subjectId)?.vietnameseName || schoolClass.subjects.find((subject) => subject.id === subjectId)?.name, terms.find((term) => term.id === termId)?.name].filter(Boolean).join(" · ")} onClose={closeImport} width="max-w-4xl" bodyClassName="max-h-[60dvh] space-y-4 overflow-y-auto" footer={<>
+            <Button variant="outline" disabled={Boolean(importBusy)} onClick={closeImport}>Hủy</Button>
+            <Button disabled={locked || Boolean(importBusy) || !importPreview || importPreview.errors.length > 0 || importPreview.changedRows === 0 || importPreview.revision !== view.book.revision} onClick={() => void importExcel()}>
+              {importBusy === "save" ? <><LoaderCircle className="size-4 animate-spin" />Đang lưu...</> : importPreview ? `Lưu ${importPreview.changedRows} học sinh` : "Lưu nháp"}
+            </Button>
+          </>}>
+            <p className="text-sm leading-6 text-slate-500">Tải tệp mẫu của lớp này, điền điểm vào các cột, sau đó kiểm tra dữ liệu trước khi lưu. Ô trống được xem là chưa đánh giá. Điểm được lưu nháp; học sinh chỉ thấy khi bạn công bố.</p>
+            {importError ? <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{importError}</p> : null}
             <div className="flex flex-wrap items-end gap-3">
               <Button variant="plain" type="button" className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-bold text-brand-700 disabled:opacity-50" disabled={Boolean(importBusy)} onClick={() => void downloadTemplate()}><Download className="size-4" />Tải tệp mẫu</Button>
-              <label className="grid min-w-56 flex-1 gap-1 text-xs font-bold text-slate-600">Tệp điểm .xlsx
-                <FileInput type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="block w-full rounded-lg border border-slate-200 bg-white p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-2 file:py-1 file:font-bold file:text-brand-700" disabled={locked || Boolean(importBusy)} onChange={(event) => { setImportFile(event.target.files?.[0] ?? null); setImportPreview(null); setError(""); }} />
+              <label className="grid min-w-0 basis-full gap-1 text-xs font-bold text-slate-600 sm:flex-1 sm:basis-auto">Tệp điểm .xlsx
+                <FileInput type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="block w-full rounded-lg border border-slate-200 bg-white p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-2 file:py-1 file:font-bold file:text-brand-700" disabled={locked || Boolean(importBusy)} onChange={(event) => { setImportFile(event.target.files?.[0] ?? null); setImportPreview(null); setImportError(""); }} />
               </label>
               <Button variant="plain" type="button" className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-bold text-white disabled:opacity-50" disabled={locked || Boolean(importBusy) || !importFile} onClick={() => void previewExcel()}><Upload className="size-4" />{importBusy === "preview" ? "Đang kiểm tra..." : "Kiểm tra tệp"}</Button>
             </div>
@@ -418,11 +441,9 @@ export function LegacyGradebookPanel({
               <p className="text-sm font-semibold text-slate-700">Đã đọc {importPreview.totalRows} học sinh · {importPreview.changedRows} học sinh có thay đổi · {importPreview.errors.length} dòng lỗi</p>
               {importPreview.errors.length ? <div role="alert" className="max-h-40 space-y-1 overflow-y-auto rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{importPreview.errors.map((item) => <p key={`${item.row}-${item.message}`}>Dòng {item.row}: {item.message}</p>)}</div> : null}
               {importPreview.rows.length ? <div className="max-h-64 overflow-auto rounded-lg border border-slate-200"><table className="w-full min-w-[600px] text-left text-xs"><thead className="sticky top-0 bg-slate-50 text-slate-600"><tr><th className="p-2">Dòng</th><th className="p-2">Học sinh</th><th className="p-2">Điểm / đánh giá</th><th className="p-2">Nhận xét</th></tr></thead><tbody>{importPreview.rows.map((item) => <tr key={item.studentId} className="border-t border-slate-100"><td className="p-2">{item.row}</td><td className="p-2 font-semibold">{item.fullName}<span className="ml-1 text-slate-400">{item.accountName}</span></td><td className="p-2">{[...item.marks.regular, item.marks.midterm, item.marks.final].map(markText).join(" · ")}</td><td className="p-2">{item.comment || "—"}</td></tr>)}</tbody></table></div> : null}
-              <Button variant="plain" type="button" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50" disabled={locked || Boolean(importBusy) || importPreview.errors.length > 0 || importPreview.changedRows === 0 || importPreview.revision !== view.book.revision} onClick={() => void importExcel()}>{importBusy === "save" ? "Đang lưu..." : `Lưu ${importPreview.changedRows} học sinh`}</Button>
               {importPreview.errors.length ? <p className="text-xs text-rose-700">Sửa các dòng lỗi trong Excel rồi kiểm tra lại; hệ thống chưa lưu điểm nào.</p> : null}
             </div> : null}
-          </div> : null}
-          {entryMode === "manual" ? (
+          </Modal>
           <div>
             <div className="overflow-x-auto">
               <Table className="min-w-[1100px]">
@@ -430,8 +451,8 @@ export function LegacyGradebookPanel({
                   <TableHead className="w-14 text-center">#</TableHead>
                   <TableHead className="min-w-44">Học sinh</TableHead>
                   <TableHead className="min-w-32">Tài khoản</TableHead>
-                  {Array.from({ length: requiredRegular }, (_, index) => <TableHead key={index} className="min-w-20 text-center">{specialized && index === requiredRegular - 1 ? "Chuyên đề" : `TK ${index + 1}`}</TableHead>)}
-                  <TableHead className="min-w-20 text-center">Giữa kỳ</TableHead><TableHead className="min-w-20 text-center">Cuối kỳ</TableHead>
+                  {Array.from({ length: requiredRegular }, (_, index) => <TableHead key={index} className="min-w-32 text-center">{specialized && index === requiredRegular - 1 ? "Chuyên đề" : `TK ${index + 1}`}</TableHead>)}
+                  <TableHead className="min-w-32 text-center">Giữa kỳ</TableHead><TableHead className="min-w-32 text-center">Cuối kỳ</TableHead>
                   <TableHead className="min-w-32 text-center">Kết quả</TableHead><TableHead className="min-w-36">Nhận xét</TableHead><TableHead className="min-w-28 text-right">Thao tác</TableHead>
                 </tr></TableHeader>
                 <TableBody>
@@ -458,7 +479,6 @@ export function LegacyGradebookPanel({
             {editing ? <div className="flex flex-wrap items-end gap-3 border-t border-blue-100 bg-blue-50/40 p-3"><label className="grid min-w-64 flex-1 gap-1 text-xs font-bold text-slate-600">Nhận xét cho {view.students.find((student) => student.id === editing)?.fullName}<Textarea className="min-h-16 rounded-lg border border-slate-200 bg-white p-2 text-sm outline-none focus:border-brand-400" maxLength={2000} disabled={saving} value={comment} onChange={(event) => setComment(event.target.value)} /></label><p className="max-w-xs text-xs text-slate-500">Để trống cột chưa đánh giá. Cột trống không được tính là điểm 0.</p></div> : null}
             {editing ? <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">Lưu hoặc hủy điểm đang nhập để chuyển trang.</p> : <DataTableFooter rowCount={pagedStudents.length} totalItems={filteredStudents.length} itemLabel="học sinh" page={currentPage} totalPages={totalPages} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />}
           </div>
-          ) : null}
         </>
       ) : null}
       </div>

@@ -13,6 +13,7 @@ import type {
 } from "@/types/auth";
 import { getCurrentPortal } from "@/lib/portal";
 import { publishAuthLogout, watchAuthLogout, withAuthLock } from "@/lib/auth-coordination";
+import { clearRecentChat } from "@/lib/class-chat-history";
 
 const API_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "/api/v1"
@@ -24,6 +25,7 @@ const accessTokenListeners = new Set<(token: string | null) => void>();
 function setAccessToken(token: string | null): void {
   if (accessToken === token) return;
   accessToken = token;
+  if (!token) clearRecentChat();
   for (const listener of accessTokenListeners) listener(token);
 }
 

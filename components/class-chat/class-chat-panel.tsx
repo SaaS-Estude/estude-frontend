@@ -5,25 +5,13 @@ import { createGoChatSocket, type ChatSocket } from "@/lib/go-chat-socket";
 import { FileImage, FileText, LoaderCircle, Paperclip, Send, Wifi, WifiOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePermissions } from "@/context/permissions-context";
+import { useAuth } from "@/context/auth-context";
+import { useTenant } from "@/context/tenant-context";
+import { CHAT_PAGE_SIZE, clearRecentChat, readRecentChat, rememberRecentChat, type ChatAttachment, type ChatMessage } from "@/lib/class-chat-history";
 import { ApiError, authenticatedRequest, getRealtimeAccessToken, subscribeAccessToken } from "@/lib/auth-api";
 import type { User } from "@/types/auth";
 import { FileInput, Textarea } from "@/components/ui/form-control";
 
-
-type ChatAttachment = {
-  id: string;
-  originalName: string;
-  mimeType: string;
-  size: number;
-};
-
-type ChatMessage = {
-  id: string;
-  content: string;
-  createdAt: string;
-  sender: Pick<User, "id" | "fullName" | "accountName" | "avatarUrl" | "role">;
-  attachments: ChatAttachment[];
-};
 
 type PendingAttachment = {
   id: string;
@@ -75,13 +63,16 @@ function errorMessage(error: unknown, fallback: string): string {
 
 export function ClassChatPanel(props: { classId: string; className?: string }) {
   const { can } = usePermissions();
-  if (!can("class_chat.read")) return null;
-  return <ClassChatContent key={props.classId} {...props} />;
+  const { user } = useAuth();
+  const tenant = useTenant();
+  if (!can("class_chat.read") || !user) return null;
+  const cacheKey = JSON.stringify([tenant?.id ?? "current-origin", user.id, props.classId]);
+  return <ClassChatContent key={cacheKey} cacheKey={cacheKey} currentUser={user} {...props} />;
 }
 
-function ClassChatContent({ classId, className }: { classId: string; className?: string }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+function ClassChatContent({ classId, className, cacheKey, currentUser }: { classId: string; className?: string; cacheKey: string; currentUser: User }) {
+  const [snapshot] = useState(() => readRecentChat(cacheKey));
+  const [messages, setMessages] = useState<ChatMessage[]>(snapshot?.messages ?? []);
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<PendingAttachment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +82,7 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
   const socketRef = useRef<ChatSocket | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const messagesRef = useRef<ChatMessage[]>([]);
+  const messagesRef = useRef<ChatMessage[]>(snapshot?.messages ?? []);
   const mountedRef = useRef(false);
   const readyRef = useRef(false);
   const sendingRef = useRef(false);
@@ -100,9 +91,15 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
   const retryRef = useRef<() => void>(() => undefined);
   const scrollRef = useRef<{ height: number; top: number } | null>(null);
   const followRef = useRef(true);
-  const [hasOlder, setHasOlder] = useState(false);
+  const [hasOlder, setHasOlder] = useState(snapshot?.hasOlder ?? false);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const loadingOlderRef = useRef(false);
+  const historyAllowedRef = useRef(true);
   const [uncertain, setUncertain] = useState(false);
+
+  useEffect(() => {
+    if (historyAllowedRef.current) rememberRecentChat(cacheKey, messages, hasOlder);
+  }, [cacheKey, messages, hasOlder]);
 
   const merge = useCallback((incoming: ChatMessage[]) => {
     messagesRef.current = mergeMessages(messagesRef.current, incoming);
@@ -110,6 +107,7 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
   }, []);
 
   const addMessage = useCallback((message: ChatMessage) => {
+    if (!mountedRef.current || !historyAllowedRef.current) return;
     const list = listRef.current;
     followRef.current = !list || list.scrollHeight - list.scrollTop - list.clientHeight < 80;
     merge([message]);
@@ -118,8 +116,7 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
   useEffect(() => {
     let active = true;
     let revision = 0;
-    let cursor: ChatMessage | undefined;
-    let initialLoaded = false;
+    let cursor: ChatMessage | undefined = snapshot?.messages.at(-1);
     let authRetried = false;
     let forceRefresh = false;
     let usedToken: string | undefined;
@@ -127,6 +124,32 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
     mountedRef.current = true;
     const controller = new AbortController();
     abortRef.current = controller;
+    function revokeHistory() {
+      historyAllowedRef.current = false;
+      readyRef.current = false;
+      setConnected(false);
+      clearRecentChat(cacheKey);
+      messagesRef.current = [];
+      setMessages([]);
+      setHasOlder(false);
+    }
+    const canReadHistory = () => active && historyAllowedRef.current;
+    // HTTP authorizes class access itself; showing history must not wait for
+    // WebSocket authentication, room join or realtime catch-up.
+    const initialHistory = authenticatedRequest<ChatMessage[]>(`/classes/${encodeURIComponent(classId)}/chat/messages?limit=${CHAT_PAGE_SIZE}`, { signal: controller.signal })
+      .then((page) => {
+        if (!canReadHistory()) return;
+        setHasOlder(page.length === CHAT_PAGE_SIZE || Boolean(snapshot?.hasOlder));
+        merge(page);
+        // Keep a cached cursor until catch-up fills the gap to the latest page.
+        cursor ??= page.at(-1);
+      })
+      .catch((cause: unknown) => {
+        if (!canReadHistory()) return;
+        if (cause instanceof ApiError && [401, 403, 404].includes(cause.status)) revokeHistory();
+        setError(errorMessage(cause, "Không thể tải trò chuyện"));
+      })
+      .finally(() => { if (active) setLoading(false); });
     const authenticateChatSocket = (callback: (value: { token: string }) => void) => {
       void getRealtimeAccessToken(forceRefresh).then((token) => {
         forceRefresh = false;
@@ -134,7 +157,6 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
       }).catch((cause: unknown) => {
         if (!active) return;
         setError(errorMessage(cause, "Không thể làm mới phiên chat"));
-        setLoading(false);
         socket.disconnect();
       });
     };
@@ -144,6 +166,8 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
       if (!active) return;
       forceRefresh = false;
       if (!token) {
+        clearRecentChat();
+        revokeHistory();
         clearTimeout(reconnectTimer);
         socket.disconnect();
         readyRef.current = false;
@@ -156,40 +180,41 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
     });
 
     async function synchronise() {
+      if (!canReadHistory()) return;
       const version = ++revision;
       readyRef.current = false;
       setConnected(false);
-      setLoading(true);
       setError("");
-      const valid = () => active && version === revision && socket.connected;
+      const valid = () => canReadHistory() && version === revision && socket.connected;
       try {
         const joined = await emitWithAck(socket, "class:join", { classId });
         if (!valid()) return;
         if (!joined.ok) {
           if (joined.code === "AUTH_REQUIRED") { forceRefresh = true; socket.disconnect().connect(); return; }
+          if (["FORBIDDEN", "RESOURCE_UNAVAILABLE"].includes(joined.code)) revokeHistory();
           throw new Error(joined.message);
         }
-        const user = await authenticatedRequest<User>("/auth/me", { signal: controller.signal });
+        await initialHistory;
         if (!valid()) return;
-        setCurrentUser(user);
-        // Join first, then read history. Live events and history are merged by ID.
+        // Fill the gap between the HTTP snapshot and joining the live room.
+        // A reconnect uses this cursor, never the oldest loaded history page.
         let more = true;
         while (more && valid()) {
-          const query = new URLSearchParams({ limit: cursor ? "100" : "40" });
+          const query = new URLSearchParams({ limit: cursor ? "100" : String(CHAT_PAGE_SIZE) });
           if (cursor) { query.set("after", cursor.createdAt); query.set("afterId", cursor.id); }
           const page = await authenticatedRequest<ChatMessage[]>(`/classes/${encodeURIComponent(classId)}/chat/messages?${query}`, { signal: controller.signal });
           if (!valid()) return;
           more = !!cursor && page.length === 100;
-          if (!cursor) setHasOlder(page.length === 40);
-          if (!initialLoaded) { initialLoaded = true; followRef.current = true; }
+          if (!cursor) setHasOlder(page.length === CHAT_PAGE_SIZE);
           merge(page);
           cursor = page.at(-1) ?? cursor;
         }
-        if (valid()) { readyRef.current = true; setConnected(true); }
+        if (valid()) { readyRef.current = true; setConnected(true); setError(""); }
       } catch (cause) {
-        if (valid()) setError(errorMessage(cause, "Không thể đồng bộ trò chuyện"));
-      } finally {
-        if (active && version === revision) setLoading(false);
+        if (active && version === revision) {
+          if (cause instanceof ApiError && [401, 403, 404].includes(cause.status)) revokeHistory();
+          setError(errorMessage(cause, "Không thể đồng bộ trò chuyện"));
+        }
       }
     }
 
@@ -198,7 +223,6 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
       ++revision;
       readyRef.current = false;
       setConnected(false);
-      setLoading(false);
       if (active && reason === "io server disconnect") {
         clearTimeout(reconnectTimer);
         reconnectTimer = setTimeout(() => { if (active) socket.connect(); }, 250);
@@ -206,7 +230,6 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
     });
     socket.on("connect_error", (cause: Error & { data?: { code?: string } }) => {
       if (!active) return;
-      setLoading(false);
       setError(cause.message || "Không thể kết nối trò chuyện");
       if (cause.data?.code === "AUTH_REQUIRED" && !authRetried) {
         authRetried = true;
@@ -221,6 +244,7 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
       setConnected(false);
       setLoading(false);
       setError(event.message ?? "Không thể sử dụng kênh chat");
+      if (["FORBIDDEN", "RESOURCE_UNAVAILABLE"].includes(event.code ?? "")) revokeHistory();
       if (event.code === "AUTH_REQUIRED") {
         forceRefresh = true;
         // Allow a server-initiated disconnect to finish before reconnecting.
@@ -244,7 +268,7 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [addMessage, classId, merge]);
+  }, [addMessage, cacheKey, classId, merge, snapshot]);
 
   useLayoutEffect(() => {
     const list = listRef.current;
@@ -256,19 +280,31 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
 
   async function loadOlder() {
     const oldest = messagesRef.current[0];
-    if (!oldest || loadingOlder) return;
+    if (!oldest || loadingOlderRef.current || !hasOlder || !historyAllowedRef.current) return;
+    loadingOlderRef.current = true;
     setLoadingOlder(true);
     try {
-      const query = new URLSearchParams({ before: oldest.createdAt, beforeId: oldest.id, limit: "40" });
+      const query = new URLSearchParams({ before: oldest.createdAt, beforeId: oldest.id, limit: String(CHAT_PAGE_SIZE) });
       const page = await authenticatedRequest<ChatMessage[]>(`/classes/${encodeURIComponent(classId)}/chat/messages?${query}`, { signal: abortRef.current?.signal });
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || !historyAllowedRef.current) return;
       const list = listRef.current;
       if (list) scrollRef.current = { height: list.scrollHeight, top: list.scrollTop };
       merge(page);
-      setHasOlder(page.length === 40);
+      setHasOlder(page.length === CHAT_PAGE_SIZE);
     } catch (cause) {
-      if (mountedRef.current) setError(errorMessage(cause, "Không thể tải tin nhắn cũ"));
-    } finally { if (mountedRef.current) setLoadingOlder(false); }
+      if (mountedRef.current && historyAllowedRef.current) {
+        if (cause instanceof ApiError && [401, 403, 404].includes(cause.status)) {
+          historyAllowedRef.current = false;
+          clearRecentChat(cacheKey);
+          messagesRef.current = [];
+          setMessages([]);
+          setHasOlder(false);
+          readyRef.current = false;
+          setConnected(false);
+        }
+        setError(errorMessage(cause, "Không thể tải tin nhắn cũ"));
+      }
+    } finally { loadingOlderRef.current = false; if (mountedRef.current) setLoadingOlder(false); }
   }
 
   function pickFiles(selected: FileList | null) {
@@ -359,9 +395,13 @@ function ClassChatContent({ classId, className }: { classId: string; className?:
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${connected ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{connected ? <Wifi className="size-3.5" /> : <WifiOff className="size-3.5" />}{connected ? "Trực tuyến" : loading ? "Đang đồng bộ" : "Chưa kết nối"}</span>
       </header>
       {error ? <p className="mx-4 mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
-      {!connected && !loading ? <div className="px-4 pt-3"><Button variant="ghost" size="sm" onClick={() => retryRef.current()}>Kết nối lại</Button></div> : null}
-      <div ref={listRef} className="h-[390px] space-y-3 overflow-y-auto bg-slate-50/60 p-4">
-        {hasOlder ? <div className="text-center"><Button variant="ghost" size="sm" disabled={loadingOlder || loading || !connected} onClick={() => void loadOlder()}>{loadingOlder ? "Đang tải…" : "Xem tin nhắn cũ"}</Button></div> : null}
+      {!connected && !loading && historyAllowedRef.current ? <div className="px-4 pt-3"><Button variant="ghost" size="sm" onClick={() => retryRef.current()}>Kết nối lại</Button></div> : null}
+      <div ref={listRef} aria-label="Tin nhắn trao đổi lớp" onScroll={(event) => {
+        const list = event.currentTarget;
+        followRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+        if (list.scrollTop < 80 && hasOlder && !loading) void loadOlder();
+      }} className="h-[390px] space-y-3 overflow-y-auto bg-slate-50/60 p-4">
+        {hasOlder ? <div className="text-center"><Button variant="ghost" size="sm" disabled={loadingOlder || loading} onClick={() => void loadOlder()}>{loadingOlder ? "Đang tải…" : "Xem tin nhắn cũ"}</Button></div> : null}
         {loading && !messages.length ? <div className="grid h-full place-items-center text-sm font-semibold text-slate-500"><span className="flex items-center gap-2"><LoaderCircle className="size-4 animate-spin" />Đang tải trò chuyện…</span></div> : null}
         {!loading && !messages.length ? <div className="grid h-full place-items-center text-center text-sm text-slate-500">Chưa có tin nhắn. Hãy bắt đầu trao đổi với lớp.</div> : null}
         {messages.map((message) => {

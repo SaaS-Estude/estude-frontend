@@ -140,6 +140,11 @@ function loadTeacher(view, save, extraService = {}) {
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const original = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    if (id === "@/components/ui/modal") return {
+      Modal: ({ open, title, children, footer, onClose }) => open
+        ? React.createElement("dialog", { "aria-label": title, onCancel: onClose }, children, footer)
+        : null,
+    };
     if (id === "./legacy-purpose-review") return { LegacyPurposeReview: () => null };
     if (id === "./internal-gradebook-panel") return { InternalGradebookPanel: () => null };
     if (id === "@/context/permissions-context")
@@ -424,11 +429,87 @@ test("teacher previews an Excel import before saving a class batch", async (t) =
   });
   t.after(async () => { await act(async () => renderer.unmount()); });
   const button = (label) => renderer.root.findAllByType("button").find((item) => item.children.some((child) => child === label));
+  assert.equal(renderer.root.findAllByType("dialog").length, 0);
   await act(async () => button("Import Excel").props.onClick());
+  assert.equal(renderer.root.findByType("dialog").props["aria-label"], "Nhập điểm từ Excel");
+  assert.ok(renderer.root.findAllByType("table").length > 0, "grade table stays mounted behind the import popup");
   await act(async () => renderer.root.findAllByType("input").find((item) => item.props.type === "file").props.onChange({ target: { files: [{ name: "scores.xlsx" }] } }));
   await act(async () => button("Kiểm tra tệp").props.onClick());
   assert.match(JSON.stringify(renderer.toJSON()), /học sinh có thay đổi/);
   assert.equal(saved, undefined);
   await act(async () => button("Lưu 1 học sinh").props.onClick());
   assert.deepEqual(saved, { revision: 7, records: [{ studentId: "student", marks: { regular: [8, null], midterm: null, final: null }, comment: "" }] });
+  assert.equal(renderer.root.findAllByType("dialog").length, 0);
+  assert.match(JSON.stringify(renderer.toJSON()), /Đã nhập điểm nháp/);
+});
+
+async function renderImport(t, service = {}) {
+  const Panel = loadTeacher(teacherView, async () => assert.fail("import must not use row editing"), service);
+  let renderer;
+  await act(async () => {
+    renderer = create(React.createElement(Panel, { schoolClass }));
+    await new Promise(setImmediate);
+  });
+  t.after(async () => { await act(async () => renderer.unmount()); });
+  const button = (label) => renderer.root.findAllByType("button").find((node) => node.children.includes(label));
+  const chooseFile = async () => act(async () => {
+    renderer.root.findAllByType("input").find((node) => node.props.type === "file").props.onChange({ target: { files: [{ name: "scores.xlsx" }] } });
+  });
+  await act(async () => button("Import Excel").props.onClick());
+  return { renderer, button, chooseFile };
+}
+
+const validImport = {
+  revision: 7, totalRows: 1, changedRows: 1,
+  rows: [{ row: 2, studentId: "student", fullName: "An", accountName: "an", marks: { regular: [8, null], midterm: null, final: null }, comment: "" }],
+  errors: [],
+};
+
+test("cancel closes the Excel popup without saving and discards the selected file and preview", async (t) => {
+  const { renderer, button, chooseFile } = await renderImport(t, {
+    previewImport: async () => validImport,
+    saveBulk: async () => assert.fail("cancel must not save grades"),
+  });
+  await chooseFile();
+  await act(async () => button("Kiểm tra tệp").props.onClick());
+  assert.ok(button("Lưu 1 học sinh"));
+  await act(async () => renderer.root.findByType("dialog").props.onCancel());
+  assert.equal(renderer.root.findAllByType("dialog").length, 0);
+  await act(async () => button("Import Excel").props.onClick());
+  assert.equal(button("Kiểm tra tệp").props.disabled, true);
+  assert.equal(button("Lưu nháp").props.disabled, true);
+  assert.equal(button("Lưu 1 học sinh"), undefined);
+});
+
+test("Excel row validation errors stay inside the popup and block saving", async (t) => {
+  const { renderer, button, chooseFile } = await renderImport(t, {
+    previewImport: async () => ({ ...validImport, errors: [{ row: 2, message: "Điểm phải nằm trong khoảng 0–10" }] }),
+    saveBulk: async () => assert.fail("invalid preview must not save"),
+  });
+  await chooseFile();
+  await act(async () => button("Kiểm tra tệp").props.onClick());
+  assert.equal(button("Lưu 1 học sinh").props.disabled, true);
+  const alerts = renderer.root.findByType("dialog").findAllByProps({ role: "alert" });
+  assert.equal(alerts.length, 1);
+  assert.match(alerts[0].findAllByType("p").map((node) => node.children.join(" ")).join(" "), /Điểm phải nằm trong khoảng/);
+  await act(async () => button("Lưu 1 học sinh").props.onClick());
+});
+
+test("Excel popup cannot close during save and keeps the preview when saving fails", async (t) => {
+  let rejectSave;
+  const { renderer, button, chooseFile } = await renderImport(t, {
+    previewImport: async () => validImport,
+    saveBulk: () => new Promise((_resolve, reject) => { rejectSave = reject; }),
+  });
+  await chooseFile();
+  await act(async () => button("Kiểm tra tệp").props.onClick());
+  await act(async () => button("Lưu 1 học sinh").props.onClick());
+  assert.equal(button("Hủy").props.disabled, true);
+  await act(async () => renderer.root.findByType("dialog").props.onCancel());
+  assert.equal(renderer.root.findAllByType("dialog").length, 1);
+  await act(async () => { rejectSave(new Error("Sổ điểm đã thay đổi")); await new Promise(setImmediate); });
+  assert.equal(renderer.root.findAllByType("dialog").length, 1);
+  assert.match(renderer.root.findByType("dialog").findByProps({ role: "alert" }).children.join(" "), /Sổ điểm đã thay đổi/);
+  assert.equal(button("Lưu 1 học sinh").props.disabled, false);
+  assert.equal(button("Hủy").props.disabled, false);
 });
