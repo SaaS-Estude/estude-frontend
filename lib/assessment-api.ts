@@ -424,9 +424,10 @@ export const academicDataService = {
       `/teacher/assigned-classes/${encodeURIComponent(classId)}`,
     );
   },
-  getClassTopics(classId: string): Promise<ClassTopic[]> {
+  getClassTopics(classId: string, courseOfferingId?: string): Promise<ClassTopic[]> {
     return authenticatedRequest<ClassTopic[]>(
       `/teacher/assigned-classes/${encodeURIComponent(classId)}/topics`,
+      courseOfferingId ? { headers: { "X-Course-Offering-ID": courseOfferingId } } : undefined,
     );
   },
   createClassTopic(

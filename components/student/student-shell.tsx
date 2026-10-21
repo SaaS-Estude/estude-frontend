@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
-  CalendarDays,
   Bell,
   BookOpen,
   BrainCircuit,
@@ -56,7 +55,6 @@ const studentNavItems: StudentNavItem[] = [
     href: "/student/learning-plans",
   },
   { icon: BarChart3, label: "Điểm số", href: "/student/grades" },
-  { icon: CalendarDays, label: "Lịch học tập", href: "/student/calendar" },
 ];
 
 function isNavItemActive(pathname: string, href?: string): boolean {

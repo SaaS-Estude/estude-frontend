@@ -29,6 +29,7 @@ import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
 import { Modal } from "@/components/ui/modal";
 import { useActionNotification } from "@/components/ui/action-notification";
 import { academicDataService } from "@/lib/assessment-api";
+import { courseOfferingApi } from "@/lib/course-offering-api";
 import { matchesSearchKeyword } from "@/lib/search-keyword";
 import { getVietnameseSubjectName } from "@/lib/subject-localization";
 import type {
@@ -48,6 +49,9 @@ type TargetDraft = {
   lessonId: string;
   topicName: string;
 };
+
+type AssignmentClass = TeacherAssignedClass & { courseLabel?: string };
+const targetKey = (schoolClass: AssignmentClass) => schoolClass.courseOfferingId || schoolClass.id;
 
 function formatFileSize(size: number): string {
   if (size < 1024) return `${size} B`;
@@ -109,7 +113,7 @@ export function TeacherMaterialLibraryPanel() {
   const { can } = usePermissions();
   const { notify } = useActionNotification();
   const [materials, setMaterials] = useState<LearningMaterial[]>([]);
-  const [classes, setClasses] = useState<TeacherAssignedClass[]>([]);
+  const [classes, setClasses] = useState<AssignmentClass[]>([]);
   const [topicsByClass, setTopicsByClass] = useState<Record<string, ClassTopic[]>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targets, setTargets] = useState<Record<string, TargetDraft>>({});
@@ -120,6 +124,8 @@ export function TeacherMaterialLibraryPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [isLoadingTargets, setIsLoadingTargets] = useState(false);
+  const [targetError, setTargetError] = useState("");
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [previewMaterial, setPreviewMaterial] = useState<LearningMaterial | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -132,16 +138,8 @@ export function TeacherMaterialLibraryPanel() {
     setIsLoading(true);
     setError("");
     try {
-      const [loadedMaterials, loadedClasses] = await Promise.all([
-        academicDataService.getMaterialLibrary(),
-        academicDataService.getTeacherAssignedClasses(),
-      ]);
-      const topicEntries = await Promise.all(
-        loadedClasses.map(async (schoolClass) => [schoolClass.id, await academicDataService.getClassTopics(schoolClass.id)] as const),
-      );
+      const loadedMaterials = await academicDataService.getMaterialLibrary();
       setMaterials(loadedMaterials);
-      setClasses(loadedClasses);
-      setTopicsByClass(Object.fromEntries(topicEntries));
       setSelectedIds((current) => current.filter((id) => loadedMaterials.some((item) => item.id === id)));
     } catch (cause) {
       setError(errorMessage(cause, "Không thể tải thư viện tài liệu"));
@@ -201,22 +199,60 @@ export function TeacherMaterialLibraryPanel() {
     }
   }
 
-  function openAssignModal() {
-    const initialTargets: Record<string, TargetDraft> = {};
-    for (const schoolClass of classes) {
-      const subjectId = schoolClass.subjects[0]?.id ?? "";
-      const availableTopics = (topicsByClass[schoolClass.id] ?? []).filter((topic) => topic.subjectId === subjectId);
-      initialTargets[schoolClass.id] = {
-        selected: false,
-        subjectId,
-        topicMode: availableTopics.length ? "existing" : "new",
-        topicId: availableTopics[0]?.id ?? "",
-        lessonId: availableTopics[0]?.lessons?.[0]?.id ?? "",
-        topicName: "",
-      };
-    }
-    setTargets(initialTargets);
+  async function openAssignModal() {
     setIsAssignModalOpen(true);
+    setIsLoadingTargets(true);
+    setTargetError("");
+    setClasses([]);
+    setTargets({});
+    try {
+      const [loadedClasses, courses] = await Promise.all([
+        academicDataService.getTeacherAssignedClasses(),
+        courseOfferingApi.list(),
+      ]);
+      const assignmentClasses: AssignmentClass[] = courses
+        .filter((course) => course.status === "DRAFT" || course.status === "OPEN")
+        .flatMap((course) => {
+          const schoolClass = loadedClasses.find((row) => row.id === course.primaryClassId);
+          const subject = schoolClass?.subjects.find((row) => row.id === course.subjectId);
+          return schoolClass && subject ? [{
+            ...schoolClass,
+            courseOfferingId: course.id,
+            subjects: [subject],
+            courseLabel: [getVietnameseSubjectName(subject), course.term?.name, course.sectionKey].filter(Boolean).join(" · "),
+          }] : [];
+        });
+      // Keep unconverted class/subject assignments without guessing a native group.
+      for (const schoolClass of loadedClasses) {
+        const subjects = schoolClass.subjects.filter((subject) => !courses.some((course) => course.primaryClassId === schoolClass.id && course.subjectId === subject.id));
+        if (subjects.length) assignmentClasses.push({ ...schoolClass, subjects });
+      }
+      const topicEntries = await Promise.all(assignmentClasses.map(async (schoolClass) => [
+        targetKey(schoolClass),
+        await academicDataService.getClassTopics(schoolClass.id, schoolClass.courseOfferingId),
+      ] as const));
+      const loadedTopics = Object.fromEntries(topicEntries);
+      const initialTargets: Record<string, TargetDraft> = {};
+      for (const schoolClass of assignmentClasses) {
+        const subjectId = schoolClass.subjects[0]?.id ?? "";
+        const availableTopics = (loadedTopics[targetKey(schoolClass)] ?? []).filter((topic) => topic.subjectId === subjectId);
+        initialTargets[targetKey(schoolClass)] = {
+          selected: false,
+          subjectId,
+          topicMode: availableTopics.length ? "existing" : "new",
+          topicId: availableTopics[0]?.id ?? "",
+          lessonId: availableTopics[0]?.lessons?.[0]?.id ?? "",
+          topicName: "",
+        };
+      }
+      setClasses(assignmentClasses);
+      setTopicsByClass(loadedTopics);
+      setTargets(initialTargets);
+    } catch (cause) {
+      setTargetError(errorMessage(cause, "Không thể tải lớp môn học để gán tài liệu"));
+    } finally {
+      setIsLoadingTargets(false);
+    }
   }
 
   function updateTarget(classId: string, update: Partial<TargetDraft>) {
@@ -224,8 +260,8 @@ export function TeacherMaterialLibraryPanel() {
   }
 
   function changeSubject(schoolClass: TeacherAssignedClass, subjectId: string) {
-    const availableTopics = (topicsByClass[schoolClass.id] ?? []).filter((topic) => topic.subjectId === subjectId);
-    updateTarget(schoolClass.id, {
+    const availableTopics = (topicsByClass[targetKey(schoolClass)] ?? []).filter((topic) => topic.subjectId === subjectId);
+    updateTarget(targetKey(schoolClass), {
       subjectId,
       topicMode: availableTopics.length ? "existing" : "new",
       topicId: availableTopics[0]?.id ?? "",
@@ -236,11 +272,12 @@ export function TeacherMaterialLibraryPanel() {
 
   async function assignMaterials() {
     const payload: MaterialAssignmentTarget[] = classes.flatMap((schoolClass) => {
-      const target = targets[schoolClass.id];
+      const target = targets[targetKey(schoolClass)];
       if (!target?.selected) return [];
       return [{
         classId: schoolClass.id,
         subjectId: target.subjectId,
+        ...(schoolClass.courseOfferingId ? { courseOfferingId: schoolClass.courseOfferingId } : {}),
         ...(target.topicMode === "existing" ? { topicId: target.topicId } : { topicName: target.topicName.trim() }),
         ...(target.topicMode === "existing" && target.lessonId ? { lessonId: target.lessonId } : {}),
       }];
@@ -336,7 +373,7 @@ export function TeacherMaterialLibraryPanel() {
               variant="outline"
               className="!h-[42px] !rounded-lg"
               disabled={!selectedIds.length || isLoading}
-              onClick={openAssignModal}
+              onClick={() => void openAssignModal()}
             >
               <FolderInput className="size-4" />
               Gán {selectedIds.length ? `${selectedIds.length} tài liệu` : "vào lớp"}
@@ -377,7 +414,7 @@ export function TeacherMaterialLibraryPanel() {
             </TableHeader>
             <TableBody>
               {isLoading ? <TableLoadingBarRow colSpan={6} /> : null}
-              {!isLoading && filteredMaterials.length === 0 ? (
+              {!isLoading && !error && filteredMaterials.length === 0 ? (
                 <TableEmptyRow
                   colSpan={6}
                   icon={<FileText className="size-5 text-slate-400" />}
@@ -414,8 +451,8 @@ export function TeacherMaterialLibraryPanel() {
                   <TableCell>
                     <div className="flex max-w-xl flex-wrap gap-1.5">
                       {(material.assignments ?? []).length ? (material.assignments ?? []).map((assignment) => (
-                        <span key={assignment.id} className="rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">
-                          {assignment.schoolClass.code} · {assignment.name}
+                        <span key={`${assignment.id}:${assignment.courseOfferingId ?? "legacy"}`} className="rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">
+                          {assignment.schoolClass.code} · {assignment.term?.name ? `${assignment.term.name} · ` : ""}{assignment.name}
                         </span>
                       )) : <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500">Chưa gán vào lớp</span>}
                     </div>
@@ -500,20 +537,20 @@ export function TeacherMaterialLibraryPanel() {
         ) : null}
       </Modal>
 
-      <Modal open={isAssignModalOpen} title={`Gán ${selectedIds.length} tài liệu vào lớp`} description="Chọn nhiều lớp; mỗi lớp có thể dùng chủ đề sẵn có hoặc tạo chủ đề mới." width="max-w-4xl" bodyClassName="max-h-[68vh] overflow-y-auto" onClose={() => !isAssigning && setIsAssignModalOpen(false)} footer={<><Button variant="outline" disabled={isAssigning} onClick={() => setIsAssignModalOpen(false)}>Hủy</Button><Button permission="materials.assign" disabled={isAssigning || !Object.values(targets).some((target) => target.selected)} onClick={() => void assignMaterials()}>{isAssigning ? <LoaderCircle className="size-4 animate-spin" /> : <FolderInput className="size-4" />}Gán tài liệu</Button></>}>
+      <Modal open={isAssignModalOpen} title={`Gán ${selectedIds.length} tài liệu vào lớp`} description="Chọn lớp và học kỳ/nhóm cần gán; dùng chủ đề sẵn có hoặc tạo chủ đề mới." width="max-w-4xl" bodyClassName="max-h-[68vh] overflow-y-auto" onClose={() => !isAssigning && setIsAssignModalOpen(false)} footer={<><Button variant="outline" disabled={isAssigning} onClick={() => setIsAssignModalOpen(false)}>Hủy</Button><Button permission="materials.assign" disabled={isAssigning || isLoadingTargets || Boolean(targetError) || !Object.values(targets).some((target) => target.selected)} onClick={() => void assignMaterials()}>{isAssigning ? <LoaderCircle className="size-4 animate-spin" /> : <FolderInput className="size-4" />}Gán tài liệu</Button></>}>
         {error ? <p className="mb-3 flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700"><XCircle className="size-4" />{error}</p> : null}
-        {classes.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">Bạn chưa được phân công lớp học nào.</p> : <div className="space-y-3">
+        {isLoadingTargets ? <p className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" />Đang tải lớp môn học...</p> : targetError ? <p role="alert" className="text-sm text-rose-700">{targetError}</p> : classes.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">Bạn chưa được phân công lớp học nào.</p> : <div className="space-y-3">
           {classes.map((schoolClass) => {
-            const target = targets[schoolClass.id];
+            const target = targets[targetKey(schoolClass)];
             if (!target) return null;
-            const availableTopics = (topicsByClass[schoolClass.id] ?? []).filter((topic) => topic.subjectId === target.subjectId);
-            return <section key={schoolClass.id} className={`rounded-xl border p-4 transition ${target.selected ? "border-brand-200 bg-blue-50/40" : "border-slate-200"}`}>
-              <label className="flex cursor-pointer items-start gap-3"><Checkbox type="checkbox" checked={target.selected} onChange={(event) => updateTarget(schoolClass.id, { selected: event.target.checked })} className="mt-1 size-4 rounded border-slate-300 accent-brand-600" /><span><b className="block text-sm text-slate-900">{schoolClass.name}</b><span className="mt-0.5 block text-xs font-semibold text-brand-600">{schoolClass.code}</span></span></label>
+            const availableTopics = (topicsByClass[targetKey(schoolClass)] ?? []).filter((topic) => topic.subjectId === target.subjectId);
+            return <section key={targetKey(schoolClass)} className={`rounded-xl border p-4 transition ${target.selected ? "border-brand-200 bg-blue-50/40" : "border-slate-200"}`}>
+              <label className="flex cursor-pointer items-start gap-3"><Checkbox type="checkbox" checked={target.selected} onChange={(event) => updateTarget(targetKey(schoolClass), { selected: event.target.checked })} className="mt-1 size-4 rounded border-slate-300 accent-brand-600" /><span><b className="block text-sm text-slate-900">{schoolClass.name}</b><span className="mt-0.5 block text-xs font-semibold text-brand-600">{schoolClass.code}{schoolClass.courseLabel ? ` · ${schoolClass.courseLabel}` : ""}</span></span></label>
               {target.selected ? <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 md:grid-cols-3">
                 <label className="grid gap-1.5 text-xs font-bold text-slate-600">Môn học<Select value={target.subjectId} onChange={(event) => changeSubject(schoolClass, event.target.value)} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400">{schoolClass.subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.code} · {getVietnameseSubjectName(subject)}</option>)}</Select></label>
-                <label className="grid gap-1.5 text-xs font-bold text-slate-600">Cách gán<Select value={target.topicMode} onChange={(event) => updateTarget(schoolClass.id, { topicMode: event.target.value as "existing" | "new" })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400"><option value="existing" disabled={!availableTopics.length}>Chủ đề có sẵn</option><option value="new">Tạo chủ đề mới</option></Select></label>
-                {target.topicMode === "existing" ? <label className="grid gap-1.5 text-xs font-bold text-slate-600">Chủ đề<Select value={target.topicId} onChange={(event) => updateTarget(schoolClass.id, { topicId: event.target.value, lessonId: availableTopics.find((t) => t.id === event.target.value)?.lessons?.[0]?.id ?? "" })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400">{availableTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</Select></label> : <label className="grid gap-1.5 text-xs font-bold text-slate-600">Tên chủ đề mới<Input required maxLength={120} value={target.topicName} onChange={(event) => updateTarget(schoolClass.id, { topicName: event.target.value })} placeholder="Ví dụ: Tài liệu tuần 1" className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400" /></label>}
-                {target.topicMode === "existing" ? <label className="grid gap-1.5 text-xs font-bold text-slate-600">Bài học<Select value={target.lessonId} onChange={(event) => updateTarget(schoolClass.id, { lessonId: event.target.value })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal"><option value="">Nội dung mặc định (bản nháp)</option>{availableTopics.find((t) => t.id === target.topicId)?.lessons?.filter((l) => l.status !== 'ARCHIVED').map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}</Select></label> : null}
+                <label className="grid gap-1.5 text-xs font-bold text-slate-600">Cách gán<Select value={target.topicMode} onChange={(event) => updateTarget(targetKey(schoolClass), { topicMode: event.target.value as "existing" | "new" })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400"><option value="existing" disabled={!availableTopics.length}>Chủ đề có sẵn</option><option value="new">Tạo chủ đề mới</option></Select></label>
+                {target.topicMode === "existing" ? <label className="grid gap-1.5 text-xs font-bold text-slate-600">Chủ đề<Select value={target.topicId} onChange={(event) => updateTarget(targetKey(schoolClass), { topicId: event.target.value, lessonId: availableTopics.find((t) => t.id === event.target.value)?.lessons?.[0]?.id ?? "" })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400">{availableTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</Select></label> : <label className="grid gap-1.5 text-xs font-bold text-slate-600">Tên chủ đề mới<Input required maxLength={120} value={target.topicName} onChange={(event) => updateTarget(targetKey(schoolClass), { topicName: event.target.value })} placeholder="Ví dụ: Tài liệu tuần 1" className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-brand-400" /></label>}
+                {target.topicMode === "existing" ? <label className="grid gap-1.5 text-xs font-bold text-slate-600">Bài học<Select value={target.lessonId} onChange={(event) => updateTarget(targetKey(schoolClass), { lessonId: event.target.value })} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal"><option value="">Nội dung mặc định (bản nháp)</option>{availableTopics.find((t) => t.id === target.topicId)?.lessons?.filter((l) => l.status !== 'ARCHIVED').map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}</Select></label> : null}
                 <p className="text-xs text-slate-500 md:col-span-3">Tài nguyên được gắn vào bài học ở trạng thái bản nháp. Công bố trong không gian lớp để học sinh xem.</p>
               </div> : null}
             </section>;

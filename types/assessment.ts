@@ -392,6 +392,8 @@ export interface LearningMaterial {
 }
 
 export interface MaterialClassAssignment {
+  courseOfferingId?: string;
+  term?: Term;
   id: string;
   classId: string;
   subjectId: string;
@@ -402,6 +404,7 @@ export interface MaterialClassAssignment {
 }
 
 export interface MaterialAssignmentTarget {
+  courseOfferingId?: string;
   lessonId?: string;
   classId: string;
   subjectId: string;
