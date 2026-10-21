@@ -76,3 +76,60 @@ test('removes results when access is denied', async (t) => {
   assert.match(JSON.stringify(renderer.toJSON()), /Liên kết đã thu hồi/);
   assert.doesNotMatch(JSON.stringify(renderer.toJSON()), /Bài của con thứ nhất/);
 });
+
+const { InternalActivityChart } = compile('components/assessment/internal-activity-chart.tsx');
+const { BarChart } = require('../components/ui/bar-chart.tsx');
+
+test('activity chart compares published normalized scores and preserves a real zero without plotting missing or qualitative results', async (t) => {
+  const report = fixture();
+  const base = report.items[0];
+  report.items = [
+    { ...base, id: 'scaled', title: 'Bài thang 20', score: 15, maxScore: 20, normalizedScore: 7.5 },
+    { ...base, id: 'zero', title: 'Điểm không', score: 0, normalizedScore: 0 },
+    { ...base, id: 'unpublished', title: 'Chưa công bố', publishedAt: null, publicationStatus: 'UNPUBLISHED', normalizedScore: 9 },
+    { ...base, id: 'missing', title: 'Chưa nộp', evaluationStatus: 'MISSING', score: null, normalizedScore: null },
+    { ...base, id: 'pass', title: 'Nhận xét', assessment: 'PASS', score: null, normalizedScore: null },
+    { ...base, id: 'excused', title: 'Miễn', excused: true },
+  ];
+  report.pagination.total = report.items.length;
+  let renderer;
+  await act(async () => { renderer = create(React.createElement(InternalActivityChart, { report })); });
+  t.after(async () => { await act(async () => renderer.unmount()); });
+  const chart = renderer.root.findByType(BarChart);
+  assert.equal(chart.props.maxValue, 10);
+  assert.deepEqual(chart.props.items.map((item) => item.value), [7.5, 0, null, null, null, null]);
+  assert.match(JSON.stringify(renderer.toJSON()), /Chưa công bố điểm|Chưa nộp|Đạt|Được miễn/);
+  assert.ok(renderer.root.findAllByProps({ role: 'img' }).some((node) => node.props['aria-label'].includes('0.0/10')));
+  await act(async () => { renderer.root.findAllByType('button')[0].props.onClick(); });
+  assert.equal(renderer.root.findByType('article').findByType('h4').children.join(''), 'Bài thang 20');
+  assert.match(JSON.stringify(renderer.toJSON()), /15\/20/);
+  assert.match(JSON.stringify(renderer.toJSON()), /Đã công bố/);
+  assert.equal(renderer.root.findAllByType('button')[0].props['aria-expanded'], true);
+  await act(async () => { renderer.root.findAllByType('button')[0].props.onClick(); });
+  assert.equal(renderer.root.findAllByType('article').length, 0);
+});
+
+test('activity chart includes the whole current page and clearly labels its scope', async (t) => {
+  const report = fixture();
+  report.items = Array.from({ length: 20 }, (_, i) => ({ ...report.items[0], id: `item-${i}`, title: `Hoạt động ${i}` }));
+  report.pagination = { page: 2, pageSize: 20, total: 45 };
+  let renderer;
+  await act(async () => { renderer = create(React.createElement(InternalActivityChart, { report })); });
+  t.after(async () => { await act(async () => renderer.unmount()); });
+  const chart = renderer.root.findByType(BarChart);
+  assert.equal(chart.props.maxItems, 20);
+  assert.equal(chart.props.items[0].shortLabel, 'Bài 21');
+  assert.equal(renderer.root.findAllByProps({ role: 'listitem' }).length, 20);
+  assert.match(JSON.stringify(renderer.toJSON()), /21|40|45/);
+});
+
+test('activity chart explains an entirely unpublished page without drawing zero bars', async (t) => {
+  const report = fixture();
+  report.items[0] = { ...report.items[0], score: null, normalizedScore: null, publishedAt: null, publicationStatus: 'UNPUBLISHED' };
+  let renderer;
+  await act(async () => { renderer = create(React.createElement(InternalActivityChart, { report })); });
+  t.after(async () => { await act(async () => renderer.unmount()); });
+  assert.match(JSON.stringify(renderer.toJSON()), /Chưa có điểm số đã công bố để vẽ cột/);
+  assert.equal(renderer.root.findAllByProps({ role: 'img' }).length, 0);
+  assert.match(JSON.stringify(renderer.toJSON()), /Chưa công bố điểm/);
+});
