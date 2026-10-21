@@ -37,9 +37,13 @@ export function calendarTime(value: string, zone: string) {
   }).format(new Date(value));
 }
 
-// Exam windows can span several days; their ending instant is exclusive.
+// Exams are opening milestones on the calendar, even when their submission
+// window spans several days. Other timed activities retain their duration.
 export function calendarEventTime(event: CalendarEvent, day: string, zone: string) {
   const start = calendarDay(new Date(event.startAt), zone);
+  if (event.type === "EXAM") {
+    return day === start ? calendarTime(event.startAt, zone) : null;
+  }
   const end = event.endAt
     ? calendarDay(new Date(new Date(event.endAt).getTime() - 1), zone)
     : start;
