@@ -133,7 +133,7 @@ export function OverviewDashboard({ user }: { user: User }) {
       </div>
 
       <div className="mt-5 grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.75fr)]">
-        <CoveragePanel items={data.coverage} isAdmin={isAdmin} onOpen={() => router.push(isAdmin ? "/admin/subject-assignments" : "/teacher/exams")} />
+        <CoveragePanel items={data.coverage} isAdmin={isAdmin} onOpen={() => router.push(isAdmin ? "/admin/course-offerings" : "/teacher/exams")} />
         <RecentActivity items={data.recentActivity} onOpen={(href) => router.push(href)} />
       </div>
 

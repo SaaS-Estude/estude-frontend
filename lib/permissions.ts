@@ -37,11 +37,6 @@ export const MODULE_LINKS = [
   { href: "/admin/course-offerings", label: "Môn học theo lớp", permission: "course_offerings.read" },
   { href: "/admin/classes", label: "Lớp học", permission: "classes.read" },
   {
-    href: "/admin/subject-assignments",
-    label: "Phân công bộ môn",
-    permission: "assignments.read",
-  },
-  {
     href: "/admin/settings/permissions",
     label: "Phân quyền động",
     permission: "authorization.read",
@@ -183,6 +178,7 @@ export function routePermission(path: string): string | null {
   )
     return "learning.read";
   if (path === "/teacher/dashboard") return "teaching.read";
+  if (path === "/admin/subject-assignments") return "course_offerings.read";
   const link = MODULE_LINKS.find(
     (item) => path === item.href || path.startsWith(`${item.href}/`),
   );

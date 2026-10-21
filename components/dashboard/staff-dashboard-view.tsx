@@ -45,7 +45,6 @@ import {
   SystemSettingsPanel,
   type SystemSettingsSection,
 } from "@/components/admin/system-settings-panel";
-import { SubjectTeacherAssignmentPanel } from "@/components/admin/subject-teacher-assignment-panel";
 import { CourseOfferingPanel } from "@/components/admin/course-offering-panel";
 import { ParentStudentLinksPanel } from "@/components/admin/parent-student-links-panel";
 import { TeacherAssignedClassesPanel } from "@/components/teacher/assigned-classes-panel";
@@ -261,11 +260,6 @@ export function StaffDashboardView() {
             label: "Lớp học",
             href: "/admin/classes",
           },
-          {
-            icon: ClipboardCheck,
-            label: "Phân công giáo viên môn học",
-            href: "/admin/subject-assignments",
-          },
         ]
       : []),
     ...staffNavItems,
@@ -290,7 +284,6 @@ export function StaffDashboardView() {
   const isSubjectsPage = pathname === "/admin/subjects";
   const isCourseOfferingsPage = pathname === "/admin/course-offerings";
   const isClassesPage = pathname === "/admin/classes";
-  const isSubjectAssignmentsPage = pathname === "/admin/subject-assignments";
   const isParentStudentLinksPage = pathname === "/admin/parent-student-links";
   const isTeacherDashboard =
     user.role === "TEACHER" && pathname === "/teacher/dashboard";
@@ -714,7 +707,6 @@ export function StaffDashboardView() {
               isSubjectsPage ||
               isCourseOfferingsPage ||
               isClassesPage ||
-              isSubjectAssignmentsPage ||
               isParentStudentLinksPage ||
               isSettingsPage ||
               isTeacherDashboard ||
@@ -748,8 +740,6 @@ export function StaffDashboardView() {
               <TeacherAssignedCoursesPanel />
             ) : isTeacherMaterialsPage ? (
               <TeacherMaterialLibraryPanel />
-            ) : isSubjectAssignmentsPage ? (
-              <SubjectTeacherAssignmentPanel />
             ) : isParentStudentLinksPage ? (
               <ParentStudentLinksPanel />
             ) : isSettingsPage && settingsSection === "permissions" ? (

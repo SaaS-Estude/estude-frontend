@@ -65,7 +65,7 @@ export function TenantName() {
 
   return (
     <p
-      className="hidden max-w-[24vw] truncate text-sm font-semibold text-slate-600 sm:block xl:max-w-xs"
+      className="hidden max-w-[24vw] truncate text-sm font-semibold text-brand-600 sm:block xl:max-w-xs"
       aria-label="Tên trường"
       title={name}
     >

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Eye, LoaderCircle, Pencil, Plus, Search } from "lucide-react";
-import { ClassGradebookConfig } from "./class-gradebook-config";
+import { CourseOfferingEditor } from "./course-offering-editor";
 import { CourseOfferingDetails } from "./course-offering-details";
 import { defaultGradePolicy, GradebookPolicyFields } from "./gradebook-policy-fields";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ import type { GradePolicy } from "@/types/gradebook";
 
 
 
-const inputClass = "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500";
 const courseStatusLabels = {DRAFT:"Bản nháp",OPEN:"Đang mở",CLOSED:"Đã đóng",ARCHIVED:"Đã lưu trữ"};
 const termStatusLabels: Record<string,string> = {UPCOMING:"Sắp diễn ra",ACTIVE:"Đang diễn ra",COMPLETED:"Đã kết thúc",LOCKED:"Đã khóa"};
 const errorText = (error: unknown) => error instanceof ApiError ? error.message : "Thao tác không thành công";
@@ -43,9 +42,6 @@ export function CourseOfferingPanel() {
   const [subjectId, setSubjectId] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [selectedMode, setSelectedMode] = useState<"view" | "edit">("view");
-  const [title, setTitle] = useState("");
-  const [teacherId, setTeacherId] = useState("");
-  const [teacherRole, setTeacherRole] = useState<CourseTeacherRole>("PRIMARY_TEACHER");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -57,6 +53,7 @@ export function CourseOfferingPanel() {
   const [createPolicy, setCreatePolicy] = useState<GradePolicy>(defaultGradePolicy);
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("");
+  const [classFilter, setClassFilter] = useState("");
   const [termFilter, setTermFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
@@ -70,13 +67,16 @@ export function CourseOfferingPanel() {
   const activeSubjects = useMemo(() => subjects.filter((subject) => subject.isActive && !subject.deletedAt), [subjects]);
   const filterTerms = terms.filter((term) => !term.deletedAt && (!yearFilter || term.academicYearId === yearFilter));
   const filteredCourses = useMemo(() => courses.filter((course) => {
+    if (classFilter && course.primaryClassId !== classFilter) return false;
     if (yearFilter && course.academicYearId !== yearFilter || termFilter && course.termId !== termFilter || statusFilter && course.status !== statusFilter) return false;
     const schoolClass = course.schoolClass ?? classes.find((row) => row.id === course.primaryClassId);
     const subject = course.subject ?? subjects.find((row) => row.id === course.subjectId);
-    return matchesSearchKeyword(normalizeSearchKeyword(course.displayName, schoolClass?.name, schoolClass?.code, subject?.name, subject?.vietnameseName), search);
-  }), [courses, yearFilter, termFilter, statusFilter, classes, subjects, search]);
+    return matchesSearchKeyword(normalizeSearchKeyword(course.displayName, schoolClass?.name, schoolClass?.code, subject?.name, subject?.vietnameseName, ...course.activeTeachers.map((assignment) => teachers.find((teacher) => teacher.id === assignment.teacherId)?.fullName)), search);
+  }), [courses, yearFilter, classFilter, termFilter, statusFilter, classes, subjects, teachers, search]);
   const totalPages = Math.max(1, Math.ceil(filteredCourses.length / pageSize));
   const pagedCourses = filteredCourses.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => { setClassFilter(new URLSearchParams(window.location.search).get("classId") ?? ""); }, []);
 
   useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
@@ -119,28 +119,15 @@ export function CourseOfferingPanel() {
   }, [activeSubjects, subjectId]);
 
   useEffect(() => {
-    if (!selected) { setMembers(null); setRoster(null); return; }
+    if (!selected || selectedMode !== "view") { setMembers(null); setRoster(null); return; }
     setMembers(null); setRoster(null); setMembersLoading(true);
-    setTitle(selected.displayNameOverride ?? "");
     let active = true;
     Promise.all([courseOfferingApi.members(selected.id), academicDataService.getClassRoster(selected.primaryClassId)])
       .then(([memberRows, classRoster]) => { if (active) { setMembers(memberRows); setRoster(classRoster); } })
       .catch((cause: unknown) => { if (active) setError(errorText(cause)); })
       .finally(() => { if (active) setMembersLoading(false); });
     return () => { active = false; };
-  }, [selected]);
-
-  async function act(action: () => Promise<unknown>, success: string) {
-    if (selectedMode !== "edit") return;
-    setBusy(true); setError(""); setMessage("");
-    try {
-      await action();
-      await refresh();
-      if (selectedId) setMembers(await courseOfferingApi.members(selectedId));
-      setMessage(success);
-    } catch (cause) { setError(errorText(cause)); }
-    finally { setBusy(false); }
-  }
+  }, [selected, selectedMode]);
 
   const alreadyAdded = courses.some((course) => course.termId === termId && course.primaryClassId === classId && course.subjectId === subjectId);
   const chosenTeachers = createTeachers.filter((row) => row.teacherId);
@@ -158,7 +145,7 @@ export function CourseOfferingPanel() {
   }
 
   function openCourse(course: CourseOffering, mode: "view" | "edit") {
-    setError(""); setMessage(""); setTeacherId(""); setTeacherRole("PRIMARY_TEACHER");
+    setError(""); setMessage("");
     setSelectedMode(mode); setSelectedId(course.id);
   }
 
@@ -170,21 +157,19 @@ export function CourseOfferingPanel() {
       const course = await courseOfferingApi.create({ termId, primaryClassId: classId, subjectId, displayNameOverride: createTitle.trim(), teachers: chosenTeachers.map(({ teacherId, role }) => ({ teacherId, role })), gradebook: createPolicy });
       setCourses((current) => [course, ...current.filter((row) => row.id !== course.id)]);
       setSelectedId("");
-      setSearch(""); setYearFilter(""); setTermFilter(""); setStatusFilter(""); setPage(1);
+      setSearch(""); setClassFilter(""); setYearFilter(""); setTermFilter(""); setStatusFilter(""); setPage(1);
       setCreateOpen(false);
       setMessage("Đã thêm môn học cho lớp");
     } catch (cause) { setCreateError(errorText(cause)); }
     finally { setBusy(false); }
   }
 
-  const activeTeachers = members?.teachers.filter((teacher) => !teacher.effectiveTo) ?? [];
-  const activeEnrollmentIds = new Set(members?.enrollments.filter((row) => row.status === "ACTIVE").map((row) => row.studentId) ?? []);
-
   return <div className="w-full">
     <div className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(200px,1fr)_160px_160px_170px]">
-          <Input icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo môn hoặc lớp" aria-label="Tìm môn học theo lớp" />
+        <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(200px,1fr)_140px_140px_140px_160px]">
+          <Input icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm môn, lớp hoặc giáo viên" aria-label="Tìm môn học theo lớp" />
+          <CustomSelect value={classFilter} searchable options={[{ value: "", label: "Tất cả lớp" }, ...classes.map((schoolClass) => ({ value: schoolClass.id, label: schoolClass.name }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo lớp học" onValueChange={(value) => { setClassFilter(value); setPage(1); }} />
           <CustomSelect value={yearFilter} options={[{ value: "", label: "Tất cả năm học" }, ...years.map((year) => ({ value: year.id, label: year.name }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(value) => { setYearFilter(value); setTermFilter(""); setPage(1); }} />
           <CustomSelect value={termFilter} options={[{ value: "", label: "Tất cả học kỳ" }, ...filterTerms.map((term) => ({ value: term.id, label: yearFilter ? term.name : `${term.name} · ${years.find((year) => year.id === term.academicYearId)?.name ?? ""}` }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo học kỳ" onValueChange={(value) => { setTermFilter(value); setPage(1); }} />
           <CustomSelect value={statusFilter} options={[{ value: "", label: "Tất cả trạng thái" }, ...Object.entries(courseStatusLabels).map(([value, label]) => ({ value, label }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái" onValueChange={(value) => { setStatusFilter(value); setPage(1); }} />
@@ -199,11 +184,11 @@ export function CourseOfferingPanel() {
       <div className="overflow-x-auto">
         <Table className="min-w-[1100px]" aria-label="Danh sách môn học theo lớp">
           <TableHeader className="!bg-brand-600 !text-white"><tr>
-            <TableHead className="w-14 text-center">#</TableHead><TableHead>Môn học</TableHead><TableHead>Lớp</TableHead><TableHead>Năm học</TableHead><TableHead>Học kỳ</TableHead><TableHead className="text-center">Học sinh</TableHead><TableHead>Trạng thái</TableHead><TableHead className="text-right">Thao tác</TableHead>
+            <TableHead className="w-14 text-center">#</TableHead><TableHead>Môn học</TableHead><TableHead>Lớp</TableHead><TableHead>Năm học</TableHead><TableHead>Học kỳ</TableHead><TableHead>Giáo viên</TableHead><TableHead className="text-center">Học sinh</TableHead><TableHead>Trạng thái</TableHead><TableHead className="text-right">Thao tác</TableHead>
           </tr></TableHeader>
           <TableBody>
-            {loading && <TableLoadingBarRow colSpan={8} />}
-            {!loading && !pagedCourses.length && <TableEmptyRow colSpan={8} message={courses.length ? "Không tìm thấy môn học phù hợp" : "Chưa có môn học theo lớp. Bấm Thêm môn cho lớp để bắt đầu."} />}
+            {loading && <TableLoadingBarRow colSpan={9} />}
+            {!loading && !pagedCourses.length && <TableEmptyRow colSpan={9} message={courses.length ? "Không tìm thấy môn học phù hợp" : "Chưa có môn học theo lớp. Bấm Thêm môn cho lớp để bắt đầu."} />}
             {!loading && pagedCourses.map((course, index) => {
               const schoolClass = course.schoolClass ?? classes.find((row) => row.id === course.primaryClassId);
               const subject = course.subject ?? subjects.find((row) => row.id === course.subjectId);
@@ -214,6 +199,7 @@ export function CourseOfferingPanel() {
                 <TableCell className="font-bold text-brand-700">{schoolClass?.name ?? "--"}</TableCell>
                 <TableCell>{years.find((year) => year.id === course.academicYearId)?.name ?? "--"}</TableCell>
                 <TableCell>{course.term?.name ?? terms.find((term) => term.id === course.termId)?.name ?? "--"}</TableCell>
+                <TableCell>{course.activeTeachers.length ? <ul className="space-y-1 text-sm">{course.activeTeachers.map((assignment) => <li key={assignment.teacherId}>{teachers.find((teacher) => teacher.id === assignment.teacherId)?.fullName ?? "Giáo viên đã phân công"}<span className="ml-1 text-xs text-slate-500">{assignment.role === "PRIMARY_TEACHER" ? "(chính)" : "(đồng giảng)"}</span></li>)}</ul> : <span className="text-sm text-slate-400">Chưa phân công</span>}</TableCell>
                 <TableCell className="text-center">{course.activeStudentCount}</TableCell>
                 <TableCell><span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${statusClass}`}>{courseStatusLabels[course.status]}</span></TableCell>
                 <TableCell><div className="flex justify-end gap-1">
@@ -266,46 +252,21 @@ export function CourseOfferingPanel() {
       </form>
     </Modal>
 
-    <Modal open={Boolean(selected)} title={`${selectedMode === "view" ? "Xem" : "Chỉnh sửa"} môn học${selected ? `: ${selected.displayName}` : ""}`} description={selectedMode === "view" ? "Thông tin môn học, giáo viên, học sinh và sổ điểm." : "Quản lý giáo viên, học sinh và sổ điểm của môn học."} onClose={() => { if (!busy) setSelectedId(""); }} width="max-w-5xl" bodyClassName="max-h-[76vh] overflow-y-auto">
+    <Modal open={Boolean(selected) && selectedMode === "view"} title={`${selectedMode === "view" ? "Xem" : "Chỉnh sửa"} môn học${selected ? `: ${selected.displayName}` : ""}`} description={selectedMode === "view" ? "Thông tin môn học, giáo viên, học sinh và sổ điểm." : "Quản lý giáo viên, học sinh và sổ điểm của môn học."} onClose={() => { if (!busy) setSelectedId(""); }} width="max-w-5xl" bodyClassName="max-h-[76vh] overflow-y-auto">
       {error && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       {message && <p role="status" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
       {membersLoading && <p className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" />Đang tải thông tin môn học...</p>}
       {selected && !membersLoading && members && selectedMode === "view" && <CourseOfferingDetails course={selected} members={members} roster={roster} subjectName={selected.subject?.vietnameseName || selected.subject?.name || subjects.find((row) => row.id === selected.subjectId)?.vietnameseName || subjects.find((row) => row.id === selected.subjectId)?.name || "--"} className={selected.schoolClass?.name ?? classes.find((row) => row.id === selected.primaryClassId)?.name ?? "--"} yearName={years.find((row) => row.id === selected.academicYearId)?.name ?? "--"} termName={selected.term?.name ?? terms.find((row) => row.id === selected.termId)?.name ?? "--"} statusLabel={courseStatusLabels[selected.status]} />}
-      {selected && !membersLoading && members && selectedMode === "edit" && <div className="space-y-4">
-        <div><h3 className="font-extrabold">{selected.displayName}</h3><p className="text-sm text-slate-600">{courseStatusLabels[selected.status]} · {selected.enrollmentMode === "CLASS_ROSTER" ? "Cả lớp" : "Chọn học sinh"}</p></div>
-        {selected.status === "DRAFT" && <div className="flex flex-wrap gap-2"><Input aria-label="Tên hiển thị môn học" className={`${inputClass} flex-1`} placeholder={selected.displayName} value={title} maxLength={120} onChange={(e)=>setTitle(e.target.value)} /><Button permission="course_offerings.update" disabled={busy} onClick={()=>void act(()=>courseOfferingApi.update(selected.id,title),"Đã lưu tên môn học")}>Lưu tên</Button></div>}
-        <div className="flex flex-wrap gap-2">
-          {selected.status === "DRAFT" && <Button permission="course_offerings.lifecycle" disabled={busy || !readiness.dbPrepared || !selected.readyForOpen || selected.term?.status !== "ACTIVE" || !activeTeachers.some((row) => row.role === "PRIMARY_TEACHER")}
-            onClick={() => void act(() => courseOfferingApi.transition(selected.id, "open"), "Đã bắt đầu giảng dạy môn học")}>Bắt đầu giảng dạy</Button>}
-          {selected.status === "OPEN" && <Button permission="course_offerings.lifecycle" disabled={busy || !readiness.dbPrepared} onClick={() => void act(() => courseOfferingApi.transition(selected.id, "close"), "Đã kết thúc giảng dạy môn học")}>Kết thúc giảng dạy</Button>}
-          {selected.status === "CLOSED" && <Button permission="course_offerings.lifecycle" disabled={busy || !readiness.dbPrepared} onClick={() => void act(() => courseOfferingApi.transition(selected.id, "archive"), "Đã lưu trữ môn học")}>Lưu trữ</Button>}
-        </div>
-        {selected.status === "DRAFT" && selected.term?.status !== "ACTIVE" && <p className="text-xs text-amber-700">Chỉ bắt đầu giảng dạy khi học kỳ đang diễn ra.</p>}
-        {selected.status === "DRAFT" && !selected.readyForOpen && <p className="text-xs text-amber-700">Dịch vụ chưa sẵn sàng bắt đầu giảng dạy. Hãy tải lại trang sau khi cập nhật backend.</p>}
-        <div className="border-t border-slate-100 pt-4">
-          <h4 className="font-bold">Giáo viên</h4>
-          <ul className="mt-2 space-y-1 text-sm">{activeTeachers.map((row) => <li key={row.id} className="flex items-center justify-between gap-2">
-            <span>{row.user?.fullName || row.teacherId} · {row.role === "PRIMARY_TEACHER" ? "Giáo viên chính" : "Đồng giảng"}</span>
-            {(row.role !== "PRIMARY_TEACHER" || selected.status !== "OPEN") && <Button variant="plain" type="submit" className="text-rose-700" disabled={busy || !readiness.dbPrepared || selected.status === "ARCHIVED"}
-              onClick={() => void act(() => courseOfferingApi.endTeacher(selected.id, row.teacherId), "Đã kết thúc phân công")}>Kết thúc</Button>}
-          </li>)}</ul>
-          <div className="mt-3 flex flex-wrap gap-2"><CustomSelect ariaLabel="Chọn giáo viên" className="w-full sm:w-56" value={teacherId} placeholder="Chọn giáo viên" searchable searchPlaceholder="Tìm giáo viên..." disabled={busy || selected.status === "ARCHIVED"} options={teachers.map((teacher) => ({ value: teacher.id, label: teacher.fullName }))} onValueChange={setTeacherId} />
-          <CustomSelect ariaLabel="Vai trò giáo viên" className="w-full sm:w-48" value={teacherRole} disabled={busy || selected.status === "ARCHIVED"} options={[{ value: "PRIMARY_TEACHER", label: "Giáo viên chính" }, { value: "CO_TEACHER", label: "Đồng giảng" }]} onValueChange={(value) => setTeacherRole(value as CourseTeacherRole)} />
-          <Button permission="course_offerings.assign" disabled={busy || !readiness.dbPrepared || !teacherId || selected.status === "ARCHIVED"} onClick={() => void act(() =>
-            teacherRole === "PRIMARY_TEACHER" && activeTeachers.some((row) => row.role === "PRIMARY_TEACHER")
-              ? courseOfferingApi.replacePrimary(selected.id, teacherId)
-              : courseOfferingApi.assignTeacher(selected.id, teacherId, teacherRole), "Đã cập nhật giáo viên")}>Phân công</Button></div>
-        </div>
-        {classes.find((row)=>row.id===selected.primaryClassId) && <ClassGradebookConfig key={selected.id} schoolClass={classes.find((row)=>row.id===selected.primaryClassId)!} course={selected} />}
-        <div className="border-t border-slate-100 pt-4"><h4 className="font-bold">Học sinh ({selected.activeStudentCount})</h4>
-          {selected.enrollmentMode === "CLASS_ROSTER" ? <div><p className="mt-1 text-sm text-slate-600">Danh sách được lấy khi bắt đầu giảng dạy và tự cập nhật khi học sinh vào hoặc rời lớp.</p><ul className="mt-2 max-h-64 space-y-1 overflow-auto text-sm">{members?.enrollments.filter((row)=>row.status==="ACTIVE").map((row)=><li key={row.id} className="rounded-lg border border-slate-100 p-2">{row.user?.fullName ?? row.studentId}<span className="ml-2 text-xs text-slate-500">{row.user?.accountName}</span></li>)}</ul></div>
-            : <div className="mt-2 max-h-64 space-y-2 overflow-auto">{roster?.students.map((student) => <div key={student.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 p-2 text-sm">
-                <span>{student.fullName}</span>{activeEnrollmentIds.has(student.id) ? <Button variant="plain" type="submit" className="text-rose-700" disabled={busy || !readiness.dbPrepared || selected.status === "CLOSED" || selected.status === "ARCHIVED"}
-                  onClick={() => void act(() => courseOfferingApi.withdraw(selected.id, student.id), "Đã rút học sinh khỏi môn học")}>Rút</Button>
-                  : <Button variant="plain" type="submit" className="text-blue-700" disabled={busy || !readiness.dbPrepared || selected.status === "CLOSED" || selected.status === "ARCHIVED"}
-                    onClick={() => void act(() => courseOfferingApi.enroll(selected.id, student.id), "Đã ghi danh học sinh")}>Ghi danh</Button>}</div>)}</div>}
-        </div>
-      </div>}
+
     </Modal>
+    {selected && selectedMode === "edit" && <CourseOfferingEditor key={selected.id} course={selected} teachers={teachers}
+      yearName={years.find((row) => row.id === selected.academicYearId)?.name ?? "--"}
+      termName={selected.term?.name ?? terms.find((row) => row.id === selected.termId)?.name ?? "--"}
+      subjectName={selected.subject?.vietnameseName || selected.subject?.name || subjects.find((row) => row.id === selected.subjectId)?.vietnameseName || subjects.find((row) => row.id === selected.subjectId)?.name || "--"}
+      className={selected.schoolClass?.name ?? classes.find((row) => row.id === selected.primaryClassId)?.name ?? "--"}
+      onClose={() => setSelectedId("")} onSaved={(updated) => {
+        setCourses((rows) => rows.map((row) => row.id === updated.id ? updated : row));
+        setSelectedId(""); setMessage("Đã cập nhật môn học và phân công giảng dạy");
+      }} />}
   </div>;
 }

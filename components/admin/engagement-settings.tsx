@@ -16,7 +16,7 @@ export function AttendancePolicyPanel() {
       <li>Dữ liệu thay đổi ở tab khác yêu cầu tải lại trước khi lưu.</li>
       <li>Không thể hoàn thành hoặc khóa học kỳ khi còn buổi chưa chốt. Học kỳ đã khóa không nhận chỉnh sửa.</li>
     </ul>
-    <a className="inline-block text-blue-700 underline" href="/admin/subject-assignments">Quản lý phân công giáo viên</a>
+    <a className="inline-block text-blue-700 underline" href="/admin/course-offerings">Quản lý phân công giáo viên</a>
   </section>;
 }
 

@@ -7,6 +7,7 @@ export type CourseTeacherRole = "PRIMARY_TEACHER" | "CO_TEACHER";
 
 export interface CourseOffering {
   id: string;
+  revision: number;
   academicYearId: string;
   termId: string;
   primaryClassId: string;
@@ -22,6 +23,15 @@ export interface CourseOffering {
   term?: { id: string; name: string; status: string };
   activeTeachers: Array<{ teacherId: string; role: CourseTeacherRole }>;
   activeStudentCount: number;
+}
+
+export interface CourseConfigurationInput {
+  revision: number;
+  displayNameOverride?: string;
+  status?: CourseStatus;
+  teachers?: Array<{ teacherId: string; role: CourseTeacherRole }>;
+  studentIds?: string[];
+  gradebook?: GradePolicy & { revision: number };
 }
 
 export interface CourseMembers {
@@ -50,6 +60,8 @@ export const courseOfferingApi = {
     authenticatedRequest<CourseOffering>("/course-offerings", json("POST", { ...input, sectionKey: "MAIN", enrollmentMode: "CLASS_ROSTER" })),
   update: (id: string, displayNameOverride: string) =>
     authenticatedRequest<CourseOffering>(path(id), json("PATCH", { displayNameOverride })),
+  configure: (id: string, input: CourseConfigurationInput) =>
+    authenticatedRequest<CourseOffering>(`${path(id)}/configuration`, json("PATCH", input)),
   assignTeacher: (id: string, teacherId: string, role: CourseTeacherRole) =>
     authenticatedRequest(`${path(id)}/teachers`, json("POST", { teacherId, role })),
   replacePrimary: (id: string, teacherId: string) =>
