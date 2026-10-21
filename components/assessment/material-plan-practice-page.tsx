@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { courseWorkspaceHref } from "@/lib/course-workspace";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StudentShell } from "@/components/student/student-shell";
@@ -86,7 +87,7 @@ export function MaterialPlanPracticePage() {
             {section.citations.slice(0, 3).map((citation, index) => <blockquote key={index} className="mt-2 border-l-2 border-brand-300 pl-3 text-xs leading-5 text-slate-600">{citation.documentName}, trang {citation.page}: {citation.excerpt}</blockquote>)}
           </section>)}
         </div>
-        <Link href={`/student/courses/${plan.classId}/${plan.subjectId}?materialId=${plan.materialStudy.materialId}`} className="mt-4 inline-block text-sm font-bold text-brand-700 underline">Mở tài liệu nguồn</Link>
+        <Link href={courseWorkspaceHref(`/student/courses/${plan.classId}/${plan.subjectId}?materialId=${plan.materialStudy.materialId}`, plan.courseOfferingId ?? "")} className="mt-4 inline-block text-sm font-bold text-brand-700 underline">Mở tài liệu nguồn</Link>
       </div>
       {practice && plan.tasks.some((task) => task.kind === "MATERIAL" && task.progress?.status !== "COMPLETED") ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Hãy mở tài liệu và xác nhận đã đọc xong ở trang lộ trình trước khi bắt đầu bài luyện.</p> : null}
       {practice && plan.tasks.every((task) => task.kind !== "MATERIAL" || task.progress?.status === "COMPLETED") ? <>

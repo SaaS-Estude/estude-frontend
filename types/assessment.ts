@@ -925,6 +925,8 @@ export interface SubjectSupportStudent {
 }
 
 export interface SubjectSupportReport {
+  courseOfferingId?: string | null;
+  termId?: string;
   classId: string;
   className: string;
   subjectId: string;
@@ -954,6 +956,10 @@ export interface SubjectSupportReport {
 export interface LearningSupportOverview {
   generatedAt: string;
   scopes: Array<{
+    courseOfferingId?: string | null;
+    term?: { id: string; name: string } | null;
+    sectionKey?: string;
+    displayName?: string;
     classId: string;
     classCode: string;
     className: string;
@@ -1483,6 +1489,7 @@ export interface LearningSupportInbox {
 
 export interface LearningPlan {
   id: string;
+  courseOfferingId?: string | null;
   cohortId: string;
   examId: string;
   studentId: string;

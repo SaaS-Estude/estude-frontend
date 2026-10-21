@@ -33,6 +33,7 @@ const sessionLabel = (session: AttendanceSession) => [session.startTime &&
 
 export function TeacherAttendancePanel() {
   const [classes, setClasses] = useState<TeacherAssignedClass[]>([]);
+  const [needsCourse, setNeedsCourse] = useState(true);
   const [classId, setClassId] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [date, setDate] = useState(todayInSchoolZone);
@@ -61,12 +62,12 @@ export function TeacherAttendancePanel() {
   }, []);
 
   const loadSessions = useCallback(async () => {
-    if (!classId || !subjectId || !date) { setSessions([]); return; }
+    if (!classId || !subjectId || !date || (needsCourse && !currentCourseId())) { setSessions([]); return; }
     setLoading(true);
     try { setSessions(await attendanceService.listSessions(classId, subjectId, date)); setError(''); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Không thể tải các lần điểm danh'); }
     finally { setLoading(false); }
-  }, [classId, subjectId, date]);
+  }, [classId, subjectId, date, needsCourse]);
 
   useEffect(() => { detailRequest.current++; setSelectedId(''); setDetail(null); setStale(false); void loadSessions(); }, [loadSessions]);
   const loadDetail = useCallback(async (id: string) => {
@@ -100,7 +101,7 @@ export function TeacherAttendancePanel() {
     finally { setBusy(false); }
   }
   async function create() {
-    if (!classId || !subjectId || !date) return;
+    if (!classId || !subjectId || !date || (needsCourse && !currentCourseId())) return;
     let created: AttendanceSession | null = null;
     const okay = await action(async () => {
       created = await attendanceService.createSession(classId, { subjectId, date,
@@ -133,7 +134,8 @@ export function TeacherAttendancePanel() {
   }
 
   return <AssessmentShell>
-    <CourseWorkspacePicker />
+    <CourseWorkspacePicker onResolved={setNeedsCourse} />
+    {needsCourse && !currentCourseId() ? <p className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-brand-700">Chọn môn học theo lớp và học kỳ ở trên để xem điểm danh.</p> : null}
     <PageHeading eyebrow="Attendance" title="Điểm danh theo buổi" description="Chọn lớp, môn và ngày; mỗi lần điểm danh có danh sách học sinh cố định. Chỉ buổi đã chốt mới hiển thị cho học sinh." />
     {error ? <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : null}
     {stale && selectedId ? <div className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
@@ -158,7 +160,7 @@ export function TeacherAttendancePanel() {
         <label className="grid gap-1 text-xs">Nhãn (tùy chọn)<Input className={field} value={label} maxLength={80} onChange={(event) => setLabel(event.target.value)} /></label>
       </div>
       <p className="mt-2 text-xs text-slate-500">Để trống mọi ô để dùng một lần điểm danh mặc định/ngày. Muốn thêm lần thứ hai, nhập giờ bắt đầu hoặc tiết/nhãn khác.</p>
-      <Button className="mt-3" permission="attendance.update" disabled={busy || !classId || !subjectId || !date} onClick={() => void create()}>Tạo lần điểm danh</Button>
+      <Button className="mt-3" permission="attendance.update" disabled={busy || !classId || !subjectId || !date || (needsCourse && !currentCourseId())} onClick={() => void create()}>Tạo lần điểm danh</Button>
     </section>
     {detail ? <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-bold">{sessionLabel(detail.session)} · {detail.session.status}</h2><p className="text-xs text-slate-500">{detail.students.length} học sinh trong audience đã chốt · {date}</p></div>

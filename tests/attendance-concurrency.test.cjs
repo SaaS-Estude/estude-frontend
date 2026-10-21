@@ -20,6 +20,7 @@ async function render(t, conflict = false) {
   const original = loaded.require.bind(loaded);
   const Box = (props) => React.createElement('div', {}, props.children);
   loaded.require = (id) => {
+    if (id === './course-workspace-picker') return { CourseWorkspacePicker: ({ onResolved }) => { React.useEffect(() => onResolved(false), [onResolved]); return null; } };
     if (id === '@/lib/assessment-api') return { academicDataService: { getTeacherAssignedClasses: async () => [{ id: 'class', code: '12A', name: 'Class', subjects: [{ id: 'subject', name: 'History' }] }] } };
     if (id === '@/lib/auth-api') return { ApiError };
     if (id === '@/lib/engagement-api') return { attendanceService: {

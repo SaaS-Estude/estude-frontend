@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AssessmentShell } from "@/components/assessment/assessment-shell";
 import { SubjectSupportDetail } from "@/components/assessment/subject-support-page";
@@ -34,6 +34,7 @@ export function LearningSupportScopePage() {
     classId: string;
     subjectId: string;
   }>();
+  const courseOfferingId = useSearchParams().get("courseOfferingId");
   const [scope, setScope] = useState<
     LearningSupportOverview["scopes"][number] | null
   >(null);
@@ -49,10 +50,14 @@ export function LearningSupportScopePage() {
     setReport(null);
     void (async () => {
       const overview = await examService.getLearningSupportOverview();
-      const match =
-        overview.scopes.find(
-          (item) => item.classId === classId && item.subjectId === subjectId,
-        ) ?? null;
+      const matches = overview.scopes.filter(
+        (item) => item.classId === classId && item.subjectId === subjectId &&
+          (!courseOfferingId || item.courseOfferingId === courseOfferingId),
+      );
+      if (matches.length > 1) {
+        throw new Error("Môn này có nhiều học kỳ hoặc nhóm. Hãy quay lại danh sách và chọn đúng lớp môn học.");
+      }
+      const match = matches[0] ?? null;
       if (!active) return;
       setScope(match);
       if (!match?.anchorExamId) return;
@@ -71,12 +76,13 @@ export function LearningSupportScopePage() {
     return () => {
       active = false;
     };
-  }, [classId, subjectId]);
+  }, [classId, subjectId, courseOfferingId]);
 
   if (
     !loading &&
     scope?.classId === classId &&
     scope.subjectId === subjectId &&
+    (!courseOfferingId || scope.courseOfferingId === courseOfferingId) &&
     scope.anchorExamId &&
     report
   )

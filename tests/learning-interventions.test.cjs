@@ -22,6 +22,7 @@ function loadApi() {
           url,
           method: options?.method ?? "GET",
           body: options?.body ? JSON.parse(options.body) : null,
+          ...(options?.headers ? { headers: options.headers } : {}),
         });
         return {};
       },
@@ -200,6 +201,15 @@ test("learning support overview sends the selected time range", async () => {
       body: null,
     },
   ]);
+});
+
+test("learning plan list passes the exact course instead of inferring it from class and subject", async () => {
+  const { learningPlanService, calls } = loadApi();
+  await learningPlanService.listForScope('class', 'subject', 'course-two');
+  assert.deepEqual(calls, [{
+    url: '/learning-plans/teacher/scopes/class/subject', method: 'GET', body: null,
+    headers: { 'X-Course-Offering-ID': 'course-two' },
+  }]);
 });
 
 test("reassessment, review, profiles and class report keep phases and scope explicit", async () => {

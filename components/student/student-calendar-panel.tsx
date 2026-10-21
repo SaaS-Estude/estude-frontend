@@ -63,7 +63,7 @@ export function StudentCalendarPanel({ showDetails = true }: { showDetails?: boo
         ]}
       />
         {!showDetails ? <Button variant="plain" type="submit" onClick={() => router.push('/student/calendar')} className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-bold text-brand-700">Mở lịch học tập</Button> : null}</>}
-      renderDay={(day) => events.filter((event) => calendarEventTime(event, day, zone) !== null).map((event) => <Button variant="plain" type="submit" key={`${event.type}:${event.sourceId}`} onClick={() => router.push(event.sourceUrl)} className={`block w-full rounded-lg border p-2 text-left ${event.type === 'EXAM' ? 'border-violet-200 bg-violet-50 text-violet-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
+      renderDay={(day) => events.filter((event) => calendarEventTime(event, day, zone) !== null).map((event) => <Button variant="plain" type="submit" key={`${event.type}:${event.sourceId}:${event.sourceUrl}`} onClick={() => router.push(event.sourceUrl)} className={`block w-full rounded-lg border p-2 text-left ${event.type === 'EXAM' ? 'border-violet-200 bg-violet-50 text-violet-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
         <span className="block text-xs font-bold">{event.title}</span><span className="mt-1 block text-[11px] opacity-80">{event.subject.name} · {event.schoolClass.code}</span>
         <span className="mt-1 block text-[10px]">{typeLabels[event.type]} · {calendarTime(event.startAt, zone)}</span>
         <span className="mt-1 block text-[10px] font-semibold">{labels[event.status] ?? event.status}</span>
@@ -74,7 +74,7 @@ export function StudentCalendarPanel({ showDetails = true }: { showDetails?: boo
     {showDetails ? <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
       <h2 className="font-extrabold">{selectedDay.split('-').reverse().join('/')}</h2>
       {!loading && !error && !daily.length ? <p className="mt-3 text-sm text-slate-500">Ngày này không có hoạt động học tập.</p> : null}
-      {daily.map((event) => <Button variant="plain" type="submit" key={`${event.type}:${event.sourceId}`} onClick={() => router.push(event.sourceUrl)} className="mt-3 block w-full rounded-xl border border-slate-200 p-3 text-left hover:bg-blue-50/30">
+      {daily.map((event) => <Button variant="plain" type="submit" key={`${event.type}:${event.sourceId}:${event.sourceUrl}`} onClick={() => router.push(event.sourceUrl)} className="mt-3 block w-full rounded-xl border border-slate-200 p-3 text-left hover:bg-blue-50/30">
         <span className="block text-xs text-slate-500">{event.subject.name} · {event.schoolClass.code}</span>
         <span className="mt-1 block font-bold">{event.title}</span>
         <span className="mt-1 block text-xs text-slate-600">{new Date(event.startAt).toLocaleString('vi-VN', { timeZone: zone })}{(event.type === 'EXAM' || event.type === 'ONLINE_SESSION') && event.endAt ? ` – ${new Date(event.endAt).toLocaleString('vi-VN', { timeZone: zone })}` : ''} · {labels[event.status] ?? event.status}</span>

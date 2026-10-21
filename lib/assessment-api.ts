@@ -1363,9 +1363,11 @@ export const learningPlanService = {
   listForScope(
     classId: string,
     subjectId: string,
+    courseOfferingId?: string | null,
   ): Promise<LearningPlanScopeItem[]> {
     return authenticatedRequest(
       `/learning-plans/teacher/scopes/${encodeURIComponent(classId)}/${encodeURIComponent(subjectId)}`,
+      courseOfferingId ? { headers: { "X-Course-Offering-ID": courseOfferingId } } : undefined,
     );
   },
   getTeacher(planId: string): Promise<LearningPlan> {

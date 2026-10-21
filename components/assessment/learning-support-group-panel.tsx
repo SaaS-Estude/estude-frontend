@@ -165,7 +165,7 @@ export function LearningSupportGroupPanel({
   useEffect(() => {
     let active = true;
     void learningPlanService
-      .listForScope(report.classId, report.subjectId)
+      .listForScope(report.classId, report.subjectId, report.courseOfferingId)
       .then((items) => {
         if (active) setPlans(items);
       })
@@ -178,7 +178,7 @@ export function LearningSupportGroupPanel({
     return () => {
       active = false;
     };
-  }, [report.classId, report.subjectId]);
+  }, [report.classId, report.subjectId, report.courseOfferingId]);
 
   const materials = useMemo(
     () =>
@@ -367,6 +367,7 @@ export function LearningSupportGroupPanel({
         const refreshed = await learningPlanService.listForScope(
           report.classId,
           report.subjectId,
+          report.courseOfferingId,
         );
         setPlans([
           ...refreshed,

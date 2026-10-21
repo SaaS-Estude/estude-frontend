@@ -101,6 +101,9 @@ export function LearningSupportOverviewPage() {
             scope.subjectName,
             toVietnameseSubjectName(scope.subjectName),
             scope.subjectCode,
+            scope.term?.name,
+            scope.sectionKey,
+            scope.displayName,
           ),
           search,
         )
@@ -174,7 +177,7 @@ export function LearningSupportOverviewPage() {
               />
               <Stat
                 icon={BookOpenCheck}
-                label={hasDateFilter ? "Môn có dữ liệu" : "Môn theo dõi"}
+                label={hasDateFilter ? "Lớp môn học có dữ liệu" : "Lớp môn học theo dõi"}
                 value={overview.totals.scopeCount}
                 tone="indigo"
               />
@@ -217,7 +220,7 @@ export function LearningSupportOverviewPage() {
               </div>
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-1 pt-3 text-xs text-slate-500">
                 <span>
-                  Hiển thị <strong className="text-slate-700">{shownScopeCount} môn</strong> trong{" "}
+                  Hiển thị <strong className="text-slate-700">{shownScopeCount} lớp môn học</strong> trong{" "}
                   <strong className="text-slate-700">{classes.length} lớp</strong>
                 </span>
                 <span>
@@ -243,7 +246,7 @@ export function LearningSupportOverviewPage() {
                         <div className="min-w-0">
                           <h2 className="truncate font-black text-slate-900">{schoolClass.name}</h2>
                           <p className="text-xs text-slate-500">
-                            {schoolClass.code} · {schoolClass.scopes.length} môn
+                            {schoolClass.code} · {schoolClass.scopes.length} lớp môn học
                           </p>
                         </div>
                       </div>
@@ -256,7 +259,7 @@ export function LearningSupportOverviewPage() {
                     </div>
                     <div className="divide-y divide-slate-100">
                       {schoolClass.scopes.map((scope) => (
-                        <ScopeRow key={`${scope.classId}:${scope.subjectId}`} scope={scope} />
+                        <ScopeRow key={scope.courseOfferingId ?? `${scope.classId}:${scope.subjectId}`} scope={scope} />
                       ))}
                     </div>
                   </section>
@@ -276,7 +279,7 @@ export function LearningSupportOverviewPage() {
               </div>
             )}
             <p className="px-1 text-xs text-slate-500">
-              Số lượt cần hỗ trợ được cộng theo từng môn/lớp; một học sinh học nhiều môn có thể xuất hiện nhiều lần.
+              Số lượt cần hỗ trợ được cộng theo từng lớp môn học, học kỳ và nhóm; một học sinh có thể xuất hiện nhiều lần.
             </p>
           </>
         ) : null}
@@ -300,8 +303,9 @@ function ScopeRow({ scope }: { scope: SupportScope }) {
     <div className="grid gap-3 px-4 py-3.5 lg:grid-cols-[minmax(220px,1fr)_minmax(310px,1.2fr)_auto] lg:items-center">
       <div className="min-w-0">
         <h3 className="truncate font-bold text-slate-900">
-          {toVietnameseSubjectName(scope.subjectName)}
+          {scope.displayName || toVietnameseSubjectName(scope.subjectName)}
         </h3>
+        {scope.term ? <p className="mt-1 text-xs font-semibold text-brand-700">{scope.term.name}{scope.sectionKey && scope.sectionKey !== "MAIN" ? ` · Nhóm ${scope.sectionKey}` : ""}</p> : null}
         <p className="mt-1 text-xs text-slate-500">
           {scope.studentCount} học sinh · {scope.examCount} bài kiểm tra
         </p>
@@ -342,7 +346,7 @@ function ScopeRow({ scope }: { scope: SupportScope }) {
         {scope.anchorExamId ? (
           <Link
             className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-sm font-bold text-white transition hover:bg-brand-700"
-            href={`/teacher/learning-support/${scope.classId}/${scope.subjectId}`}
+            href={`/teacher/learning-support/${scope.classId}/${scope.subjectId}${scope.courseOfferingId ? `?courseOfferingId=${encodeURIComponent(scope.courseOfferingId)}` : ""}`}
           >
             Chi tiết <ArrowRight className="size-4" />
           </Link>

@@ -21,12 +21,15 @@ import { getVietnameseSubjectName } from "@/lib/subject-localization";
 import type { TeacherAssignedClass } from "@/types/assessment";
 import type { AttendanceRoster, AttendanceStatus } from "@/types/engagement";
 import { DateInput } from "@/components/ui/date-range-picker";
+import { CourseWorkspacePicker } from "./course-workspace-picker";
+import { currentCourseId } from "@/lib/course-workspace";
 
 
 export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "message" }) {
   const { notify } = useActionNotification();
   const isAttendance = mode === "attendance";
   const [classes, setClasses] = useState<TeacherAssignedClass[]>([]);
+  const [needsCourse, setNeedsCourse] = useState(true);
   const [classId, setClassId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -58,7 +61,7 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
   }, []);
 
   const loadRoster = useCallback(async () => {
-    if (!classId || !subjectId) {
+    if (!classId || !subjectId || (needsCourse && !currentCourseId())) {
       setRoster(null);
       setStatuses({});
       return;
@@ -76,7 +79,7 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
     } finally {
       setLoading(false);
     }
-  }, [classId, date, subjectId]);
+  }, [classId, date, subjectId, needsCourse]);
 
   useEffect(() => { if (isAttendance) void loadRoster(); }, [isAttendance, loadRoster]);
 
@@ -105,6 +108,7 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
   }
 
   function validateComposer() {
+    if (needsCourse && !currentCourseId()) return "Vui lòng chọn môn học theo lớp và học kỳ.";
     if (!classId || !subjectId) return "Vui lòng chọn lớp và môn học.";
     if (!title.trim()) return "Vui lòng nhập tiêu đề.";
     if (!message.trim()) return "Vui lòng nhập nội dung thông báo.";
@@ -133,6 +137,7 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
 
   return (
     <AssessmentShell>
+      <CourseWorkspacePicker onResolved={setNeedsCourse} />
       <PageHeading
         title={isAttendance ? "Điểm danh" : "Thông báo"}
         description={isAttendance ? "Ghi nhận tình trạng tham gia lớp học." : "Gửi thông báo đến học sinh hoặc phụ huynh."}
@@ -142,6 +147,7 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
           <div className={`grid min-w-0 gap-3 sm:grid-cols-2 ${isAttendance ? "xl:grid-cols-[360px_360px_240px]" : "xl:grid-cols-[360px_360px]"}`}>
             <CustomSelect
               label="Lớp học"
+              disabled={Boolean(currentCourseId())}
               value={classId}
               options={classes.map((item) => ({ value: item.id, label: `${item.code} · ${item.name}` }))}
               placeholder="Chọn lớp học"
@@ -151,6 +157,7 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
             />
             <CustomSelect
               label="Môn học"
+              disabled={Boolean(currentCourseId())}
               value={subjectId}
               options={subjects.map((item) => ({ value: item.id, label: getVietnameseSubjectName(item) }))}
               placeholder="Chọn môn học"
