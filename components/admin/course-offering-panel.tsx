@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Eye, LoaderCircle, Pencil, Plus, Search } from "lucide-react";
+import { Eye, Filter, LoaderCircle, Pencil, Plus, RotateCcw, Search } from "lucide-react";
 import { CourseOfferingEditor } from "./course-offering-editor";
 import { CourseOfferingDetails } from "./course-offering-details";
 import { defaultGradePolicy, GradebookPolicyFields } from "./gradebook-policy-fields";
@@ -56,6 +56,11 @@ export function CourseOfferingPanel() {
   const [classFilter, setClassFilter] = useState("");
   const [termFilter, setTermFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [draftFilters, setDraftFilters] = useState({ classId: "", termId: "", status: "" });
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const filterPopupRef = useRef<HTMLDivElement>(null);
+  const filterId = useId();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(true);
@@ -75,6 +80,47 @@ export function CourseOfferingPanel() {
   }), [courses, yearFilter, classFilter, termFilter, statusFilter, classes, subjects, teachers, search]);
   const totalPages = Math.max(1, Math.ceil(filteredCourses.length / pageSize));
   const pagedCourses = filteredCourses.slice((page - 1) * pageSize, page * pageSize);
+  const activeFilterCount = [classFilter, termFilter, statusFilter].filter(Boolean).length;
+
+  useEffect(() => {
+    if (!filterOpen) return;
+    filterPopupRef.current?.focus();
+    function closeOnOutsideClick(event: MouseEvent) {
+      const target = event.target as Node;
+      if (!filterButtonRef.current?.contains(target) && !filterPopupRef.current?.contains(target)) setFilterOpen(false);
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape" && !event.defaultPrevented && !document.querySelector('[role="listbox"]')) {
+        setFilterOpen(false);
+        filterButtonRef.current?.focus();
+      }
+    }
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [filterOpen]);
+
+  function openFilters() {
+    setDraftFilters({ classId: classFilter, termId: termFilter, status: statusFilter });
+    setFilterOpen(true);
+  }
+
+  function closeFilters() {
+    setFilterOpen(false);
+    filterButtonRef.current?.focus();
+  }
+
+  function applyFilters(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setClassFilter(draftFilters.classId);
+    setTermFilter(draftFilters.termId);
+    setStatusFilter(draftFilters.status);
+    setPage(1);
+    closeFilters();
+  }
 
   useEffect(() => { setClassFilter(new URLSearchParams(window.location.search).get("classId") ?? ""); }, []);
 
@@ -167,12 +213,32 @@ export function CourseOfferingPanel() {
   return <div className="w-full">
     <div className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(200px,1fr)_140px_140px_140px_160px]">
-          <Input icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm môn, lớp hoặc giáo viên" aria-label="Tìm môn học theo lớp" />
-          <CustomSelect value={classFilter} searchable options={[{ value: "", label: "Tất cả lớp" }, ...classes.map((schoolClass) => ({ value: schoolClass.id, label: schoolClass.name }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo lớp học" onValueChange={(value) => { setClassFilter(value); setPage(1); }} />
-          <CustomSelect value={yearFilter} options={[{ value: "", label: "Tất cả năm học" }, ...years.map((year) => ({ value: year.id, label: year.name }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(value) => { setYearFilter(value); setTermFilter(""); setPage(1); }} />
-          <CustomSelect value={termFilter} options={[{ value: "", label: "Tất cả học kỳ" }, ...filterTerms.map((term) => ({ value: term.id, label: yearFilter ? term.name : `${term.name} · ${years.find((year) => year.id === term.academicYearId)?.name ?? ""}` }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo học kỳ" onValueChange={(value) => { setTermFilter(value); setPage(1); }} />
-          <CustomSelect value={statusFilter} options={[{ value: "", label: "Tất cả trạng thái" }, ...Object.entries(courseStatusLabels).map(([value, label]) => ({ value, label }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái" onValueChange={(value) => { setStatusFilter(value); setPage(1); }} />
+        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-3 sm:grid-cols-[minmax(200px,1fr)_190px_auto]">
+          <div className="col-span-2 sm:col-span-1"><Input icon={Search} className="!h-[42px]" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm môn, lớp hoặc giáo viên" aria-label="Tìm môn học theo lớp" /></div>
+          <CustomSelect value={yearFilter} options={[{ value: "", label: "Tất cả năm học" }, ...years.map((year) => ({ value: year.id, label: year.name }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(value) => { setYearFilter(value); setTermFilter(""); setPage(1); setFilterOpen(false); }} />
+          <div className="relative">
+            <Button ref={filterButtonRef} variant="outline" className="!h-[42px] gap-2" aria-haspopup="dialog" aria-expanded={filterOpen} aria-controls={filterOpen ? filterId : undefined} onClick={() => filterOpen ? closeFilters() : openFilters()}>
+              Bộ lọc<span className="relative"><Filter className="size-4" />{activeFilterCount > 0 && <span aria-hidden="true" className="absolute -right-1 -top-1 size-2 rounded-full bg-orange-500 ring-2 ring-white" />}</span>
+              {activeFilterCount > 0 && <span className="sr-only">{activeFilterCount} bộ lọc đang áp dụng</span>}
+            </Button>
+            {filterOpen && <div ref={filterPopupRef} id={filterId} role="dialog" aria-labelledby={`${filterId}-title`} tabIndex={-1} className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(560px,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/15 outline-none">
+              <form onSubmit={applyFilters}>
+                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+                  <h2 id={`${filterId}-title`} className="text-base font-bold text-brand-700">Bộ lọc</h2>
+                  <Button variant="ghost" size="sm" className="!size-9 !px-0" aria-label="Đặt lại bộ lọc" title="Đặt lại bộ lọc" onClick={() => setDraftFilters({ classId: "", termId: "", status: "" })}><RotateCcw className="size-5" /></Button>
+                </div>
+                <div className="grid max-h-[60vh] gap-4 overflow-y-auto p-5 sm:grid-cols-2">
+                  <CustomSelect label="Lớp học" className="sm:col-span-2" value={draftFilters.classId} searchable searchPlaceholder="Tìm lớp học..." options={[{ value: "", label: "Tất cả lớp" }, ...classes.map((schoolClass) => ({ value: schoolClass.id, label: schoolClass.name }))]} ariaLabel="Lọc theo lớp học" onValueChange={(value) => setDraftFilters((current) => ({ ...current, classId: value }))} />
+                  <CustomSelect label="Học kỳ" value={draftFilters.termId} options={[{ value: "", label: "Tất cả học kỳ" }, ...filterTerms.map((term) => ({ value: term.id, label: yearFilter ? term.name : `${term.name} · ${years.find((year) => year.id === term.academicYearId)?.name ?? ""}` }))]} ariaLabel="Lọc theo học kỳ" onValueChange={(value) => setDraftFilters((current) => ({ ...current, termId: value }))} />
+                  <CustomSelect label="Trạng thái" value={draftFilters.status} options={[{ value: "", label: "Tất cả trạng thái" }, ...Object.entries(courseStatusLabels).map(([value, label]) => ({ value, label }))]} ariaLabel="Lọc theo trạng thái" onValueChange={(value) => setDraftFilters((current) => ({ ...current, status: value }))} />
+                </div>
+                <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-5 py-4">
+                  <Button variant="outline" onClick={closeFilters}>Hủy</Button>
+                  <Button type="submit">Áp dụng</Button>
+                </div>
+              </form>
+            </div>}
+          </div>
         </div>
         <div className="flex shrink-0 justify-end"><Button permission="course_offerings.create" className="!h-[42px] !rounded-lg" disabled={busy} onClick={openCreate}><Plus className="size-4" />Thêm môn cho lớp</Button></div>
       </div>

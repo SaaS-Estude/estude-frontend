@@ -62,7 +62,7 @@ export function ClassGradebookConfig({ schoolClass, course }: { schoolClass: Sch
       .then((loaded) => {
         if (!active) return;
         setView(loaded);
-        setPolicy(loaded.book ?? defaultGradePolicy);
+        setPolicy({ ...defaultGradePolicy, assessmentMode: loaded.book?.assessmentMode ?? "NUMERIC" });
       })
       .catch((cause: unknown) => {
         if (active) setError(cause instanceof Error ? cause.message : "Không tải được sổ điểm");

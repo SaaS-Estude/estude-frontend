@@ -3,21 +3,17 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useState,
   type FormEvent,
 } from "react";
-import { CheckCircle2, Edit3, Plus, Settings2, Trash2 } from "lucide-react";
+import { Edit3, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { Input, Select, Checkbox } from "@/components/ui/form-control";
+import { Input, Select } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { academicDataService } from "@/lib/assessment-api";
-import { getVietnameseSubjectName } from "@/lib/subject-localization";
 import type {
   AcademicYear,
-  GradeComponent,
-  Subject,
   Term,
 } from "@/types/assessment";
 import { DateInput } from "@/components/ui/date-range-picker";
@@ -62,9 +58,7 @@ const termStatusLabels: Record<TermStatus, string> = {
 export function AcademicDataPanel() {
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [terms, setTerms] = useState<Term[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedYearId, setSelectedYearId] = useState("");
-  const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [yearForm, setYearForm] = useState(defaultYearForm);
   const [termForm, setTermForm] = useState(defaultTermForm);
   const [editingYear, setEditingYear] = useState<AcademicYear | null>(null);
@@ -87,21 +81,14 @@ export function AcademicDataPanel() {
     return () => { active = false; };
   }, [editingTerm, termForm.status]);
 
-  const activeSubjects = useMemo(
-    () => subjects.filter((item) => item.isActive),
-    [subjects],
-  );
-
   const load = useCallback(async () => {
     try {
-      const [loadedYears, loadedTerms, loadedSubjects] = await Promise.all([
+      const [loadedYears, loadedTerms] = await Promise.all([
         academicDataService.getAcademicYears(true),
         academicDataService.getTerms(undefined, true),
-        academicDataService.getSubjects(),
       ]);
       setYears(loadedYears);
       setTerms(loadedTerms);
-      setSubjects(loadedSubjects);
       setSelectedYearId((current) =>
         current && loadedYears.some((item) => item.id === current)
           ? current
@@ -109,11 +96,7 @@ export function AcademicDataPanel() {
             loadedYears[0]?.id ??
             ""),
       );
-      setSelectedSubjectId((current) =>
-        current && loadedSubjects.some((item) => item.id === current)
-          ? current
-          : (loadedSubjects[0]?.id ?? ""),
-      );
+
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Không thể tải dữ liệu học vụ",
@@ -292,11 +275,7 @@ export function AcademicDataPanel() {
             ))}
           </div>
         </section>
-        <details className="xl:col-span-2"><summary className="cursor-pointer text-sm text-slate-500">Cấu hình điểm lịch sử theo hệ số cũ</summary>        <GradeComponentConfiguration
-          subjectId={selectedSubjectId}
-          subjects={activeSubjects}
-          onSubjectChange={setSelectedSubjectId}
-        /></details>
+
       </div>
       <Modal
         open={yearModalOpen}
@@ -471,398 +450,6 @@ export function AcademicDataPanel() {
         </p>
       </ConfirmationDialog>
     </div>
-  );
-}
-
-function GradeComponentConfiguration({
-  subjectId,
-  subjects,
-  onSubjectChange,
-}: {
-  subjectId: string;
-  subjects: Subject[];
-  onSubjectChange: (value: string) => void;
-}) {
-  const [components, setComponents] = useState<GradeComponent[]>([]);
-  const [editing, setEditing] = useState<GradeComponent | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<GradeComponent | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [form, setForm] = useState({
-    code: "TX",
-    name: "Thường xuyên",
-    requiredColumns: 3,
-    weight: 1,
-    teacherCanConfigureCalculation: false,
-    sortOrder: 0,
-    isActive: true,
-  });
-  const selectedSubject = subjects.find((item) => item.id === subjectId);
-  const totalWeight = components
-    .filter((item) => item.isActive)
-    .reduce((sum, item) => sum + item.weight, 0);
-
-  const load = useCallback(async () => {
-    if (!subjectId) {
-      setComponents([]);
-      return;
-    }
-    try {
-      setComponents(
-        await academicDataService.getGradeComponents({
-          subjectId,
-          includeInactive: true,
-        }),
-      );
-    } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Không thể tải cấu hình điểm",
-      );
-    }
-  }, [subjectId]);
-  useEffect(() => {
-    void load();
-    setMessage("");
-  }, [load]);
-  function edit(item: GradeComponent) {
-    setEditing(item);
-    setForm({
-      code: item.code,
-      name: item.name,
-      requiredColumns: item.requiredColumns,
-      weight: item.weight,
-      teacherCanConfigureCalculation: item.teacherCanConfigureCalculation,
-      sortOrder: item.sortOrder,
-      isActive: item.isActive,
-    });
-    setModalOpen(true);
-  }
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!subjectId) return;
-    setSaving(true);
-    setError("");
-    try {
-      if (editing)
-        await academicDataService.updateGradeComponent(editing.id, form);
-      else
-        await academicDataService.createGradeComponent({ ...form, subjectId });
-      setModalOpen(false);
-      setEditing(null);
-      await load();
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể lưu thành phần điểm",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-  async function remove() {
-    if (!deleteTarget) return;
-    setSaving(true);
-    try {
-      await academicDataService.deleteGradeComponent(deleteTarget.id);
-      setDeleteTarget(null);
-      await load();
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể xóa thành phần điểm",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-  async function validate() {
-    if (!subjectId) return;
-    setSaving(true);
-    setError("");
-    try {
-      const result =
-        await academicDataService.validateGradeConfiguration(subjectId);
-      setMessage(`Cấu hình hợp lệ: hệ số TX/GK/CK là 1/2/3 (tổng ${result.totalWeight}).`);
-    } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Cần cấu hình TX/GK/CK đúng hệ số 1/2/3",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card xl:col-span-2">
-      <div className="flex items-start gap-3">
-        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
-          <Settings2 className="size-5" />
-        </div>
-        <div>
-          <h2 className="font-black">Cấu hình thành phần điểm</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Danh mục hệ số THPT: TX = 1, GK = 2, CK = 3. Số cột thực tế và hình thức đánh giá được giáo viên xác nhận tại sổ điểm của từng lớp, học kỳ.
-          </p>
-        </div>
-      </div>
-      <div className="mt-5 max-w-md">
-        <Select
-          label="Môn học"
-          value={subjectId}
-          onChange={(event) => onSubjectChange(event.target.value)}
-        >
-          <option value="">Chọn môn học</option>
-          {subjects.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.code} · {getVietnameseSubjectName(item)}
-            </option>
-          ))}
-        </Select>
-      </div>
-      {message ? (
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">
-          <CheckCircle2 className="size-4" />
-          {message}
-        </div>
-      ) : null}
-      {error ? (
-        <div className="mt-3 rounded-xl bg-rose-50 p-3 text-sm font-semibold text-rose-700">
-          {error}
-        </div>
-      ) : null}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-3 text-sm">
-        <span className="font-semibold text-slate-600">
-          {selectedSubject ? `Môn ${getVietnameseSubjectName(selectedSubject)} · ` : ""}
-          <b
-            className={
-              totalWeight === 6 ? "text-emerald-700" : "text-amber-600"
-            }
-          >
-            Tổng hệ số: {totalWeight} (chuẩn 6)
-          </b>
-        </span>
-        <div className="flex gap-2">
-          <Button permission="academic.update"
-            variant="outline"
-            size="sm"
-            disabled={!subjectId || saving}
-            onClick={() => void validate()}
-          >
-            Kiểm tra hệ số
-          </Button>
-          <Button permission="academic.create"
-            size="sm"
-            disabled={!subjectId}
-            onClick={() => {
-              setEditing(null);
-              setForm({
-                code: "TX",
-                name: "Thường xuyên",
-                requiredColumns: 3,
-                weight: 1,
-                teacherCanConfigureCalculation: false,
-                sortOrder: 0,
-                isActive: true,
-              });
-              setModalOpen(true);
-            }}
-          >
-            <Plus className="size-4" />
-            Thêm thành phần
-          </Button>
-        </div>
-      </div>
-      {!subjectId ? (
-        <p className="mt-4 rounded-xl border border-dashed border-slate-200 p-5 text-center text-sm text-slate-400">
-          Chọn môn học để cấu hình.
-        </p>
-      ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400">
-              <tr>
-                <th className="px-3 py-3">Thành phần</th>
-                <th className="px-3 py-3">Số cột</th>
-                <th className="px-3 py-3">Hệ số</th>
-                <th className="px-3 py-3">Giáo viên tự cấu hình</th>
-                <th className="px-3 py-3 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {components.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-3 py-8 text-center text-sm text-slate-400"
-                  >
-                    Chưa có thành phần điểm.
-                  </td>
-                </tr>
-              ) : (
-                components.map((item) => (
-                  <tr
-                    key={item.id}
-                    className={
-                      !item.isActive
-                        ? "bg-slate-50 text-slate-400"
-                        : "hover:bg-slate-50/70"
-                    }
-                  >
-                    <td className="px-3 py-3 font-bold">
-                      {item.code} · {item.name}
-                    </td>
-                    <td className="px-3 py-3">{item.requiredColumns}</td>
-                    <td className="px-3 py-3 font-bold">{item.weight}</td>
-                    <td className="px-3 py-3">
-                      {item.teacherCanConfigureCalculation ? (
-                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">
-                          Cho phép
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-400">
-                          Theo hệ thống
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      <Button permission="academic.update"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => edit(item)}
-                      >
-                        <Edit3 className="size-4" />
-                      </Button>
-                      <Button permission="academic.delete"
-                        variant="ghost"
-                        size="sm"
-                        className="text-rose-600 hover:bg-rose-50"
-                        onClick={() => setDeleteTarget(item)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <Modal
-        open={modalOpen}
-        title={editing ? "Chỉnh sửa thành phần điểm" : "Thêm thành phần điểm"}
-        onClose={() => setModalOpen(false)}
-        width="max-w-2xl"
-        footer={
-          <Button permission={editing ? 'academic.update' : 'academic.create'} type="submit" form="component-form" disabled={saving}>
-            {editing ? "Lưu thay đổi" : "Thêm thành phần"}
-          </Button>
-        }
-      >
-        <form
-          id="component-form"
-          onSubmit={(event) => void submit(event)}
-          className="grid gap-4"
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label="Mã thành phần (TX, GK hoặc CK)"
-              required
-              value={form.code}
-              onChange={(event) =>
-                setForm({ ...form, code: event.target.value.toUpperCase(), weight: ({ TX: 1, GK: 2, CK: 3 } as Record<string, number>)[event.target.value.toUpperCase()] ?? 1, requiredColumns: event.target.value.toUpperCase() === 'TX' ? 3 : 1 })
-              }
-            />
-            <Input
-              label="Tên thành phần"
-              required
-              value={form.name}
-              onChange={(event) =>
-                setForm({ ...form, name: event.target.value })
-              }
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Input
-              label="Số cột điểm yêu cầu"
-              type="number"
-              min={1}
-              max={4}
-              required
-              value={form.requiredColumns}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  requiredColumns: Number(event.target.value),
-                })
-              }
-            />
-            <Input
-              label="Hệ số cố định"
-              type="number"
-              min={1}
-              max={3}
-              step="1"
-              disabled
-              required
-              value={form.weight}
-              onChange={(event) =>
-                setForm({ ...form, weight: Number(event.target.value) })
-              }
-            />
-            <Input
-              label="Thứ tự hiển thị"
-              type="number"
-              min={0}
-              value={form.sortOrder}
-              onChange={(event) =>
-                setForm({ ...form, sortOrder: Number(event.target.value) })
-              }
-            />
-          </div>
-          <label className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-3 text-sm">
-            <Checkbox
-              className="mt-1"
-              type="checkbox"
-              checked={form.teacherCanConfigureCalculation}
-              disabled
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  teacherCanConfigureCalculation: event.target.checked,
-                })
-              }
-            />
-            <span>
-              <b className="block">
-                Cho phép giáo viên cấu hình cách tính chi tiết
-              </b>
-              <span className="text-xs text-slate-500">
-                Giáo viên có thể khai báo cách gộp các cột điểm của thành phần
-                này.
-              </span>
-            </span>
-          </label>
-        </form>
-      </Modal>
-      <ConfirmationDialog
-        open={Boolean(deleteTarget)}
-        title="Xác nhận xóa mềm thành phần điểm"
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => void remove()}
-        loading={saving}
-        confirmVariant="danger"
-        confirmLabel="Xóa mềm"
-      >
-        <p>
-          Thành phần <b>{deleteTarget?.name}</b> sẽ được ngừng sử dụng.
-        </p>
-      </ConfirmationDialog>
-    </section>
   );
 }
 

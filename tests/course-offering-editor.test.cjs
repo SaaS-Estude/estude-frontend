@@ -114,3 +114,16 @@ test("courses with marks retain their gradebook configuration", async (t) => {
   await ui.submit();
   assert.equal(ui.writes[0].input.gradebook, undefined);
 });
+
+test("an unused historical book is configured with the activity model", async (t) => {
+  const ui = await setup(t, { view: { book: { ...initialBook.book, resultMode: "LEGACY", annualPeriods: 70, specialized: true } } });
+  await ui.submit();
+  assert.deepEqual(ui.writes[0].input.gradebook, { resultMode: "INTERNAL", assessmentMode: "NUMERIC", annualPeriods: 35, specialized: false, revision: 4 });
+});
+
+test("editing a course preserves historical books that already have grades", async (t) => {
+  const ui = await setup(t, { view: { book: { ...initialBook.book, resultMode: "LEGACY", annualPeriods: 70, specialized: true }, items: [{ id: "item" }] } });
+  await ui.change("Tên hiển thị môn học", "Tên mới");
+  await ui.submit();
+  assert.equal(ui.writes[0].input.gradebook, undefined);
+});

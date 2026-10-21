@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { gradebookService } from '@/lib/gradebook-api';
 import { assessmentPurposeLabels, internalResultText, type InternalResultQuery, type InternalResultReport } from '@/lib/internal-results';
-import { OfficialGradeReport } from './official-grade-report';
 import { Select } from "@/components/ui/form-control";
 import { Button } from "@/components/ui/button";
 
@@ -17,7 +16,6 @@ function ReportBody({ studentId }: { studentId: string }) {
   const [query, setQuery] = useState<InternalResultQuery>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [legacy, setLegacy] = useState(false);
   useEffect(() => {
     let active = true;
     setLoading(true); setError('');
@@ -52,6 +50,5 @@ function ReportBody({ studentId }: { studentId: string }) {
       {data.pagination.total > data.pagination.pageSize ? <div className="flex items-center justify-end gap-3 text-sm"><Button variant="plain" type="submit" disabled={data.pagination.page <= 1} onClick={() => setQuery({ ...query, page: data.pagination.page - 1 })}>Trang trước</Button><span>Trang {data.pagination.page}</span><Button variant="plain" type="submit" disabled={data.pagination.page * data.pagination.pageSize >= data.pagination.total} onClick={() => setQuery({ ...query, page: data.pagination.page + 1 })}>Trang sau</Button></div> : null}
       {data.unclassifiedCount > 0 ? <p className="text-xs text-amber-700">Có {data.unclassifiedCount} hoạt động cũ cần phân loại; các điểm này không được cộng vào trung bình nội bộ.</p> : null}
     </> : null}
-    <details open={legacy} onToggle={(e) => setLegacy(e.currentTarget.open)} className="border-t border-slate-100 pt-3"><summary className="cursor-pointer text-sm text-slate-500">Xem bảng điểm lịch sử theo cấu hình cũ</summary>{legacy ? <OfficialGradeReport studentId={studentId} /> : null}</details>
   </section>;
 }

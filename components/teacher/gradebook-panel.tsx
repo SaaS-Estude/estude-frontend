@@ -466,6 +466,5 @@ export function LegacyGradebookPanel({
 }
 
 export function GradebookPanel({ schoolClass }: { schoolClass: TeacherAssignedClass }) {
-  const [legacy, setLegacy] = useState(false);
-  return <div className="space-y-4"><InternalGradebookPanel key={schoolClass.id} schoolClass={schoolClass} /><details open={legacy} onToggle={(e) => setLegacy(e.currentTarget.open)}><summary className="cursor-pointer text-sm text-slate-500">Bảng điểm lịch sử theo cấu hình cũ</summary>{legacy ? <LegacyGradebookPanel key={schoolClass.id} schoolClass={schoolClass} /> : null}</details></div>;
+  return <InternalGradebookPanel key={schoolClass.id} schoolClass={schoolClass} />;
 }

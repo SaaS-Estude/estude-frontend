@@ -70,7 +70,7 @@ export function CourseOfferingEditor({ course, teachers, yearName, termName, sub
       setPrimaryId(assigned.find((row) => row.role === "PRIMARY_TEACHER")?.teacherId ?? "");
       setCoTeacherIds(assigned.filter((row) => row.role === "CO_TEACHER").map((row) => row.teacherId));
       setStudentIds(loadedMembers.enrollments.filter((row) => row.status === "ACTIVE").map((row) => row.studentId));
-      setPolicy(policyValues(book?.book ?? defaultGradePolicy));
+      setPolicy({ ...defaultGradePolicy, assessmentMode: book?.book?.assessmentMode ?? "NUMERIC" });
     }
     void load().catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Không tải được thông tin môn học"); })
       .finally(() => { if (active) setLoading(false); });
