@@ -47,7 +47,6 @@ const studentNavItems: StudentNavItem[] = [
   },
   { icon: BookOpen, label: "Môn học", href: "/student/courses" },
   { icon: ClipboardCheck, label: "Bài tập", href: "/student/assignments" },
-  { icon: ClipboardCheck, label: "Bài thi", href: "/student/exams" },
   { icon: BrainCircuit, label: "Study Coach", href: "/student/study-coach" },
   {
     icon: ListChecks,
@@ -75,13 +74,11 @@ function isNavItemActive(pathname: string, href?: string): boolean {
   }
 
   if (href === "/student/courses") {
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-
-  if (href === "/student/exams") {
     return (
       pathname === href ||
       pathname.startsWith(`${href}/`) ||
+      pathname === "/student/exams" ||
+      pathname.startsWith("/student/exams/") ||
       (pathname.startsWith("/student/attempts/") && !isStudyRoute)
     );
   }
