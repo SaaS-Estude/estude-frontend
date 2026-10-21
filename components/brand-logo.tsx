@@ -5,12 +5,14 @@ import { GraduationCap } from "lucide-react";
 export function BrandLogo({
   inverse = false,
   withShadow = true,
+  showTenantName = true,
 }: {
   inverse?: boolean;
   withShadow?: boolean;
+  showTenantName?: boolean;
 }) {
   const tenant = useTenant();
-  const name = tenant?.branding.displayName || tenant?.name;
+  const name = showTenantName ? tenant?.branding.displayName || tenant?.name : undefined;
   return (
     <div
       className="inline-flex items-center gap-3"
@@ -52,5 +54,22 @@ export function BrandLogo({
         ) : null}
       </span>
     </div>
+  );
+}
+
+export function TenantName() {
+  const tenant = useTenant();
+  const name = tenant?.branding.displayName || tenant?.name;
+
+  if (!name) return null;
+
+  return (
+    <p
+      className="hidden max-w-[24vw] truncate text-sm font-semibold text-slate-600 sm:block xl:max-w-xs"
+      aria-label="Tên trường"
+      title={name}
+    >
+      {name}
+    </p>
   );
 }

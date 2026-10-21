@@ -28,7 +28,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { requestWorkspaceNavigation } from "@/lib/workspace-navigation";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandLogo, TenantName } from "@/components/brand-logo";
 import { ProfileModal } from "@/components/auth/profile-modal";
 import { ContentLoading } from "@/components/ui/content-loading";
 import { StudentShell } from "@/components/student/student-shell";
@@ -214,7 +214,8 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
             {workspaceTitle}
           </h1>
         )}
-        <div className="ml-auto flex items-center gap-2 sm:gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-2 pl-4 sm:gap-4">
+          <TenantName />
           <Button variant="plain"
             type="button"
             onClick={() =>
@@ -354,7 +355,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
           <div
             className={`box-border max-w-[190px] overflow-hidden px-2 transition-[max-width,padding] ${isSidebarCollapsed ? "lg:max-w-[56px] lg:px-[6px]" : "lg:max-w-[190px] lg:px-2"}`}
           >
-            <BrandLogo withShadow={false} />
+            <BrandLogo withShadow={false} showTenantName={false} />
           </div>
           <Button variant="plain"
             type="button"

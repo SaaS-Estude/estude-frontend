@@ -196,7 +196,6 @@ export function CourseOfferingPanel() {
     <section className="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
       {!selected && error && <p role="alert" className="m-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       {!selected && message && <p role="status" className="m-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
-      {!readiness.dbPrepared && <p role="status" className="m-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Đang kiểm tra dữ liệu môn học theo lớp. Nếu thông báo còn hiển thị, hãy tải lại trang hoặc kiểm tra dịch vụ backend.</p>}
       <div className="overflow-x-auto">
         <Table className="min-w-[1100px]" aria-label="Danh sách môn học theo lớp">
           <TableHeader className="!bg-brand-600 !text-white"><tr>

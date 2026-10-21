@@ -30,7 +30,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandLogo, TenantName } from "@/components/brand-logo";
 import { OverviewDashboard } from "@/components/dashboard/overview-dashboard";
 import { MonthlyTimetable } from "@/components/dashboard/monthly-timetable";
 import { AccountManagementPanel } from "@/components/admin/account-management-panel";
@@ -394,7 +394,8 @@ export function StaffDashboardView() {
             </h1>
           )}
 
-          <div className="ml-auto flex items-center gap-2 sm:gap-4">
+          <div className="ml-auto flex shrink-0 items-center gap-2 pl-4 sm:gap-4">
+            <TenantName />
             <Button variant="plain"
               type="button"
               className="relative grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
@@ -540,7 +541,7 @@ export function StaffDashboardView() {
                   : "lg:max-w-[190px] lg:px-2"
               }`}
             >
-              <BrandLogo withShadow={false} />
+              <BrandLogo withShadow={false} showTenantName={false} />
             </div>
             <Button variant="plain"
               type="button"
