@@ -225,16 +225,7 @@ export function SystemSettingsPanel({
 
   async function handleSave() {
     if (section === "default-passwords") {
-      if (
-        !teacherDefaultPassword &&
-        !studentDefaultPassword &&
-        !parentDefaultPassword
-      ) {
-        setPasswordSettingsError(
-          "Vui lòng nhập ít nhất một mật khẩu cần cập nhật.",
-        );
-        return;
-      }
+      if (!passwordSettings) return;
       setSavingPasswordSettings(true);
       setPasswordSettingsError("");
       try {
@@ -243,6 +234,8 @@ export function SystemSettingsPanel({
           {
             method: "PATCH",
             body: JSON.stringify({
+              teacherRequirePasswordChange: passwordSettings.teacherRequirePasswordChange,
+              studentRequirePasswordChange: passwordSettings.studentRequirePasswordChange,
               ...(teacherDefaultPassword ? { teacherDefaultPassword } : {}),
               ...(studentDefaultPassword ? { studentDefaultPassword } : {}),
               ...(parentDefaultPassword ? { parentDefaultPassword } : {}),
@@ -253,7 +246,7 @@ export function SystemSettingsPanel({
         setTeacherDefaultPassword("");
         setStudentDefaultPassword("");
         setParentDefaultPassword("");
-        notify("Đã cập nhật mật khẩu mặc định", {
+        notify("Đã cập nhật cấu hình tài khoản", {
           key: "default-passwords-saved",
         });
       } catch (error) {
@@ -429,7 +422,7 @@ export function SystemSettingsPanel({
           <SectionHeader
             icon={KeyRound}
             title="Mật khẩu mặc định"
-            description="Thiết lập riêng mật khẩu ban đầu cho tài khoản giáo viên, học sinh và phụ huynh được tạo bằng Excel."
+            description="Thiết lập mật khẩu được cấp và yêu cầu đổi mật khẩu lần đầu. Không bắt buộc email hoặc OTP khi đăng nhập."
             tone="bg-indigo-50 text-indigo-600"
           />
 
@@ -447,7 +440,7 @@ export function SystemSettingsPanel({
                       Tài khoản giáo viên
                     </h3>
                     <p className="mt-1 text-xs text-slate-500">
-                      Áp dụng khi import danh sách giáo viên.
+                      Áp dụng khi tạo hoặc import giáo viên.
                     </p>
                   </div>
                   <span
@@ -481,6 +474,14 @@ export function SystemSettingsPanel({
                   hint="Không yêu cầu độ mạnh, chỉ cần không để trống."
                   autoComplete="new-password"
                 />
+                <div className="mt-4">
+                  <SettingSwitch
+                    label="Đổi mật khẩu lần đầu"
+                    description="Áp dụng cho tài khoản chưa hoàn tất đổi mật khẩu. Không yêu cầu email hoặc OTP."
+                    checked={passwordSettings?.teacherRequirePasswordChange ?? false}
+                    onChange={(checked) => setPasswordSettings((current) => current ? { ...current, teacherRequirePasswordChange: checked } : current)}
+                  />
+                </div>
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
@@ -490,7 +491,7 @@ export function SystemSettingsPanel({
                       Tài khoản học sinh
                     </h3>
                     <p className="mt-1 text-xs text-slate-500">
-                      Áp dụng khi import danh sách học sinh.
+                      Áp dụng khi tạo hoặc import học sinh.
                     </p>
                   </div>
                   <span
@@ -524,6 +525,14 @@ export function SystemSettingsPanel({
                   hint="Không yêu cầu độ mạnh, chỉ cần không để trống."
                   autoComplete="new-password"
                 />
+                <div className="mt-4">
+                  <SettingSwitch
+                    label="Đổi mật khẩu lần đầu"
+                    description="Áp dụng cho tài khoản chưa hoàn tất đổi mật khẩu. Không yêu cầu email hoặc OTP."
+                    checked={passwordSettings?.studentRequirePasswordChange ?? false}
+                    onChange={(checked) => setPasswordSettings((current) => current ? { ...current, studentRequirePasswordChange: checked } : current)}
+                  />
+                </div>
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
@@ -533,7 +542,7 @@ export function SystemSettingsPanel({
                       Tài khoản phụ huynh
                     </h3>
                     <p className="mt-1 text-xs text-slate-500">
-                      Áp dụng khi import danh sách phụ huynh.
+                      Dùng ngay tài khoản và mật khẩu được cấp; không bắt buộc đổi mật khẩu.
                     </p>
                   </div>
                   <span

@@ -8,61 +8,20 @@ import { getCurrentPortal } from "@/lib/portal";
 import { AuthNotice } from "./auth-notice";
 import { Input } from "@/components/ui/form-control";
 import { Button } from "@/components/ui/button";
-import type { OtpChallenge } from "@/types/auth";
 
 export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
   const { user, isInitializing, signOut } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState(user?.email ?? "");
-  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
-  const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
   const lock = useRef(false);
-  const needed = user?.requiresFirstLoginSetup;
+  const needed = user?.role !== "PARENT" && user?.requiresFirstLoginSetup;
   const loginPath = `/${user?.role.toLowerCase() ?? getCurrentPortal()}/login`;
   useEffect(() => {
     if (!modal && !isInitializing && !user) router.replace(loginPath);
   }, [modal, isInitializing, user, router, loginPath]);
-  useEffect(() => {
-    if (!cooldown) return;
-    const timer = window.setTimeout(
-      () => setCooldown((current) => Math.max(0, current - 1)),
-      1000,
-    );
-    return () => window.clearTimeout(timer);
-  }, [cooldown]);
-  async function sendCode() {
-    if (lock.current || cooldown) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Email không hợp lệ.");
-      return;
-    }
-    lock.current = true;
-    setBusy(true);
-    setError("");
-    setNotice("");
-    try {
-      const result = await authApi.requestFirstLoginOtp(
-        email.trim().toLowerCase(),
-      );
-      setChallenge(result);
-      setCode("");
-      setCooldown(result.retryAfter);
-      setNotice(
-        "Đã gửi mã xác thực đến email của bạn. Mã có hiệu lực trong 10 phút.",
-      );
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể gửi mã.");
-    } finally {
-      lock.current = false;
-      setBusy(false);
-    }
-  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (lock.current) return;
@@ -71,18 +30,11 @@ export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
       setError(invalid);
       return;
     }
-    if (!challenge || !/^\d{6}$/.test(code)) {
-      setError("Vui lòng gửi và nhập mã xác thực gồm 6 chữ số.");
-      return;
-    }
     lock.current = true;
     setBusy(true);
     setError("");
     try {
       await authApi.completeFirstLogin({
-        challengeId: challenge.challengeId,
-        email: email.trim().toLowerCase(),
-        code,
         newPassword: password,
         confirmNewPassword: confirmation,
       });
@@ -127,52 +79,13 @@ export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
           id="setup-title"
           className="text-center text-2xl font-extrabold text-brand-600"
         >
-          Thiết lập tài khoản lần đầu
+          Đổi mật khẩu lần đầu
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Đổi mật khẩu mặc định và xác thực email khôi phục trước khi sử dụng
-          hệ thống.
+          Nhà trường yêu cầu đổi mật khẩu được cấp trước khi sử dụng hệ thống.
         </p>
         <form className="mt-6 space-y-4" onSubmit={submit}>
           {error ? <AuthNotice message={error} /> : null}
-          {notice ? <AuthNotice type="success" message={notice} /> : null}
-          <Input
-            label="Email khôi phục"
-            type="email"
-            autoComplete="email"
-            value={email}
-            disabled={busy}
-            onChange={(event) => {
-              setEmail(event.target.value);
-              setChallenge(null);
-              setCode("");
-              setNotice("");
-            }}
-            required
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            className="w-full"
-            disabled={busy || cooldown > 0}
-            onClick={() => void sendCode()}
-          >
-            {cooldown
-              ? `Gửi lại mã sau ${cooldown}s`
-              : challenge
-                ? "Gửi lại mã"
-                : "Gửi mã xác thực"}
-          </Button>
-          <Input
-            label="Mã xác thực"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            value={code}
-            onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-            disabled={busy || !challenge}
-            required
-          />
           <Input
             label="Mật khẩu mới"
             type="password"
@@ -197,7 +110,7 @@ export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
           <Button
             type="submit"
             className="h-12 w-full"
-            disabled={busy || !challenge}
+            disabled={busy}
           >
             {busy ? "Đang xử lý..." : "Hoàn tất & đăng nhập lại"}
           </Button>

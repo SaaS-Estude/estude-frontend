@@ -133,81 +133,49 @@ test("recovery awaits the server, validates passwords and keeps the form on an i
   assert.equal(ui.root.findAllByType("input").length, 0);
 });
 
-for (const role of ["STUDENT", "TEACHER", "PARENT"]) {
-test(`${role} first login verifies the exact email, invalidates the code after editing email, and logs out only after success`, async (t) => {
-  const requests = [];
-  const completions = [];
-  const redirects = [];
-  let logouts = 0;
-  let fail = true;
-  const { FirstLoginSetupForm } = load(
-    "components/auth/first-login-setup-form.tsx",
-    mocks(
-      {
-        requestFirstLoginOtp: async (email) => {
-          requests.push(email);
-          return { ...challenge, retryAfter: 0 };
-        },
-        completeFirstLogin: async (payload) => {
-          completions.push(payload);
-          if (fail) throw new Error("Mã đã hết hạn");
-        },
+for (const role of ["STUDENT", "TEACHER"]) {
+  test(`${role} optional first-login password change works without email or OTP and logs out only on success`, async (t) => {
+    const completions = [], redirects = [];
+    let logouts = 0, fail = true;
+    const { FirstLoginSetupForm } = load("components/auth/first-login-setup-form.tsx", mocks({
+      completeFirstLogin: async (payload) => {
+        completions.push(payload);
+        if (fail) throw new Error("Không thể đổi mật khẩu");
       },
-      {
-        user: { role, requiresFirstLoginSetup: true },
-        isInitializing: false,
-        signOut: async () => {
-          logouts++;
-        },
-      },
-      { replace: (url) => redirects.push(url) },
-    ),
-  );
-  const ui = await render(t, FirstLoginSetupForm, { modal: true });
-  assert.equal(ui.root.findByType("section").props["aria-modal"], true);
-  await fill(ui, "Email khôi phục", "invalid");
-  await act(async () => button(ui, "Gửi mã xác thực").props.onClick());
-  assert.equal(requests.length, 0);
-  await fill(ui, "Email khôi phục", " FIRST@EXAMPLE.TEST ");
-  await act(async () => {
-    button(ui, "Gửi mã xác thực").props.onClick();
-    await new Promise(setImmediate);
+    }, {
+      user: { role, requiresFirstLoginSetup: true },
+      isInitializing: false,
+      signOut: async () => { logouts++; },
+    }, { replace: (url) => redirects.push(url) }));
+    const ui = await render(t, FirstLoginSetupForm, { modal: true });
+    assert.equal(ui.root.findByType("section").props["aria-modal"], true);
+    assert.equal(ui.root.findAllByType("input").length, 2);
+    assert.doesNotMatch(textOf(ui.toJSON()), /Email khôi phục|Mã xác thực|Gửi mã/);
+    await fill(ui, "Mật khẩu mới", "111111");
+    await fill(ui, "Nhập lại mật khẩu mới", "111111");
+    await submit(ui);
+    assert.equal(completions.length, 0);
+    await fill(ui, "Mật khẩu mới", "New@12345");
+    await fill(ui, "Nhập lại mật khẩu mới", "New@12345");
+    await submit(ui);
+    assert.equal(logouts, 0);
+    assert.match(textOf(ui.toJSON()), /Không thể đổi mật khẩu/);
+    fail = false;
+    await submit(ui);
+    assert.equal(logouts, 1);
+    assert.deepEqual(redirects, [`/${role.toLowerCase()}/login?setup=complete`]);
+    assert.deepEqual(completions[0], {newPassword: "New@12345", confirmNewPassword: "New@12345"});
   });
-  await fill(ui, "Mã xác thực", "123456");
-  await fill(ui, "Email khôi phục", "new@example.test");
-  assert.equal(input(ui, "Mã xác thực").props.value, "");
-  assert.equal(input(ui, "Mã xác thực").props.disabled, true);
-  await act(async () => {
-    button(ui, "Gửi mã xác thực").props.onClick();
-    await new Promise(setImmediate);
-  });
-  await fill(ui, "Mã xác thực", "123456");
-  await fill(ui, "Mật khẩu mới", "111111");
-  await fill(ui, "Nhập lại mật khẩu mới", "111111");
-  await submit(ui);
-  assert.equal(completions.length, 0);
-  await fill(ui, "Mật khẩu mới", "New@12345");
-  await fill(ui, "Nhập lại mật khẩu mới", "New@12345");
-  await submit(ui);
-  assert.equal(logouts, 0);
-  assert.match(textOf(ui.toJSON()), /Mã đã hết hạn/);
-  fail = false;
-  await submit(ui);
-  assert.equal(logouts, 1);
-  assert.deepEqual(redirects, [`/${role.toLowerCase()}/login?setup=complete`]);
-  assert.equal(completions[0].email, "new@example.test");
-  assert.deepEqual(requests, ["first@example.test", "new@example.test"]);
-});
 }
 
 for (const role of ["STUDENT", "TEACHER", "PARENT"]) {
-test(`restoring ${role} first-login session renders the mandatory popup before loading workspace data`, async (t) => {
+test(`restoring ${role} session only gates teacher/student accounts when the school requires a password change`, async (t) => {
   for (const pending of [true, false]) {
     let dataLoads = 0;
     const { AuthProvider, useAuth } = load("context/auth-context.tsx", {
       "@/components/auth/first-login-setup-form": {
         FirstLoginSetupForm: () =>
-          React.createElement("dialog", null, "Verify email"),
+          React.createElement("dialog", null, "Change password"),
       },
       "@/lib/auth-api": {
         authApi: {
@@ -231,8 +199,9 @@ test(`restoring ${role} first-login session renders the mandatory popup before l
     const ui = await render(t, AuthProvider, {
       children: React.createElement(Workspace),
     });
-    assert.equal(ui.root.findAllByType("dialog").length, pending ? 1 : 0);
-    assert.equal(dataLoads, pending ? 0 : 1);
+    const blocked = pending && role !== "PARENT";
+    assert.equal(ui.root.findAllByType("dialog").length, blocked ? 1 : 0);
+    assert.equal(dataLoads, blocked ? 0 : 1);
     await act(async () => ui.unmount());
   }
 });

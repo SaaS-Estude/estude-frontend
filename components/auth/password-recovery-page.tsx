@@ -98,6 +98,7 @@ export function PasswordRecoveryPage({
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">
           Nhận mã xác thực qua email khôi phục đã lưu trong tài khoản.
+          Nếu chưa có email hoặc không sử dụng email, vui lòng liên hệ nhà trường để được hỗ trợ.
         </p>
         {completed ? (
           <div className="mt-6">

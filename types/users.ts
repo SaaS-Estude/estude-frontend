@@ -41,6 +41,8 @@ export interface ImportUsersResult {
 }
 
 export interface DefaultPasswordSettings {
+  teacherRequirePasswordChange: boolean;
+  studentRequirePasswordChange: boolean;
   teacherConfigured: boolean;
   studentConfigured: boolean;
   parentConfigured: boolean;

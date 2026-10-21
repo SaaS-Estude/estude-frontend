@@ -392,7 +392,7 @@ export const authApi = {
     );
   },
   completeFirstLogin(
-    payload: ResetPasswordPayload & { email: string },
+    payload: { newPassword: string; confirmNewPassword: string },
   ): Promise<Record<string, never>> {
     return authenticatedRequest<Record<string, never>>(
       portalAuthPath("first-login/complete"),
