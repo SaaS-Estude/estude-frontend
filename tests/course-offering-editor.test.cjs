@@ -1,3 +1,4 @@
+require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -39,8 +40,8 @@ async function setup(t, overrides = {}) {
       Checkbox: (props) => React.createElement("input", { type: "checkbox", ...props }),
     };
     if (id === "./gradebook-policy-fields") return {
-      defaultGradePolicy: { resultMode: "INTERNAL", assessmentMode: "NUMERIC", annualPeriods: 35, specialized: false },
-      GradebookPolicyFields: ({ policy, onChange, disabled }) => React.createElement("select", { "aria-label": "Hình thức đánh giá", disabled, value: policy.assessmentMode, onChange: (event) => onChange({ ...policy, assessmentMode: event.target.value }) }),
+      ...original(id),
+      GradebookPolicyFields: ({ policy, onChange, disabled, structureLocked }) => React.createElement("select", { "aria-label": "Hình thức đánh giá", disabled: disabled || structureLocked, value: policy.assessmentMode, onChange: (event) => onChange({ ...policy, assessmentMode: event.target.value }) }),
     };
     return original(id);
   };
@@ -77,7 +78,7 @@ test("confirm sends a single request containing all edited fields", async (t) =>
   await ui.change("Trạng thái giảng dạy", "OPEN");
   await ui.change("Hình thức đánh giá", "COMMENT");
   await ui.submit();
-  assert.deepEqual(ui.writes, [{ id: "course", input: { revision: 7, displayNameOverride: "Toán nâng cao", status: "OPEN", teachers: [{ teacherId: "t2", role: "PRIMARY_TEACHER" }], gradebook: { resultMode: "INTERNAL", assessmentMode: "COMMENT", annualPeriods: 35, specialized: false, revision: 4 } } }]);
+  assert.deepEqual(ui.writes, [{ id: "course", input: { revision: 7, displayNameOverride: "Toán nâng cao", status: "OPEN", teachers: [{ teacherId: "t2", role: "PRIMARY_TEACHER" }], gradebook: { resultMode: "DUAL", assessmentMode: "COMMENT", annualPeriods: 35, specialized: false, regularColumns: 2, regularWeight: 1, midtermWeight: 2, finalWeight: 3, revision: 4 } } }]);
   assert.equal(ui.saved.length, 1);
 });
 
@@ -108,21 +109,22 @@ test("upcoming semesters keep opening disabled while allowing draft edits", asyn
 });
 
 test("courses with marks retain their gradebook configuration", async (t) => {
-  const ui = await setup(t, { view: { items: [{ id: "item" }] } });
+  const ui = await setup(t, { view: { items: [{ id: "item", resultChannel: "OFFICIAL" }] } });
   assert.equal(ui.field("Hình thức đánh giá").props.disabled, true);
   await ui.change("Tên hiển thị môn học", "Tên mới");
   await ui.submit();
   assert.equal(ui.writes[0].input.gradebook, undefined);
 });
 
-test("an unused historical book is configured with the activity model", async (t) => {
+test("an unchanged historical column plan is preserved", async (t) => {
   const ui = await setup(t, { view: { book: { ...initialBook.book, resultMode: "LEGACY", annualPeriods: 70, specialized: true } } });
   await ui.submit();
-  assert.deepEqual(ui.writes[0].input.gradebook, { resultMode: "INTERNAL", assessmentMode: "NUMERIC", annualPeriods: 35, specialized: false, revision: 4 });
+  assert.equal(ui.writes.length, 0);
+  assert.equal(ui.closed.length, 1);
 });
 
 test("editing a course preserves historical books that already have grades", async (t) => {
-  const ui = await setup(t, { view: { book: { ...initialBook.book, resultMode: "LEGACY", annualPeriods: 70, specialized: true }, items: [{ id: "item" }] } });
+  const ui = await setup(t, { view: { book: { ...initialBook.book, resultMode: "LEGACY", annualPeriods: 70, specialized: true }, items: [{ id: "item", resultChannel: "OFFICIAL" }] } });
   await ui.change("Tên hiển thị môn học", "Tên mới");
   await ui.submit();
   assert.equal(ui.writes[0].input.gradebook, undefined);

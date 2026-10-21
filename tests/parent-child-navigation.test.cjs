@@ -38,9 +38,9 @@ function setup() {
     if (id === "@/lib/auth-api")
       return { authenticatedRequest: async () => children };
     if (id === "@/components/dashboard/student-overview-summary") return {LearningSummary:({report})=>React.createElement("div",{"data-summary-student":report.student.id})};
-    if (id === "@/components/assessment/internal-grade-report")
+    if (id === "@/components/assessment/grade-reports")
       return {
-        InternalGradeReport: ({ studentId }) =>
+        GradeReports: ({ studentId }) =>
           React.createElement("div", { "data-grade-student": studentId }),
       };
     if (id === "@/components/parent/parent-shell")

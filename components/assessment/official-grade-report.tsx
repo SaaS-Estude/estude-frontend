@@ -101,10 +101,9 @@ export function OfficialGradeReport({
       : result?.semesterLevels.find((item) => item.termId === termId);
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
-      <h2 className="text-lg font-bold text-slate-950">Sổ điểm học sinh</h2>
+      <h2 className="text-lg font-bold text-slate-950">Điểm học kỳ</h2>
       <p className="mt-1 text-xs text-slate-500">
-        Điểm do giáo viên ghi nhận theo Thông tư 22/2021. Ô trống là chưa đánh
-        giá; điểm 0 được hiển thị riêng.
+        Chỉ hiển thị điểm học kỳ giáo viên đã công bố. Hệ số và số cột theo cấu hình nhà trường; ô trống chưa đánh giá, điểm 0 là một kết quả riêng.
       </p>
       <div className="my-4 flex flex-wrap gap-3">
         <label className="grid gap-1 text-xs">
@@ -174,7 +173,7 @@ export function OfficialGradeReport({
                 ? ["Môn học", "Học kỳ I", "Học kỳ II", "Cả năm"]
                 : [
                     "Môn học",
-                    "Thường xuyên",
+                    "Thường kỳ",
                     "Giữa kỳ",
                     "Cuối kỳ",
                     "Kết quả",

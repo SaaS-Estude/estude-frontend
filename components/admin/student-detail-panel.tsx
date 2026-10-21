@@ -1,5 +1,5 @@
 "use client";
-import { InternalGradeReport } from "@/components/assessment/internal-grade-report";
+import { GradeReports } from "@/components/assessment/grade-reports";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -395,7 +395,7 @@ export function StudentDetailPanel({
       <EmptyState message="Học sinh chưa được phân môn trong lớp học." />
     );
 
-  const renderSemesters = () => <InternalGradeReport studentId={studentId} />;
+  const renderSemesters = () => <GradeReports studentId={studentId} />;
 
   const renderExams = () =>
     visibleExamResults.length ? (

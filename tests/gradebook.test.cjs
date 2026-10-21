@@ -229,6 +229,7 @@ const teacherView = {
     specialized: false,
   },
   requiredRegular: 2,
+  items: [],
   students: [
     {
       id: "student",
@@ -277,7 +278,8 @@ test("admin configures the class gradebook for a selected subject and term", asy
   });
   assert.deepEqual(payload, {
     classId: "class", subjectId: "math", termId: "term", revision: 0,
-    resultMode: "INTERNAL", assessmentMode: "NUMERIC", annualPeriods: 35, specialized: false,
+    resultMode: "DUAL", assessmentMode: "NUMERIC", annualPeriods: 35, specialized: false,
+    regularColumns: 2, regularWeight: 1, midtermWeight: 2, finalWeight: 3,
   });
 });
 
@@ -341,11 +343,12 @@ test("teacher edits the class table, sends zero distinctly from blank, and keeps
   assert.equal(input().props.value, "");
   await act(async () => input().props.onChange({ target: { value: "0" } }));
   await act(async () =>
-    renderer.root.findAllByType("button").find((item) => item.children.includes("Lưu")).props.onClick(),
+    renderer.root.findAllByType("button").find((item) => item.children.includes("Lưu nháp")).props.onClick(),
   );
   assert.deepEqual(payload, {
     studentId: "student",
     revision: 7,
+    publish: false,
     marks: { regular: [0, null], midterm: null, final: null },
     comment: "",
   });

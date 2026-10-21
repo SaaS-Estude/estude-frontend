@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Eye, Filter, LoaderCircle, Pencil, Plus, RotateCcw, Search } from "lucide-react";
 import { CourseOfferingEditor } from "./course-offering-editor";
 import { CourseOfferingDetails } from "./course-offering-details";
-import { defaultGradePolicy, GradebookPolicyFields } from "./gradebook-policy-fields";
+import { defaultGradePolicy, validGradePolicy, GradebookPolicyFields } from "./gradebook-policy-fields";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { CustomSelect, Input } from "@/components/ui/form-control";
@@ -178,7 +178,7 @@ export function CourseOfferingPanel() {
   const alreadyAdded = courses.some((course) => course.termId === termId && course.primaryClassId === classId && course.subjectId === subjectId);
   const chosenTeachers = createTeachers.filter((row) => row.teacherId);
   const teachersValid = new Set(chosenTeachers.map((row) => row.teacherId)).size === chosenTeachers.length && chosenTeachers.filter((row) => row.role === "PRIMARY_TEACHER").length <= 1;
-  const policyValid = Number.isInteger(createPolicy.annualPeriods) && createPolicy.annualPeriods >= 35 && createPolicy.annualPeriods <= 1000;
+  const policyValid = validGradePolicy(createPolicy) && Number.isInteger(createPolicy.annualPeriods) && createPolicy.annualPeriods >= 35 && createPolicy.annualPeriods <= 1000;
   const canCreate = readiness.dbPrepared && Boolean(termId && classId && subjectId) && !alreadyAdded && teachersValid && policyValid;
   const defaultCreateTitle = [subjects.find((row) => row.id === subjectId)?.vietnameseName || subjects.find((row) => row.id === subjectId)?.name, classes.find((row) => row.id === classId)?.name, terms.find((row) => row.id === termId)?.name].filter(Boolean).join(" - ");
 

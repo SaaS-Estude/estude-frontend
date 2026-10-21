@@ -5,7 +5,7 @@ import { LegacyPurposeReview } from "./legacy-purpose-review";
 import { useEffect, useMemo, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import { CustomSelect } from "@/components/ui/form-control";
-import { defaultGradePolicy, GradebookPolicyFields } from "./gradebook-policy-fields";
+import { defaultGradePolicy, validGradePolicy, gradePolicyValues, GradebookPolicyFields } from "./gradebook-policy-fields";
 import { academicDataService } from "@/lib/assessment-api";
 import { gradebookService } from "@/lib/gradebook-api";
 import type { SchoolClass, SubjectTeacherAssignment, Term } from "@/types/assessment";
@@ -62,7 +62,7 @@ export function ClassGradebookConfig({ schoolClass, course }: { schoolClass: Sch
       .then((loaded) => {
         if (!active) return;
         setView(loaded);
-        setPolicy({ ...defaultGradePolicy, assessmentMode: loaded.book?.assessmentMode ?? "NUMERIC" });
+        setPolicy(gradePolicyValues(loaded.book));
       })
       .catch((cause: unknown) => {
         if (active) setError(cause instanceof Error ? cause.message : "Không tải được sổ điểm");
@@ -71,9 +71,9 @@ export function ClassGradebookConfig({ schoolClass, course }: { schoolClass: Sch
     return () => { active = false; };
   }, [schoolClass.id, subjectId, termId, refresh,workspaceId]);
 
-  const hasMarks = !!view?.items?.length || (view?.students.some((student) => student.record) ?? false);
+  const hasMarks = !!view?.items?.some((item)=>item.resultChannel==="OFFICIAL") || (view?.students.some((student) => student.record) ?? false);
   const readOnly = !schoolClass.isActive || view?.year?.status === "COMPLETED" || (view ? ["COMPLETED", "LOCKED"].includes(view.term.status) : false);
-  const canSave = Boolean(view && !loading && !bookLoading && !saving && !hasMarks && !readOnly &&
+  const canSave = Boolean(validGradePolicy(policy) && view && !loading && !bookLoading && !saving && !readOnly &&
     Number.isInteger(policy.annualPeriods) && policy.annualPeriods >= 35 && policy.annualPeriods <= 1000);
 
   async function save() {
@@ -94,7 +94,7 @@ export function ClassGradebookConfig({ schoolClass, course }: { schoolClass: Sch
 
   return <div className="space-y-4">
     <div>
-      <h3 className="font-bold text-slate-900">Cấu hình kết quả nội bộ</h3>
+      <h3 className="font-bold text-slate-900">Cấu hình điểm học kỳ và tự học</h3>
       <p className="mt-1 text-xs text-slate-500">Chọn môn học và học kỳ của {schoolClass.name}. Điểm từng hoạt động được lưu và công bố theo môn, học kỳ.</p>
     </div>
     {error ? <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : null}
@@ -110,13 +110,13 @@ export function ClassGradebookConfig({ schoolClass, course }: { schoolClass: Sch
         {bookLoading ? <p className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" />Đang tải sổ điểm...</p> : null}
         {view && !bookLoading ? <>
           <div className="flex flex-wrap items-end gap-3 rounded-xl border border-blue-100 bg-blue-50/40 p-4">
-            <GradebookPolicyFields policy={policy} onChange={setPolicy} disabled={saving || hasMarks || readOnly} />
+            <GradebookPolicyFields policy={policy} onChange={setPolicy} disabled={saving || readOnly} structureLocked={hasMarks} />
             <Button variant="plain" type="button" className="h-10 rounded-lg bg-brand-600 px-4 text-sm font-bold text-white disabled:opacity-50" disabled={!canSave} onClick={() => void save()}>{saving ? "Đang lưu..." : view.book ? "Lưu cấu hình" : "Tạo sổ điểm"}</Button>
           </div>
-          {view.book && view.book.resultMode !== "INTERNAL" ? <p className="text-xs text-slate-500">Cấu hình lịch sử: {view.requiredRegular} cột thường xuyên{view.book.specialized ? " (gồm 1 cột chuyên đề)" : ""}, giữa kỳ và cuối kỳ.</p> : null}
-          {policy.resultMode === "INTERNAL" ? <p className="text-xs text-slate-500">Trung bình nội bộ lấy các bài đánh giá thường xuyên đã công bố, mỗi bài tính một lần. Luyện tập và thi thử hiển thị riêng.</p> : null}
+          {view.book && view.book.resultMode !== "INTERNAL" ? <p className="text-xs text-slate-500">Điểm học kỳ: {view.requiredRegular} cột thường kỳ{view.book.specialized ? " (gồm 1 cột chuyên đề)" : ""}, giữa kỳ và cuối kỳ.</p> : null}
+          {true ? <p className="text-xs text-slate-500">Trung bình nội bộ lấy các bài đánh giá thường xuyên đã công bố, mỗi bài tính một lần. Luyện tập và thi thử hiển thị riêng.</p> : null}
           <LegacyPurposeReview view={view} onChanged={() => setRefresh((v) => v + 1)} />
-          {hasMarks ? <p className="text-xs text-amber-700">Đã có điểm học sinh, không thể thay đổi cấu hình sổ điểm.</p> : null}
+          {hasMarks ? <p className="text-xs text-amber-700">Đã có điểm học kỳ: giữ số cột và hình thức đánh giá, vẫn có thể điều chỉnh hệ số.</p> : null}
           {readOnly ? <p className="text-xs text-amber-700">Lớp, năm học hoặc học kỳ đã kết thúc/khóa.</p> : null}
         </> : null}
       </> : null}

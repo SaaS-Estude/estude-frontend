@@ -11,7 +11,11 @@ export interface GradeOutcome {
   complete: boolean;
 }
 export interface GradePolicy {
-  resultMode?: "INTERNAL" | "LEGACY" | null;
+  regularColumns?: number;
+  regularWeight?: number;
+  midtermWeight?: number;
+  finalWeight?: number;
+  resultMode?: "INTERNAL" | "LEGACY" | "DUAL" | null;
   assessmentMode: "NUMERIC" | "COMMENT";
   annualPeriods: number;
   specialized: boolean;
@@ -22,7 +26,7 @@ export interface GradeScope {
   termId: string;
 }
 export interface Gradebook extends GradePolicy, GradeScope {
-  resultMode?: "INTERNAL" | "LEGACY" | null;
+  resultMode?: "INTERNAL" | "LEGACY" | "DUAL" | null;
   id: string;
   revision: number;
 }
@@ -32,6 +36,7 @@ export interface GradeRecord {
   updatedAt: string;
 }
 export interface GradeItem {
+  resultChannel?: "INTERNAL" | "OFFICIAL";
   revision?: number;
   assessmentPurpose?: AssessmentPurpose | null;
   id: string;
@@ -72,6 +77,9 @@ export interface GradebookView {
     id: string;
     fullName: string;
     accountName: string;
+    isActive?: boolean;
+    hasDraft?: boolean;
+    hasPublished?: boolean;
     record: GradeRecord | null;
     internalGroups?: InternalResultGroup[];
     itemGrades: StudentGrade[];

@@ -13,14 +13,11 @@ import type { GradebookView, GradePolicy } from "@/types/gradebook";
 import { Button } from "@/components/ui/button";
 import { Checkbox, CustomSelect, Input } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
-import { defaultGradePolicy, GradebookPolicyFields } from "./gradebook-policy-fields";
+import { defaultGradePolicy, validGradePolicy, gradePolicyValues, GradebookPolicyFields } from "./gradebook-policy-fields";
 
 const statusLabels: Record<CourseStatus, string> = { DRAFT: "Bản nháp", OPEN: "Đang giảng dạy", CLOSED: "Đã kết thúc", ARCHIVED: "Đã lưu trữ" };
 const nextStatus: Partial<Record<CourseStatus, CourseStatus>> = { DRAFT: "OPEN", OPEN: "CLOSED", CLOSED: "ARCHIVED" };
-const policyValues = (policy: GradePolicy): GradePolicy => ({
-  resultMode: policy.resultMode ?? "INTERNAL", assessmentMode: policy.assessmentMode,
-  annualPeriods: policy.annualPeriods, specialized: policy.specialized,
-});
+const policyValues = gradePolicyValues;
 const teacherValues = (rows: Array<{ teacherId: string; role: CourseTeacherRole }>) =>
   rows.map(({ teacherId, role }) => ({ teacherId, role })).sort((a, b) => a.teacherId.localeCompare(b.teacherId));
 const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
@@ -70,7 +67,7 @@ export function CourseOfferingEditor({ course, teachers, yearName, termName, sub
       setPrimaryId(assigned.find((row) => row.role === "PRIMARY_TEACHER")?.teacherId ?? "");
       setCoTeacherIds(assigned.filter((row) => row.role === "CO_TEACHER").map((row) => row.teacherId));
       setStudentIds(loadedMembers.enrollments.filter((row) => row.status === "ACTIVE").map((row) => row.studentId));
-      setPolicy({ ...defaultGradePolicy, assessmentMode: book?.book?.assessmentMode ?? "NUMERIC" });
+      setPolicy(gradePolicyValues(book?.book));
     }
     void load().catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Không tải được thông tin môn học"); })
       .finally(() => { if (active) setLoading(false); });
@@ -81,11 +78,11 @@ export function CourseOfferingEditor({ course, teachers, yearName, termName, sub
     ...teachers.map((teacher) => [teacher.id, { value: teacher.id, label: teacher.fullName }] as const),
     ...(members?.teachers.filter((row) => !row.effectiveTo).map((row) => [row.teacherId, { value: row.teacherId, label: row.user?.fullName ?? row.teacherId }] as const) ?? []),
   ]).values()];
-  const hasMarks = Boolean(view?.items.length || view?.students.some((student) => student.record));
-  const bookReadOnly = hasMarks || current.status === "CLOSED" || current.status === "ARCHIVED" || view?.schoolClass?.isActive === false || view?.year?.status === "COMPLETED" || (view ? ["COMPLETED", "LOCKED"].includes(view.term.status) : false);
+  const hasMarks = Boolean(view?.items.some((item)=>item.resultChannel==="OFFICIAL") || view?.students.some((student) => student.record));
+  const bookReadOnly = current.status === "CLOSED" || current.status === "ARCHIVED" || view?.schoolClass?.isActive === false || view?.year?.status === "COMPLETED" || (view ? ["COMPLETED", "LOCKED"].includes(view.term.status) : false);
   const editable = !saving && current.status !== "ARCHIVED";
   const openAllowed = current.term?.status === "ACTIVE" && current.readyForOpen;
-  const valid = Boolean(members) && !loading && editable && (status !== "OPEN" || Boolean(primaryId) && (current.status !== "DRAFT" || openAllowed)) &&
+  const valid = validGradePolicy(policy) && Boolean(members) && !loading && editable && (status !== "OPEN" || Boolean(primaryId) && (current.status !== "DRAFT" || openAllowed)) &&
     Number.isInteger(policy.annualPeriods) && policy.annualPeriods >= 35 && policy.annualPeriods <= 1000;
   const students = current.enrollmentMode === "CLASS_ROSTER" && current.status === "DRAFT"
     ? roster?.students.map((student) => ({ id: student.id, name: student.fullName, account: student.accountName })) ?? []
@@ -148,8 +145,8 @@ export function CourseOfferingEditor({ course, teachers, yearName, termName, sub
       </section>
       {view && <section className="space-y-3 border-t border-slate-100 pt-4" aria-label="Cấu hình sổ điểm">
         <h3 className="font-bold text-slate-900">Cấu hình sổ điểm</h3>
-        <div className="flex flex-wrap items-end gap-3 rounded-xl border border-blue-100 bg-blue-50/40 p-4"><GradebookPolicyFields policy={policy} onChange={setPolicy} disabled={!editable || bookReadOnly || !can("academic.update")} /></div>
-        {hasMarks && <p className="text-xs text-slate-500">Đã có hoạt động hoặc điểm học sinh, cấu hình sổ điểm được giữ nguyên.</p>}
+        <div className="flex flex-wrap items-end gap-3 rounded-xl border border-blue-100 bg-blue-50/40 p-4"><GradebookPolicyFields policy={policy} onChange={setPolicy} disabled={!editable || bookReadOnly || !can("academic.update")} structureLocked={hasMarks} /></div>
+        {hasMarks && <p className="text-xs text-slate-500">Đã có điểm học kỳ: giữ số cột và hình thức đánh giá, vẫn có thể điều chỉnh hệ số.</p>}
         {!hasMarks && bookReadOnly && <p className="text-xs text-slate-500">Môn học, lớp hoặc học kỳ đã kết thúc/khóa, cấu hình sổ điểm chỉ được xem.</p>}
       </section>}
       <section className="space-y-2 border-t border-slate-100 pt-4" aria-label="Học sinh">

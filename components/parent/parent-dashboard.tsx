@@ -16,7 +16,7 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { authenticatedRequest } from "@/lib/auth-api";
 import { LearningSummary } from "@/components/dashboard/student-overview-summary";
-import { InternalGradeReport } from "@/components/assessment/internal-grade-report";
+import { GradeReports } from "@/components/assessment/grade-reports";
 import {
   ParentOverviewPanels,
   useParentOverview,
@@ -364,7 +364,7 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
                   </strong>
                 </span>
               </div>
-              <InternalGradeReport
+              <GradeReports
                 key={`${selectedStudent.id}:${childrenRefresh}`}
                 studentId={selectedStudent.id}
               />

@@ -1,0 +1,19 @@
+"use client";
+import { useState } from "react";
+import { gradebookService } from "@/lib/gradebook-api";
+import type { GradebookView } from "@/types/gradebook";
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { Select, Input } from "@/components/ui/form-control";
+export function AcademicGradeActions({view,disabled,onChanged,onError}:{view:GradebookView;disabled:boolean;onChanged:(message:string)=>void;onError:(message:string)=>void}){
+ const [action,setAction]=useState<"adopt"|"publish"|null>(null);const [source,setSource]=useState("");const [slot,setSlot]=useState("TX1");const [reason,setReason]=useState("");const [busy,setBusy]=useState(false);const [error,setError]=useState("");
+ const book=view.book;if(!book)return null;
+ const candidates=view.items.filter((i)=>i.resultChannel!=="OFFICIAL"&&i.status==="ACTIVE");
+ const pending=view.students.filter((s)=>s.hasDraft && s.isActive !== false);
+ async function confirm(){if(!book||!action||busy)return;setBusy(true);setError("");try{if(action==="adopt")await gradebookService.adoptSelfStudy(book.id,{revision:book.revision,gradeItemId:source,slotKey:slot,reason});else await gradebookService.publishRecords(book.id,book.revision,pending.slice(0,500).map((s)=>s.id));onChanged(action==="adopt"?"Đã sao chép điểm tự học vào bản nháp. Kiểm tra và công bố khi sẵn sàng.":"Đã công bố điểm học kỳ cho học sinh và phụ huynh.");setAction(null);}catch(cause){const message=cause instanceof Error?cause.message:"Không thực hiện được thao tác";setError(message);onError(message);}finally{setBusy(false)}}
+ return <><div className="m-3 flex flex-wrap items-center gap-3 rounded-xl bg-blue-50/60 p-3"><Button variant="outline" disabled={disabled||!candidates.length} onClick={()=>{setError("");setSource("");setReason("");setAction("adopt")}}>Lấy điểm tự học vào thường kỳ</Button><Button disabled={disabled||!pending.length} onClick={()=>{setError("");setAction("publish")}}>Công bố điểm học kỳ{pending.length?` (${pending.length})`:""}</Button><p className="text-xs text-slate-500">Nhập điểm và import Excel chỉ lưu nháp. Học sinh xem bản đã công bố gần nhất.</p></div>
+ <Modal open={action!==null} title={action==="adopt"?"Lấy điểm tự học vào cột thường kỳ":"Công bố điểm học kỳ"} onClose={()=>{if(!busy)setAction(null)}} footer={<><Button variant="outline" disabled={busy} onClick={()=>setAction(null)}>Hủy</Button><Button disabled={busy||(action==="adopt"&&(!source||!reason.trim()))} onClick={()=>void confirm()}>{busy?"Đang lưu…":"Xác nhận"}</Button></>}>
+ {error?<p role="alert" className="mb-3 text-sm text-rose-700">{error}</p>:null}
+ {action==="adopt"?<div className="space-y-4"><p className="text-sm text-slate-600">Sao chép điểm đã công bố của hoạt động vào cột thường kỳ, quy đổi về thang 10. Chỉ cập nhật học sinh có kết quả phù hợp. Điểm ở cột được chọn của các học sinh này sẽ được thay thế trong bản nháp; điểm nguồn và bản đã công bố không đổi.</p><Select label="Hoạt động tự học" value={source} onChange={(e)=>setSource(e.target.value)}><option value="">Chọn hoạt động đã có điểm công bố</option>{candidates.map((i)=><option key={i.id} value={i.id}>{i.title} · thang {i.maxScore}</option>)}</Select><Select label="Cột thường kỳ nhận điểm" value={slot} onChange={(e)=>setSlot(e.target.value)}>{Array.from({length:view.requiredRegular??2},(_,i)=><option key={i} value={`TX${i+1}`}>Thường kỳ {i+1}</option>)}</Select><Input label="Lý do lấy điểm" value={reason} maxLength={500} onChange={(e)=>setReason(e.target.value)} /></div>:<p className="text-sm text-slate-600">Công bố bản điểm nháp cho {Math.min(pending.length,500)} học sinh. Học sinh và phụ huynh sẽ thấy điểm và nhận xét ở tab Điểm học kỳ. Kết quả tự học giữ nguyên.{pending.length>500?" Thực hiện tiếp cho các học sinh còn lại sau lần này.":""}</p>}
+ </Modal></>;
+}

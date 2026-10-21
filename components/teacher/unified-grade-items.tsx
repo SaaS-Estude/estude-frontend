@@ -53,6 +53,7 @@ export function UnifiedGradeItems({ view, disabled, onChanged, onError, internal
   const [mappingReason, setMappingReason] = useState("");
   const [editing, setEditing] = useState<{ item: GradeItem; studentId: string; grade?: StudentGrade } | null>(null);
   const [evaluation, setEvaluation] = useState<"NOT_GRADED" | "GRADED" | "MISSING" | "EXCUSED">("GRADED");
+  const [entryMode, setEntryMode] = useState<"NUMERIC" | "COMMENT">("NUMERIC");
   const [score, setScore] = useState("");
   const [assessment, setAssessment] = useState<"PASS" | "FAIL" | "">("");
   const [reason, setReason] = useState("");
@@ -91,6 +92,7 @@ export function UnifiedGradeItems({ view, disabled, onChanged, onError, internal
     setEvaluation(grade?.evaluationStatus ?? "GRADED");
     setScore(grade?.rawScore === null || grade?.rawScore === undefined ? "" : String(grade.rawScore));
     setAssessment(grade?.assessmentValue ?? "");
+    setEntryMode(grade?.assessmentValue ? "COMMENT" : "NUMERIC");
     setReason("");
     setFeedback(grade?.feedback ?? "");
   }
@@ -99,15 +101,15 @@ export function UnifiedGradeItems({ view, disabled, onChanged, onError, internal
       onError("Hãy nhập lý do lưu hoặc công bố điểm.");
       return;
     }
-    const value = evaluation === "GRADED" && book.assessmentMode === "NUMERIC" && score !== "" ? Number(score) : null;
-    if (evaluation === "GRADED" && book.assessmentMode === "NUMERIC" && (value === null || !Number.isFinite(value))) {
+    const value = evaluation === "GRADED" && entryMode === "NUMERIC" && score !== "" ? Number(score) : null;
+    if (evaluation === "GRADED" && entryMode === "NUMERIC" && (value === null || !Number.isFinite(value))) {
       onError("Cần nhập điểm hợp lệ."); return;
     }
     setBusy(true);
     try {
       await gradebookService.saveManualGrade(book.id, editing.item.id, {
         studentId: editing.studentId, evaluationStatus: evaluation,
-        score: value, assessment: evaluation === "GRADED" && book.assessmentMode === "COMMENT" ? assessment || null : null,
+        score: value, assessment: evaluation === "GRADED" && entryMode === "COMMENT" ? assessment || null : null,
         publish, feedback, reason: reason.trim(),
       });
       setEditing(null);
@@ -145,7 +147,8 @@ export function UnifiedGradeItems({ view, disabled, onChanged, onError, internal
     {editing ? <div className="flex flex-wrap items-end gap-2 rounded-lg bg-blue-50 p-3 text-sm">
       <span className="font-semibold">{editing.item.title} · {view.students.find((row) => row.id === editing.studentId)?.fullName}</span>
       <label className="grid gap-1 text-xs">Trạng thái<Select className={field} value={evaluation} onChange={(event) => setEvaluation(event.target.value as typeof evaluation)}><option value="GRADED">Đã chấm</option><option value="NOT_GRADED">Chưa chấm</option><option value="MISSING">Chưa nộp</option><option value="EXCUSED">Được miễn</option></Select></label>
-      {evaluation === "GRADED" ? book.assessmentMode === "NUMERIC" ? <label className="grid gap-1 text-xs">Điểm<Input className={`${field} w-24`} type="number" min="0" max={editing.item.maxScore} step="0.01" value={score} onChange={(event) => setScore(event.target.value)} /></label> : <label className="grid gap-1 text-xs">Đánh giá<Select className={field} value={assessment} onChange={(event) => setAssessment(event.target.value as typeof assessment)}><option value="">Chọn</option><option value="PASS">Đạt</option><option value="FAIL">Chưa đạt</option></Select></label> : null}
+      {evaluation === "GRADED" && internal ? <Select aria-label="Hình thức điểm tự học" value={entryMode} onChange={(event)=>{setEntryMode(event.target.value as typeof entryMode);setScore("");setAssessment("");}}><option value="NUMERIC">Điểm số</option><option value="COMMENT">Đạt / Chưa đạt</option></Select> : null}
+      {evaluation === "GRADED" ? entryMode === "NUMERIC" ? <label className="grid gap-1 text-xs">Điểm<Input className={`${field} w-24`} type="number" min="0" max={editing.item.maxScore} step="0.01" value={score} onChange={(event) => setScore(event.target.value)} /></label> : <label className="grid gap-1 text-xs">Đánh giá<Select className={field} value={assessment} onChange={(event) => setAssessment(event.target.value as typeof assessment)}><option value="">Chọn</option><option value="PASS">Đạt</option><option value="FAIL">Chưa đạt</option></Select></label> : null}
       <label className="grid min-w-48 flex-1 gap-1 text-xs">Nhận xét<Input className={field} maxLength={10000} value={feedback} onChange={(e) => setFeedback(e.target.value)} /></label>
       <label className="grid min-w-48 flex-1 gap-1 text-xs">Lý do<Input className={field} maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} /></label>
       <Button variant="plain" type="button" className="rounded-lg border border-brand-600 px-3 py-2 font-semibold text-brand-700" disabled={busy} onClick={() => void save(false)}>Lưu nháp</Button>

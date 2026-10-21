@@ -19,7 +19,7 @@ import type {
 import { outcomeText } from "@/components/assessment/official-grade-report";
 import { usePermissions } from "@/context/permissions-context";
 import { InternalGradebookPanel } from "./internal-gradebook-panel";
-import { UnifiedGradeItems } from "@/components/teacher/unified-grade-items";
+import { AcademicGradeActions } from "./academic-grade-actions";
 
 import { Button } from "@/components/ui/button";
 
@@ -234,10 +234,11 @@ export function LegacyGradebookPanel({
         marks,
         comment,
         revision: view.book.revision,
+        publish: false,
       });
       setEditing("");
       setRefresh((value) => value + 1);
-      setNotice("Đã lưu điểm và nhận xét.");
+      setNotice("Đã lưu điểm nháp và nhận xét. Chọn Công bố điểm học kỳ để học sinh thấy.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không lưu được");
     } finally {
@@ -402,7 +403,7 @@ export function LegacyGradebookPanel({
       ) : null}
       {view?.book ? (
         <>
-          <UnifiedGradeItems view={view} disabled={baseLocked} onChanged={(message) => { setNotice(message); setRefresh((value) => value + 1); }} onError={setError} />
+          <AcademicGradeActions key={view.book.id} view={view} disabled={baseLocked || Boolean(editing)} onChanged={(message) => { setNotice(message); setRefresh((value) => value + 1); }} onError={setError} />
           {legacyManualLocked ? <p className="m-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Một cột TX/GK/CK đang lấy điểm từ bài tập hoặc bài kiểm tra. Sửa điểm ở hoạt động gốc; bảng nhập tay/Excel bên dưới chỉ để xem.</p> : null}
           {view.book && entryMode === "excel" ? <div className="m-3 space-y-4 rounded-xl border border-slate-200 bg-white p-4">
             <div><h3 className="font-bold text-slate-900">Nhập điểm từ Excel</h3><p className="mt-1 text-sm text-slate-500">Tải tệp mẫu của lớp này, điền điểm vào các cột, sau đó kiểm tra dữ liệu trước khi lưu. Ô trống được xem là chưa đánh giá.</p></div>
@@ -429,7 +430,7 @@ export function LegacyGradebookPanel({
                   <TableHead className="w-14 text-center">#</TableHead>
                   <TableHead className="min-w-44">Học sinh</TableHead>
                   <TableHead className="min-w-32">Tài khoản</TableHead>
-                  {Array.from({ length: requiredRegular }, (_, index) => <TableHead key={index} className="min-w-20 text-center">{specialized && index === requiredRegular - 1 ? "Chuyên đề" : `TX ${index + 1}`}</TableHead>)}
+                  {Array.from({ length: requiredRegular }, (_, index) => <TableHead key={index} className="min-w-20 text-center">{specialized && index === requiredRegular - 1 ? "Chuyên đề" : `TK ${index + 1}`}</TableHead>)}
                   <TableHead className="min-w-20 text-center">Giữa kỳ</TableHead><TableHead className="min-w-20 text-center">Cuối kỳ</TableHead>
                   <TableHead className="min-w-32 text-center">Kết quả</TableHead><TableHead className="min-w-36">Nhận xét</TableHead><TableHead className="min-w-28 text-right">Thao tác</TableHead>
                 </tr></TableHeader>
@@ -438,7 +439,7 @@ export function LegacyGradebookPanel({
                   {pagedStudents.map((student, index) => {
                     const isEditing = editing === student.id;
                     const current = isEditing ? marks : emptyMarks(requiredRegular, student.record?.marks);
-                    const state = student.outcome?.complete ? "Đủ điểm" : student.record ? "Đang nhập" : "Chưa nhập";
+                    const state = student.hasDraft ? "Có bản nháp chưa công bố" : student.hasPublished ? "Đã công bố" : student.outcome?.complete ? "Đủ điểm" : student.record ? "Đang nhập" : "Chưa nhập";
                     return <tr key={student.id} className={`transition ${isEditing ? "bg-blue-50/70" : "hover:bg-slate-50/70"}`}>
                       <TableCell className="text-center text-xs text-slate-400">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                       <TableCell><p className="font-bold text-slate-900">{student.fullName}</p><p className="mt-0.5 text-xs text-slate-500">{state}</p></TableCell>
@@ -448,7 +449,7 @@ export function LegacyGradebookPanel({
                       <TableCell className="text-center">{isEditing ? markInput(current.final, `${student.fullName} cuối kỳ`, (value) => setMarks((previous) => ({ ...previous, final: value }))) : markText(current.final)}</TableCell>
                       <TableCell className="text-center font-bold text-slate-800">{outcomeText(student.outcome)}</TableCell>
                       <TableCell className="max-w-40 truncate text-xs text-slate-500" title={student.record?.comment ?? ""}>{student.record?.comment || "—"}</TableCell>
-                      <TableCell className="text-right">{isEditing ? <div className="flex justify-end gap-2"><Button variant="plain" type="button" className="font-bold text-brand-700 disabled:opacity-50" disabled={locked} onClick={() => void save()}>{saving ? "Đang lưu..." : "Lưu"}</Button><Button variant="plain" type="button" className="text-slate-500 disabled:opacity-50" disabled={saving} onClick={() => setEditing("")}>Hủy</Button></div> : canWrite && !historicalReadOnly && !legacyManualLocked && !["LOCKED"].includes(view.term.status) ? <Button variant="plain" type="button" className="font-bold text-brand-700 hover:underline disabled:text-slate-400" disabled={Boolean(editing) || saving} onClick={() => { setEditing(student.id); setMarks(emptyMarks(requiredRegular, student.record?.marks)); setComment(student.record?.comment ?? ""); setNotice(""); setError(""); }}>{student.record ? "Sửa điểm" : "Nhập điểm"}</Button> : null}</TableCell>
+                      <TableCell className="text-right">{isEditing ? <div className="flex justify-end gap-2"><Button variant="plain" type="button" className="font-bold text-brand-700 disabled:opacity-50" disabled={locked} onClick={() => void save()}>{saving ? "Đang lưu..." : "Lưu nháp"}</Button><Button variant="plain" type="button" className="text-slate-500 disabled:opacity-50" disabled={saving} onClick={() => setEditing("")}>Hủy</Button></div> : canWrite && !historicalReadOnly && !legacyManualLocked && !["LOCKED"].includes(view.term.status) ? <Button variant="plain" type="button" className="font-bold text-brand-700 hover:underline disabled:text-slate-400" disabled={Boolean(editing) || saving} onClick={() => { setEditing(student.id); setMarks(emptyMarks(requiredRegular, student.record?.marks)); setComment(student.record?.comment ?? ""); setNotice(""); setError(""); }}>{student.record ? "Sửa điểm" : "Nhập điểm"}</Button> : null}</TableCell>
                     </tr>;
                   })}
                 </TableBody>
@@ -466,5 +467,6 @@ export function LegacyGradebookPanel({
 }
 
 export function GradebookPanel({ schoolClass }: { schoolClass: TeacherAssignedClass }) {
-  return <InternalGradebookPanel key={schoolClass.id} schoolClass={schoolClass} />;
+ const [tab,setTab]=useState<"official"|"self-study">("official");
+ return <div className="space-y-4"><div role="tablist" aria-label="Quản lý điểm" className="flex gap-2 rounded-xl border border-slate-200 bg-white p-2"><Button role="tab" aria-selected={tab==="official"} variant={tab==="official"?"primary":"ghost"} onClick={()=>setTab("official")}>Điểm học kỳ</Button><Button role="tab" aria-selected={tab==="self-study"} variant={tab==="self-study"?"primary":"ghost"} onClick={()=>setTab("self-study")}>Kết quả tự học</Button></div><div role="tabpanel">{tab==="official"?<LegacyGradebookPanel key={schoolClass.id} schoolClass={schoolClass}/>:<InternalGradebookPanel key={schoolClass.id} schoolClass={schoolClass}/>}</div></div>;
 }

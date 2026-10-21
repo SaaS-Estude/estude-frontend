@@ -1,8 +1,8 @@
 "use client";
 
 import { StudentShell } from '@/components/student/student-shell';
-import { InternalGradeReport } from '@/components/assessment/internal-grade-report';
+import { GradeReports } from '@/components/assessment/grade-reports';
 
 export function StudentGradesPage() {
-  return <StudentShell><InternalGradeReport /></StudentShell>;
+  return <StudentShell><GradeReports /></StudentShell>;
 }

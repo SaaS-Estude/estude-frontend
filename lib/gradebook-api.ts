@@ -11,6 +11,8 @@ import type {
 } from "@/types/gradebook";
 
 export const gradebookService = {
+ publishRecords(id: string, revision: number, studentIds: string[]) { return authenticatedRequest(`/gradebooks/${encodeURIComponent(id)}/records/publish`,{method:"POST",body:JSON.stringify({revision,studentIds})}); },
+ adoptSelfStudy(id: string, input: { revision: number; gradeItemId: string; slotKey: string; reason: string }) { return authenticatedRequest(`/gradebooks/${encodeURIComponent(id)}/adopt-self-study`,{method:"POST",body:JSON.stringify(input)}); },
   get(scope: GradeScope & {courseOfferingId?:string}) {
     return authenticatedRequest<GradebookView>(
       `/gradebooks?${new URLSearchParams(Object.fromEntries(Object.entries(scope).filter(([,value])=>value !== undefined)) as Record<string,string>)}`,
@@ -29,6 +31,7 @@ export const gradebookService = {
       marks: GradeMarks;
       comment: string;
       revision: number;
+      publish?: boolean;
     },
   ) {
     return authenticatedRequest(`/gradebooks/${id}/records`, {
@@ -50,7 +53,7 @@ export const gradebookService = {
   saveBulk(id: string, revision: number, records: Array<{ studentId: string; marks: GradeMarks; comment: string }>): Promise<{ count: number; revision: number }> {
     return authenticatedRequest<{ count: number; revision: number }>(`/gradebooks/${encodeURIComponent(id)}/records/bulk`, {
       method: "POST",
-      body: JSON.stringify({ revision, records }),
+      body: JSON.stringify({ revision, records, publish: false }),
     });
   },
   internalReport(studentId = "me", query: InternalResultQuery = {}) {

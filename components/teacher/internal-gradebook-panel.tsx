@@ -25,10 +25,11 @@ export function InternalGradebookPanel({ schoolClass }: { schoolClass: TeacherAs
     setTerms([]); setTermId('');
     academicDataService.getTerms(schoolClass.academicYearId, true).then((rows) => {
       if (!active) return;
+      rows=schoolClass.courseTermId? rows.filter((term)=>term.id===schoolClass.courseTermId):rows;
       setTerms(rows); setTermId(rows.find((t) => t.status === 'ACTIVE')?.id ?? [...rows].filter((t) => t.status !== 'UPCOMING').sort((a, b) => b.displayOrder - a.displayOrder)[0]?.id ?? rows[0]?.id ?? '');
     }).catch((e: unknown) => { if (active) setError(e instanceof Error ? e.message : 'Không tải được học kỳ'); });
     return () => { active = false; };
-  }, [schoolClass.academicYearId]);
+  }, [schoolClass.academicYearId,schoolClass.courseTermId]);
   useEffect(() => {
     let active = true;
     setView(null); setError('');
@@ -40,10 +41,10 @@ export function InternalGradebookPanel({ schoolClass }: { schoolClass: TeacherAs
     return () => { active = false; };
   }, [schoolClass.id, termId, subjectId, refresh]);
   const disabled = !can('teaching.update') && !can('academic.update') || !view || !['ACTIVE', 'COMPLETED'].includes(view.term.status) || view.year?.status === 'COMPLETED' || view.schoolClass?.isActive === false;
-  const filtered = view ? { ...view, students: view.students.filter((s) => `${s.fullName} ${s.accountName}`.toLocaleLowerCase('vi-VN').includes(search.toLocaleLowerCase('vi-VN'))) } : null;
+  const filtered = view ? { ...view, items:view.items.filter((item)=>item.resultChannel!=="OFFICIAL"), students: view.students.filter((s) => `${s.fullName} ${s.accountName}`.toLocaleLowerCase('vi-VN').includes(search.toLocaleLowerCase('vi-VN'))) } : null;
   const field = 'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm';
   return <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
-    <div><h2 className="font-bold">Kết quả học tập nội bộ</h2><p className="text-sm text-slate-500">Mỗi bài đánh giá thường xuyên tính một lần. Học sinh và phụ huynh chỉ thấy kết quả đã công bố.</p></div>
+    <div><h2 className="font-bold">Kết quả tự học</h2><p className="text-sm text-slate-500">Mỗi bài đánh giá thường xuyên tính một lần. Học sinh và phụ huynh chỉ thấy kết quả đã công bố.</p></div>
     <div className="flex flex-wrap gap-3"><label className="grid gap-1 text-xs">Môn học<Select className={field} value={subjectId} onChange={(e) => { setSubjectId(e.target.value); setNotice(''); }}>{schoolClass.subjects.map((s) => <option key={s.id} value={s.id}>{s.vietnameseName || s.name}</option>)}</Select></label><label className="grid gap-1 text-xs">Học kỳ<Select className={field} value={termId} onChange={(e) => { setTermId(e.target.value); setNotice(''); }}>{terms.map((t) => <option key={t.id} value={t.id}>{t.name} · {t.status === 'COMPLETED' ? 'Chấm nốt' : t.status === 'LOCKED' ? 'Đã khóa' : t.status === 'ACTIVE' ? 'Đang diễn ra' : 'Sắp diễn ra'}</option>)}</Select></label><label className="grid gap-1 text-xs">Tìm học sinh<Input className={field} value={search} onChange={(e) => setSearch(e.target.value)} /></label></div>
     {error ? <p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-700">{error}</p> : null}{notice ? <p role="status" className="rounded-lg bg-emerald-50 p-3 text-emerald-700">{notice}</p> : null}
     {loading ? <p role="status">Đang tải kết quả…</p> : null}
