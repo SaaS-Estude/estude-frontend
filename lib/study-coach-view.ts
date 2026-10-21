@@ -62,7 +62,15 @@ const publicFailureLabels: Record<string, string> = {
 };
 
 export function publicFailureMessage(code: string | null): string | null {
-  return code ? publicFailureLabels[code] ?? null : null;
+  if (!code) return null;
+  const aliases: Record<string, string> = {
+    AI_HTTP_400: "AI_REQUEST_INVALID", AI_HTTP_401: "AI_CONFIGURATION_ERROR", AI_HTTP_403: "AI_CONFIGURATION_ERROR", AI_HTTP_404: "AI_CONFIGURATION_ERROR",
+    AI_HTTP_429: "AI_RATE_LIMIT", AI_NETWORK_ERROR: "TEMPORARY_PROVIDER_ERROR", AI_NOT_CONFIGURED: "AI_CONFIGURATION_ERROR", AI_MODEL_CHANGED: "AI_CONFIGURATION_ERROR",
+    AI_INVALID_OUTPUT: "INVALID_AI_OUTPUT", PDF_INVALID: "INVALID_DOCUMENT", PDF_UNREADABLE: "INVALID_DOCUMENT", PDF_NO_TEXT: "EMPTY_DOCUMENT",
+    PDF_PAGE_LIMIT: "DOCUMENT_TOO_LARGE", PDF_TEXT_LIMIT: "DOCUMENT_TOO_LARGE", PDF_CHUNK_LIMIT: "DOCUMENT_TOO_LARGE",
+    STUDY_LEASE_EXPIRED: "RETRY_LIMIT_EXCEEDED",
+  };
+  return publicFailureLabels[aliases[code] ?? code] ?? (code.startsWith("AI_HTTP_5") ? publicFailureLabels.TEMPORARY_PROVIDER_ERROR : "Không thể hoàn tất xử lý tài liệu. Bạn có thể thử xử lý lại.");
 }
 
 export function formatFileSize(size: number): string {

@@ -31,7 +31,7 @@ export function uploadToAuthorizedUrl(
     const xhr = new XMLHttpRequest();
     xhr.open(session.method, session.uploadUrl);
     xhr.timeout = 120_000;
-    xhr.setRequestHeader("Content-Type", file.type);
+    xhr.setRequestHeader("Content-Type", file.type || "application/pdf");
     xhr.upload.addEventListener("progress", (event) => {
       if (event.lengthComputable && event.total > 0) {
         onProgress(Math.round((event.loaded / event.total) * 100));

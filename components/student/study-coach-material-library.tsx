@@ -85,7 +85,7 @@ export function StudyCoachMaterialLibrary({ capabilities }: { capabilities: Stud
     setFile(null);
     setFileError("");
     if (!next) return;
-    if (next.type !== "application/pdf" || !next.name.toLowerCase().endsWith(".pdf")) {
+    if ((next.type && next.type !== "application/pdf") || !next.name.toLowerCase().endsWith(".pdf")) {
       setFileError("Study Coach hiện chỉ hỗ trợ tệp PDF.");
       return;
     }
@@ -104,7 +104,7 @@ export function StudyCoachMaterialLibrary({ capabilities }: { capabilities: Stud
       setUploadPhase("authorizing");
       const session = await studyCoachService.createMaterialUpload({
         fileName: file.name,
-        contentType: file.type,
+        contentType: file.type || "application/pdf",
         fileSize: file.size,
         subjectId,
       });
@@ -137,6 +137,9 @@ export function StudyCoachMaterialLibrary({ capabilities }: { capabilities: Stud
     setProcessingId(materialId);
     setError("");
     try {
+      if (result?.items.find((item) => item.id === materialId)?.uploadStatus === "PENDING") {
+        await studyCoachService.confirmMaterialUpload(materialId);
+      }
       await studyCoachService.processMaterial(materialId);
       await load(page, true);
       notify("Tài liệu đã được xếp hàng xử lý.", { key: `process-${materialId}` });
@@ -226,7 +229,7 @@ export function StudyCoachMaterialLibrary({ capabilities }: { capabilities: Stud
       {loading ? <MaterialSkeleton /> : null}
       {!loading && error ? <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-5" role="alert"><p className="font-bold text-rose-800">{error}</p><Button variant="outline" className="mt-3" onClick={() => void load(page)}><RotateCcw className="size-4" /> Thử lại</Button></div> : null}
       {!loading && !error && result?.items.length === 0 ? <div className="mt-5 rounded-2xl bg-slate-50 p-6 text-center"><FileText className="mx-auto size-8 text-slate-400" /><p className="mt-3 font-black text-slate-800">Bạn chưa có tài liệu học nào.</p><p className="mt-1 text-sm text-slate-500">Tải tài liệu đầu tiên để bắt đầu.</p></div> : null}
-      {!loading && !error && result?.items.length ? <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{result.items.map((material) => <MaterialCard key={material.id} material={material} capabilities={capabilities} processing={processingId === material.id} cancelling={cancellingId === material.id} deleting={deletingId === material.id} onOpen={() => router.push(`/student/study-coach/materials/${material.id}`)} onProcess={() => void processMaterial(material.id)} onCancel={() => void cancelMaterial(material.id)} onDelete={() => void deleteMaterial(material.id)} onFlashcards={() => router.push(`/student/study-coach/materials/${encodeURIComponent(material.id)}/flashcards`)} onMastery={() => router.push(`/student/study-coach/materials/${encodeURIComponent(material.id)}/mastery`)} />)}</div> : null}
+      {!loading && result?.items.length ? <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{result.items.map((material) => <MaterialCard key={material.id} material={material} capabilities={capabilities} processing={processingId === material.id} cancelling={cancellingId === material.id} deleting={deletingId === material.id} onOpen={() => router.push(`/student/study-coach/materials/${material.id}`)} onProcess={() => void processMaterial(material.id)} onCancel={() => void cancelMaterial(material.id)} onDelete={() => void deleteMaterial(material.id)} onFlashcards={() => router.push(`/student/study-coach/materials/${encodeURIComponent(material.id)}/flashcards`)} onMastery={() => router.push(`/student/study-coach/materials/${encodeURIComponent(material.id)}/mastery`)} />)}</div> : null}
       {!loading && !error && result && result.meta.totalPages > 1 ? <nav className="mt-5 flex items-center justify-between gap-3" aria-label="Phân trang tài liệu"><Button variant="outline" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>Trang trước</Button><span className="text-sm font-bold text-slate-600">Trang {result.meta.page}/{result.meta.totalPages} · {result.meta.total} tài liệu</span><Button variant="outline" disabled={page >= result.meta.totalPages} onClick={() => setPage((value) => value + 1)}>Trang sau</Button></nav> : null}
     </section>
   );
@@ -234,18 +237,18 @@ export function StudyCoachMaterialLibrary({ capabilities }: { capabilities: Stud
 
 function MaterialCard({ material, capabilities, processing, cancelling, deleting, onOpen, onProcess, onCancel, onDelete, onFlashcards, onMastery }: { material: StudyCoachMaterial; capabilities: StudyCoachCapabilities; processing: boolean; cancelling: boolean; deleting: boolean; onOpen: () => void; onProcess: () => void; onCancel: () => void; onDelete: () => void; onFlashcards: () => void; onMastery: () => void }) {
   const failure = publicFailureMessage(material.failureCode);
-  const canProcess = material.lifecycle === "READY_TO_PROCESS" || material.lifecycle === "FAILED" || material.lifecycle === "CANCELLED";
-  const canDelete = material.lifecycle === "FAILED" || material.lifecycle === "CANCELLED";
+  const canProcess = material.lifecycle === "UPLOAD_PENDING" || material.lifecycle === "READY_TO_PROCESS" || material.lifecycle === "FAILED" || material.lifecycle === "CANCELLED";
+  const canDelete = material.lifecycle === "UPLOAD_PENDING" || material.lifecycle === "FAILED" || material.lifecycle === "CANCELLED";
   const busy = processing || cancelling || deleting;
   return <article className="flex min-h-64 flex-col rounded-2xl border border-slate-200 p-4" data-testid={`material-${material.lifecycle.toLowerCase()}`}>
     <span className={`w-fit rounded-full border px-2.5 py-1 text-xs font-black ${materialLifecycleTones[material.lifecycle]}`} aria-live={material.lifecycle === "PROCESSING" ? "polite" : undefined}>{materialLifecycleLabels[material.lifecycle]}</span>
     <h3 className="mt-3 line-clamp-2 font-black text-slate-950">{material.title}</h3>
     <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-slate-500"><div><dt className="font-bold">Loại tài liệu</dt><dd>PDF</dd></div><div><dt className="font-bold">Kích thước</dt><dd>{formatFileSize(material.size)}</dd></div><div><dt className="font-bold">Ngày tải lên</dt><dd>{new Intl.DateTimeFormat("vi-VN").format(new Date(material.createdAt))}</dd></div></dl>
     <p className="mt-1 text-xs font-bold text-slate-700">{material.readyForStudy ? "Đã sẵn sàng học" : "Chưa sẵn sàng học"}</p>
-    {failure ? <p className="mt-2 text-xs text-rose-700">{failure}</p> : null}
+    {failure ? <p className="mt-2 text-xs text-rose-700">{failure}</p> : null}{material.lifecycle === "UPLOAD_PENDING" ? <p className="mt-2 text-xs text-slate-500">Tệp chưa được xác nhận. Thử xác nhận tải lên; nếu tệp chưa tải xong, hãy xóa mục này và tải lại.</p> : null}
     <div className="mt-auto flex flex-wrap gap-2 pt-4">
       <Button variant={material.readyForStudy ? "primary" : "outline"} disabled={deleting} onClick={onOpen}>Xem chi tiết</Button>
-      {canProcess && capabilities.processing.enabled ? <Button variant="secondary" disabled={busy} onClick={onProcess}>{processing ? <LoaderCircle className="size-4 animate-spin" /> : null}{material.lifecycle === "FAILED" ? "Thử xử lý lại" : "Xử lý"}</Button> : null}
+      {canProcess && capabilities.processing.enabled ? <Button variant="secondary" disabled={busy} onClick={onProcess}>{processing ? <LoaderCircle className="size-4 animate-spin" /> : null}{material.lifecycle === "UPLOAD_PENDING" ? "Xác nhận tải lên" : material.lifecycle === "FAILED" ? "Thử xử lý lại" : "Xử lý"}</Button> : null}
       {material.lifecycle === "PROCESSING" ? <Button variant="danger" disabled={busy} onClick={onCancel}>{cancelling ? <LoaderCircle className="size-4 animate-spin" /> : <XCircle className="size-4" />}{cancelling ? "Đang hủy..." : "Hủy xử lý"}</Button> : null}
       {canDelete ? <Button variant="danger" disabled={busy} onClick={onDelete}>{deleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}{deleting ? "Đang xóa..." : "Xóa"}</Button> : null}
       {material.readyForStudy && capabilities.flashcards.enabled ? <Button variant="ghost" disabled={deleting} onClick={onFlashcards}>Thẻ ghi nhớ</Button> : null}

@@ -183,3 +183,63 @@ test("production material UI does not reference forbidden internal fields or pro
   const source = files.map((file) => fs.readFileSync(path.resolve(file), "utf8")).join("\n");
   for (const forbidden of ["s3Key", "correctOptionIndexes", "answerKey", "rawPrompt", "tokenUsage", "leaseUntil", "GEMINI_API_KEY"]) assert.doesNotMatch(source, new RegExp(forbidden, "i"));
 });
+
+test("pending upload can confirm existing bytes then queue processing without uploading again", async (t) => {
+  const calls = [];
+  let lifecycle = "UPLOAD_PENDING";
+  const api = {
+    getMaterials: async () => ({ items: [material(lifecycle, { id: "pending" })], meta: { page: 1, limit: 6, total: 1, totalPages: 1 } }),
+    confirmMaterialUpload: async (id) => { calls.push(["confirm", id]); lifecycle = "READY_TO_PROCESS"; },
+    processMaterial: async (id) => { calls.push(["process", id]); lifecycle = "PROCESSING"; },
+  };
+  const ui = await renderComponent(t, "components/student/study-coach-material-library.tsx", "StudyCoachMaterialLibrary", api, { props: { capabilities: capabilities() } });
+  assert.ok(ui.button("Xóa"));
+  await act(async () => { ui.button("Xác nhận tải lên").props.onClick(); await flush(); });
+  assert.deepEqual(calls, [["confirm", "pending"], ["process", "pending"]]);
+  assert.match(ui.text(), /AI đang phân tích tài liệu/);
+});
+
+test("missing upload never queues AI and remains removable", async (t) => {
+  let queued = false;
+  const api = {
+    getMaterials: async () => ({ items: [material("UPLOAD_PENDING")], meta: { page: 1, limit: 6, total: 1, totalPages: 1 } }),
+    confirmMaterialUpload: async () => { throw { safe: "Tệp chưa tải xong. Hãy tải lại." }; },
+    processMaterial: async () => { queued = true; },
+  };
+  const ui = await renderComponent(t, "components/student/study-coach-material-library.tsx", "StudyCoachMaterialLibrary", api, { props: { capabilities: capabilities() } });
+  await act(async () => { ui.button("Xác nhận tải lên").props.onClick(); await flush(); });
+  assert.equal(queued, false);
+  assert.match(ui.text(), /Tệp chưa tải xong/);
+  assert.ok(ui.button("Xóa"));
+});
+
+test("detail resumes pending confirmation before processing", async (t) => {
+  const calls = [];
+  let lifecycle = "UPLOAD_PENDING";
+  const api = {
+    getCapabilities: async () => capabilities(),
+    getMaterial: async () => material(lifecycle, { id: "pending" }),
+    confirmMaterialUpload: async () => { calls.push("confirm"); lifecycle = "READY_TO_PROCESS"; },
+    processMaterial: async () => { calls.push("process"); lifecycle = "PROCESSING"; },
+  };
+  const ui = await renderComponent(t, "components/student/study-coach-material-detail-page.tsx", "StudyCoachMaterialDetailPage", api);
+  await act(async () => { ui.button("Xác nhận tải lên").props.onClick(); await flush(); });
+  assert.deepEqual(calls, ["confirm", "process"]);
+  assert.match(ui.text(), /AI đang phân tích tài liệu/);
+});
+
+test("PDF filename with missing browser MIME still follows authorize upload confirm process", async (t) => {
+  const calls = [];
+  const api = {
+    getMaterials: async () => ({ items: [], meta: { page: 1, limit: 6, total: 0, totalPages: 0 } }),
+    createMaterialUpload: async (input) => { calls.push(input.contentType); return { material: { id: "m" } }; },
+    uploadAuthorizedFile: async () => calls.push("upload"),
+    confirmMaterialUpload: async () => calls.push("confirm"),
+    processMaterial: async () => calls.push("process"),
+  };
+  const ui = await renderComponent(t, "components/student/study-coach-material-library.tsx", "StudyCoachMaterialLibrary", api, { props: { capabilities: capabilities() } });
+  await act(async () => { ui.button("Tải tài liệu").props.onClick(); await flush(); });
+  await act(async () => { ui.renderer.root.findByType("input").props.onChange({ target: { files: [{ name: "notes.pdf", type: "", size: 100 }] } }); ui.renderer.root.findByType("select").props.onChange({ target: { value: "subject" } }); await flush(); });
+  await act(async () => { ui.button("Tải lên và xử lý").props.onClick(); await flush(); });
+  assert.deepEqual(calls, ["application/pdf", "upload", "confirm", "process"]);
+});
