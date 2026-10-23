@@ -41,6 +41,7 @@ import { AcademicDataPanel } from "@/components/admin/academic-data-panel";
 import { SubjectManagementPanel } from "@/components/admin/subject-management-panel";
 import { ClassManagementPanel } from "@/components/admin/class-management-panel";
 import { AiDifficultySettingsPanel } from "@/components/admin/ai-difficulty-settings-panel";
+import { BillingPanel } from "@/components/admin/billing-panel";
 import { AutomaticFeatureNotificationPanel } from "@/components/admin/automatic-feature-notification-panel";
 import {
   SystemSettingsPanel,
@@ -134,10 +135,15 @@ const settingsSubItems = [
     href: "/admin/settings/security",
     section: "security",
   },
+  {
+    label: "Gói dịch vụ & thanh toán",
+    href: "/admin/settings/billing",
+    section: "billing",
+  },
 ] satisfies Array<{
   label: string;
   href: string;
-  section: SystemSettingsSection | "permissions";
+  section: SystemSettingsSection | "permissions" | "billing";
 }>;
 
 const userSubItems = [
@@ -757,6 +763,8 @@ export function StaffDashboardView() {
                 <SystemNotificationComposer />
                 <AutomaticFeatureNotificationPanel />
               </>
+            ) : isSettingsPage && settingsSection === "billing" ? (
+              <BillingPanel />
             ) : isSettingsPage && settingsSection === "attendance" ? (
               <AttendancePolicyPanel />
             ) : isSettingsPage ? (

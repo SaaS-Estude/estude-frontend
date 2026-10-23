@@ -38,6 +38,17 @@ export const sourceMeta: Record<
     description: "Chưa tìm thấy nội dung tương ứng rõ ràng trong tài liệu lớp.",
     tone: "bg-amber-50 text-amber-700",
   },
+  EXAM_REVIEW: {
+    label: "Từ bài thi của bạn",
+    description:
+      "Môn học chưa có tài liệu để đối chiếu. Nội dung dựa trên chính các câu bạn làm sai và có thể chưa chính xác; hãy hỏi giáo viên nếu thấy nghi ngờ.",
+    tone: "bg-sky-50 text-sky-700",
+  },
+  EXAM_MISTAKE: {
+    label: "Câu bạn đã làm sai",
+    description: "Câu hỏi và đáp án gốc của bài thi do giáo viên soạn.",
+    tone: "bg-rose-50 text-rose-700",
+  },
 };
 
 export function StudyAnalysisDetails({

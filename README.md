@@ -2,7 +2,83 @@
 
 Frontend Next.js cho luồng đăng ký, đăng nhập và trang tổng quan EStude.
 
+## DNS tự động và Cloudflare proxy
+
+Hostname mới dùng dạng `admin-ten-truong.estude.io.vn` (teacher/student/parent tương tự).
+Hostname cũ dạng `admin.ten-truong.estude.io.vn` tiếp tục được hỗ trợ đến khi cập nhật trường.
+Khi deploy, đặt `PORTAL_PROXY_SECRET` server-only giống hệt backend và SaaS admin để
+API hoạt động qua Cloudflare proxy cam. Không dùng tên `NEXT_PUBLIC_` cho secret này.
+Xem [cấu hình và thứ tự triển khai](../estude-saas-backend/docs/domains/README.md).
+
 ## Chạy SaaS với backend Go
+
+### Cấu hình `PORTAL_PROXY_SECRET` khi chạy local
+
+`PORTAL_PROXY_SECRET` là khóa nội bộ để Next.js ký hostname cổng trường hoặc
+SaaS admin; backend xác minh chữ ký trước khi dùng hostname để định tuyến.
+Tạo một lần bằng:
+
+```bash
+openssl rand -hex 32
+```
+
+Copy **cùng một giá trị vừa tạo** vào `.env` của cả ba project. Các giá trị
+`<cung-mot-khoa-vua-tao>` dưới đây là chỗ để thay bằng khóa của bạn:
+
+```dotenv
+# estude-saas-backend/.env
+PORTAL_PROXY_SECRET=<cung-mot-khoa-vua-tao>
+BASE_DOMAIN=localhost
+
+# estude-saas-frontend/.env
+PORTAL_PROXY_SECRET=<cung-mot-khoa-vua-tao>
+GO_API_URL=http://127.0.0.1:8090
+NEXT_PUBLIC_API_URL=/api/v1
+
+# estude-saas-admin/.env
+PORTAL_PROXY_SECRET=<cung-mot-khoa-vua-tao>
+CONTROL_API_URL=http://127.0.0.1:8092
+PLATFORM_HOST=platform.localhost
+```
+
+Khóa chỉ dùng ở server, không thêm tiền tố `NEXT_PUBLIC_` và không commit `.env`.
+Sau khi đổi khóa, cần nạp lại env cho backend và khởi động lại cả hai Next.js:
+
+```bash
+# Từ thư mục estude-saas-backend, với database đã migrate và image hiện hành:
+docker compose --env-file .env --env-file .env.platform-local --profile app --profile control up -d
+```
+
+Sau đó chạy `npm run dev` trong `estude-saas-admin` và `npm run dev:saas` trong
+`estude-saas-frontend`, mỗi lệnh ở một terminal riêng. Nếu đã có tiến trình cũ,
+dừng bằng Ctrl+C trước khi chạy lại.
+
+| Cổng local | Địa chỉ |
+| --- | --- |
+| SaaS admin | `http://platform.localhost:3005/platform` |
+| Quản trị trường | `http://admin-demo-school.localhost:8091/login` |
+| Giáo viên | `http://teacher-demo-school.localhost:8091/login` |
+| Học sinh | `http://student-demo-school.localhost:8091/login` |
+| Phụ huynh | `http://parent-demo-school.localhost:8091/login` |
+
+Thay `demo-school` bằng mã trường đã có trong database. Nếu SaaS admin đã lưu
+tên miền gốc riêng, đặt về `localhost` trong **Tên miền** khi muốn tạo trường
+local; `BASE_DOMAIN` trong env chỉ là mặc định khi chưa lưu cấu hình này.
+Hostname cũ dạng `admin.demo-school.localhost` vẫn dùng được nếu database đang
+đăng ký địa chỉ đó; lấy đúng link trong chi tiết trường.
+
+`DOMAIN_AUTO_ENABLED` là công tắc ở backend để tự thiết lập DNS Cloudflare và
+domain Vercel. Worker bỏ qua hostname `.localhost` ngay cả khi công tắc là
+`true`; chạy trường local không cần gọi hai nhà cung cấp.
+
+Lưu ý: proxy development ở cổng `8091` chuyển API trực tiếp tới Go và giữ Host,
+nên luồng này không cần chữ ký. SaaS admin và các route proxy chạy qua Next.js
+sẽ ký request khi có `PORTAL_PROXY_SECRET`. Nên giữ khóa khớp cả ba project để
+kiểm tra cấu hình giống production. Khóa không khớp thường trả `403` với thông
+báo chữ ký proxy không hợp lệ; kiểm tra cả `.env.local` và các container đã nạp
+env mới trước khi thử lại.
+
+### Khởi động frontend trường
 
 Backend Go phải chạy ở port `8090`, đã migrate và tạo tenant. Dừng dev server Next cũ trước khi chạy:
 
@@ -10,14 +86,14 @@ Backend Go phải chạy ở port `8090`, đã migrate và tạo tenant. Dừng 
 npm run dev:saas
 ```
 
-Lệnh này chạy Next.js ở port `3000` và proxy local ở `127.0.0.1:8091`, tự đặt `NEXT_PUBLIC_API_URL=/api/v1` và bỏ cấu hình ép portal. Mở `http://admin.demo-school.localhost:8091/login`; thay `admin` bằng `teacher`, `student` hoặc `parent` để chọn portal, thay `demo-school` bằng tenant đã tạo.
+Lệnh này chạy Next.js ở port `3000` và proxy local ở `127.0.0.1:8091`, tự đặt `NEXT_PUBLIC_API_URL=/api/v1` và bỏ cấu hình ép portal. Mở `http://admin-demo-school.localhost:8091/login`; thay `admin` bằng `teacher`, `student` hoặc `parent` để chọn portal, thay `demo-school` bằng tenant đã tạo.
 
 Nếu Nginx Docker đang chiếm port `8091`, dừng riêng Nginx trước:
 
 ```bash
-cd ../estude-backend-go
+cd ../estude-saas-backend
 docker compose --profile app --profile edge stop nginx
-cd ../estude-frontend
+cd ../estude-saas-frontend
 npm run dev:saas
 ```
 
@@ -25,13 +101,13 @@ Proxy này chỉ dùng cho local development, giữ hostname tenant và chuyển
 
 ## Source quản trị SaaS riêng
 
-Quản trị toàn nền tảng nằm ở project [estude-saas-admin](../estude-saas-admin/README.md), chạy riêng bằng `npm run dev` tại **http://platform.localhost:3005**. Project này chỉ phục vụ bốn portal của trường học; lệnh `dev:saas` ở đây kết nối portal trường với backend Go.
+Quản trị toàn nền tảng nằm ở project `estude-saas-admin`, chạy riêng bằng `npm run dev` tại **http://platform.localhost:3005**; xem [hướng dẫn SaaS admin](../estude-saas-backend/docs/saas-console/README.md). Project frontend này chỉ phục vụ bốn portal của trường học; lệnh `dev:saas` ở đây kết nối portal trường với backend Go.
 
 ## Chạy dự án
 
 1. Chạy `npm ci`.
 2. Chạy `npm run dev` (tương đương `npm run dev:saas`).
-3. Mở `http://admin.demo-school.localhost:8091/login`; dùng `teacher`, `student` hoặc `parent` cho các portal còn lại.
+3. Mở `http://admin-demo-school.localhost:8091/login`; dùng `teacher`, `student` hoặc `parent` cho các portal còn lại.
 
 Backend duy nhất là Go. API mặc định `/api/v1` qua proxy cùng origin, gồm cả WebSocket chat. Production cũng định tuyến `/api/v1` tới Go theo hostname tenant. Các module chưa nghiệm thu được kiểm soát trong `lib/features.ts`; không chọn backend bằng biến môi trường.
 
@@ -44,18 +120,21 @@ và Output Directory mặc định. Đặt biến môi trường Production:
 ```ini
 NEXT_PUBLIC_API_URL=/api/v1
 GO_API_URL=https://saas-api.estude.io.vn
+PORTAL_PROXY_SECRET=<cung-khoa-voi-backend-va-saas-admin>
 ```
 
 `GO_API_URL` chỉ dành cho server Next.js, không có hậu tố `/api/v1`. Không đặt
 database/JWT/S3 credential vào frontend. Khi dùng Preview, cấu hình riêng cho
 môi trường đó và gắn hostname portal đã đăng ký trước khi thử đăng nhập.
 
-Route `app/api/v1/[...path]/route.ts` chuyển HTTP tới Go, giữ Host của trường,
-Origin, cookie, Authorization, Idempotency-Key và trạng thái lỗi. Kết nối HTTPS
-xác thực chứng chỉ/SNI theo hostname trong `GO_API_URL`. Backend Go tiếp tục
-quyết định trường nào tồn tại, tài khoản, phiên, quyền và nghiệp vụ. Request không
-được dùng header để chọn tenant hoặc đổi đích backend. Phản hồi không cache chéo
-trường; tải file vẫn dùng URL S3 được backend cấp.
+Route `app/api/v1/[...path]/route.ts` chuyển HTTP tới Go với Host của API trong
+`GO_API_URL`, truyền hostname trường qua header được ký bằng `PORTAL_PROXY_SECRET`.
+Origin, cookie, Authorization, Idempotency-Key và trạng thái lỗi được giữ lại.
+Kết nối HTTPS xác thực chứng chỉ/SNI theo hostname trong `GO_API_URL`. Backend
+xác minh chữ ký rồi tra hostname đã đăng ký; backend tiếp tục quyết định trường,
+tài khoản, phiên, quyền và nghiệp vụ. Header do trình duyệt tự gửi không chọn
+được tenant hoặc đổi đích backend. Phản hồi không cache chéo trường; tải file
+vẫn dùng URL S3 được backend cấp.
 
 Chat dùng route `app/api/v1/class-chat/ws/route.ts` trên Vercel Functions với
 Fluid Compute bật. Route chuyển tiếp frame tới Go, giữ nguyên việc gửi access
@@ -67,14 +146,15 @@ giới hạn 180 giây và client hiện có tự kết nối lại. Local tiế
 [API Next.js upgradeWebSocket](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package#upgradewebsocket).
 
 Sau khi tạo trường trong SaaS Admin, lấy đúng các địa chỉ được đăng ký, ví dụ
-`student.nguyen-trai.saas.estude.io.vn`, rồi thêm chúng vào **project FE trường học
-→ Settings → Domains** và tạo DNS theo Vercel hiển thị. Bốn portal của một trường
-cùng trỏ tới project này. Wildcard một cấp không bao phủ hostname portal hai cấp;
-có thể thêm từng hostname khi triển khai những trường đầu tiên. Trang chủ
-`estude.io.vn` và URL `.vercel.app` không đại diện cho một trường để đăng nhập.
-Chuyển domain trên Vercel không tự đăng ký hostname tương ứng trong backend.
+`student-nguyen-trai.estude.io.vn`. Khi backend đã bật `DOMAIN_AUTO_ENABLED=true`
+và cấu hình đủ provider credentials, worker tự tạo DNS Cloudflare, gắn hostname
+vào project frontend trường trên Vercel và kiểm tra HTTPS. Đợi trạng thái
+**Sẵn sàng** trong chi tiết trường trước khi mở link. Nếu tắt tự động, cấu hình
+domain và DNS thủ công theo Vercel hiển thị. Bốn portal cùng trỏ tới project này.
+Trang chủ `estude.io.vn` và URL `.vercel.app` không đại diện cho một trường để
+đăng nhập. Chuyển domain trên Vercel không tự đăng ký hostname trong backend.
 
-Kiểm tra `https://student.<trường>.saas.estude.io.vn/api/v1/tenant` trả JSON đúng
+Kiểm tra `https://student-<ma-truong>.estude.io.vn/api/v1/tenant` trả JSON đúng
 trường trước khi đăng nhập tại `/login`. `404` với request ID từ Go thường là
 hostname chưa đăng ký hoặc trường không hoạt động; `503` báo thiếu cấu hình
 `GO_API_URL`; `502` là lỗi kết nối tới backend. Test transport/TLS/chat bằng
@@ -99,7 +179,8 @@ chỉ áp dụng khi phát triển, bỏ qua việc nhận diện vai trò từ 
 Khi `NODE_ENV=development`, portal đăng nhập được npm script thiết lập bằng
 `NEXT_PUBLIC_AUTH_PORTAL`. Khi `NODE_ENV=production`, ứng dụng bỏ qua cấu hình portal local và
 tự nhận diện hostname bắt đầu bằng `student`, `teacher`, `parent` hoặc `admin`;
-SaaS dùng `<portal>.<trường>.<tên-miền-gốc>`, tất cả đều dùng path `/login`.
+SaaS mới dùng `<portal>-<ma-truong>.<ten-mien-goc>`, tất cả đều dùng path `/login`;
+các mapping cũ dạng `<portal>.<ma-truong>.<ten-mien-goc>` vẫn được hỗ trợ.
 
 - `ADMIN`: `/admin/dashboard`
 - `TEACHER`: `/teacher/dashboard`

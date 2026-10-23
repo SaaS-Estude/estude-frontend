@@ -2,11 +2,15 @@ import http from "node:http";
 import httpProxy from "http-proxy";
 
 // Local development only: keep tenant Host and cookies on the same origin.
-const frontend = "http://127.0.0.1:3000";
+const frontendPort = Number(process.env.SAAS_FRONTEND_PORT ?? "3000");
+if (!Number.isInteger(frontendPort) || frontendPort < 1 || frontendPort > 65535) {
+  throw new Error("SAAS_FRONTEND_PORT phải là cổng hợp lệ");
+}
+const frontend = `http://127.0.0.1:${frontendPort}`;
 const backend = "http://127.0.0.1:8090";
 const port = 8091;
 const portalHost =
-  /^(admin|teacher|student|parent)\.[a-z][a-z0-9-]+\.localhost(?::\d{1,5})?$/i;
+  /^(admin|teacher|student|parent)[.-][a-z][a-z0-9-]+\.localhost(?::\d{1,5})?$/i;
 const proxy = httpProxy.createProxyServer({
   changeOrigin: false,
   ws: true,
@@ -26,6 +30,7 @@ function prepare(request) {
   if (pathname === "/api/platform/v1" || pathname.startsWith("/api/platform/v1/")) return false;
   // Never trust forwarded tenant identity supplied by a browser.
   delete request.headers["x-tenant-slug"];
+  for (const key of Object.keys(request.headers)) if (key.startsWith("x-estude-")) delete request.headers[key];
   request.headers["x-forwarded-host"] = host;
   request.headers["x-forwarded-proto"] = "http";
   request.headers["x-forwarded-for"] = request.socket.remoteAddress;
@@ -47,7 +52,7 @@ proxy.on("error", (error, _request, output) => {
         "Cache-Control": "no-store",
       });
       output.end(
-        "Không kết nối được Next.js (3000) hoặc Go API (8090). Kiểm tra terminal của dịch vụ.\n",
+        `Không kết nối được Next.js (${frontendPort}) hoặc Go API (8090). Kiểm tra terminal của dịch vụ.\n`,
       );
     } else output.destroy(error);
   } else output?.destroy(error);
@@ -57,7 +62,7 @@ const server = http.createServer((request, response) => {
   if (!prepare(request)) {
     response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
     response.end(
-      "Dùng http://<portal>.<tenant>.localhost:8091\n",
+      "Dùng http://<portal>-<tenant>.localhost:8091\n",
     );
     return;
   }
@@ -84,7 +89,7 @@ server.on("error", (error) => {
 
 server.listen(port, "127.0.0.1", () => {
   console.log(
-    "SaaS local: http://admin.demo-school.localhost:8091 (teacher/student/parent dùng cùng port)",
+    "SaaS local: http://admin-demo-school.localhost:8091 (teacher/student/parent dùng cùng port)",
   );
 });
 

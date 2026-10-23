@@ -30,6 +30,7 @@ function isPortalPath(pathname: string, portal: AuthPortal): boolean {
 }
 
 export function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname === "/.well-known/estude-domain") return NextResponse.next();
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
   const portal = getPortalFromHost(host);
   if (!portal) {

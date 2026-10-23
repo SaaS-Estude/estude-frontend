@@ -52,6 +52,7 @@ export function StudentStudyAnalysisPage() {
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [queueNotice, setQueueNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [starting, setStarting] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -68,10 +69,17 @@ export function StudentStudyAnalysisPage() {
 
     async function loadAnalysis() {
       try {
-        const loaded = await loadOrCreateStudentStudyAnalysis(params.id, () => {
-          if (active) setGenerating(true);
-        });
+        const loaded = await loadOrCreateStudentStudyAnalysis(
+          params.id,
+          () => {
+            if (active) setGenerating(true);
+          },
+          (notice) => {
+            if (active) setQueueNotice(notice.message);
+          },
+        );
         if (!active) return;
+        setQueueNotice("");
         setAnalysis(loaded);
         setHints({});
         if (loaded.practiceSet?.status === "SUBMITTED") {
@@ -97,6 +105,7 @@ export function StudentStudyAnalysisPage() {
         if (active) {
           setLoading(false);
           setGenerating(false);
+          setQueueNotice("");
         }
       }
     }
@@ -326,9 +335,14 @@ export function StudentStudyAnalysisPage() {
           </h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">
             {generating
-              ? "AI đang xác định phần kiến thức còn yếu và đối chiếu với tài liệu giáo viên đã cung cấp."
+              ? "AI đang xác định phần kiến thức còn yếu từ bài làm của bạn và đối chiếu với tài liệu giáo viên đã cung cấp (nếu có)."
               : "Đang lấy kết quả phân tích và bộ luyện tập đã lưu của bạn."}
           </p>
+          {queueNotice ? (
+            <p role="status" className="mx-auto mt-4 max-w-xl rounded-xl bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
+              {queueNotice} Trang sẽ tự thử lại, bạn không cần bấm gì thêm.
+            </p>
+          ) : null}
           <LoaderCircle className="mx-auto mt-5 size-5 animate-spin text-brand-600" />
         </div>
       </StudentShell>
@@ -478,6 +492,20 @@ export function StudentStudyAnalysisPage() {
 
       {!assessmentOnly ? (
         <StudyActivityDashboard attemptId={params.id} practice={practice} />
+      ) : null}
+
+      {report.analysisScope === "EXAM_GROUNDED" && report.weakAreas.length ? (
+        <div role="note" className="mt-4 flex gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+          <CircleAlert className="mt-0.5 size-5 shrink-0" />
+          <div>
+            <p className="font-black">Phân tích chỉ dựa trên bài thi của bạn</p>
+            <p className="mt-1 leading-6">
+              Môn học chưa có tài liệu để đối chiếu, nên phần giải thích và câu
+              luyện tập do AI tạo từ chính các câu bạn làm sai và chưa được kiểm
+              chứng với tài liệu. Hãy hỏi giáo viên nếu có điều gì chưa chắc.
+            </p>
+          </div>
+        </div>
       ) : null}
 
       {assessmentOnly ? (

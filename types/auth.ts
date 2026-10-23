@@ -86,6 +86,8 @@ export interface ApiErrorEnvelope {
   statusCode: number;
   message: string;
   errors?: string[];
+  /** Machine-readable reason, e.g. AI_QUEUE_BUSY when the school's AI line is full. */
+  code?: string;
   path: string;
   timestamp: string;
 }

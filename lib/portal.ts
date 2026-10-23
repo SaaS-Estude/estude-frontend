@@ -59,7 +59,7 @@ export function getPortalFromHost(host: string | null): AuthPortal | null {
       (url.hostname.split(".").length >= 3 && !/^[0-9.]+$/.test(url.hostname)) ||
       (process.env.NODE_ENV === "development" && url.hostname.endsWith(".localhost"))
     ) {
-      const subdomain = url.hostname.split(".", 1)[0];
+      const subdomain = url.hostname.split(".", 1)[0].split("-", 1)[0];
       if (subdomain === "admin" || subdomain === "teacher" || subdomain === "student" || subdomain === "parent") {
         return subdomain;
       }

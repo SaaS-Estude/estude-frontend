@@ -136,7 +136,7 @@ test('preserves backend rejection, binary downloads and empty responses', async 
   assert.equal(await empty.text(), '');
 });
 
-test('HTTPS verifies the API certificate while forwarding the school Host', async (t) => {
+test('HTTPS verifies API certificate and signs school Host while routing to API Host', async (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'estude-school-tls-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const key = path.join(directory, 'key.pem'), cert = path.join(directory, 'cert.pem');
@@ -145,12 +145,13 @@ test('HTTPS verifies the API certificate while forwarding the school Host', asyn
   const ca = fs.readFileSync(cert);
   const server = https.createServer({ key: fs.readFileSync(key), cert: ca }, (req, res) => {
     assert.equal(req.socket.servername, 'localhost');
-    assert.equal(req.headers.host, host);
+    assert.equal(req.headers.host, `localhost:${server.address().port}`);
+    assert.equal(req.headers['x-estude-portal-host'], host);
     res.end('verified');
   });
   await new Promise((resolve) => server.listen(0, resolve));
   t.after(() => new Promise((resolve) => { server.closeAllConnections(); server.close(resolve); }));
-  env(t, { NODE_ENV: 'production', GO_API_URL: `https://localhost:${server.address().port}` });
+  env(t, { NODE_ENV: 'production', PORTAL_PROXY_SECRET: 'signed-proxy-fixture-key-at-least-32-bytes', GO_API_URL: `https://localhost:${server.address().port}` });
   const secured = loadTypeScript('lib/go-api-proxy.ts', (name) => name === 'node:https' ? {
     request(url, options) {
       assert.equal(options.rejectUnauthorized, undefined);

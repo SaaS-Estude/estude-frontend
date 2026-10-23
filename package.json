@@ -2,7 +2,9 @@
   "name": "estude-frontend",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "npm run dev:saas",
     "dev:saas": "concurrently --kill-others --names NEXT,PROXY \"npm:dev:saas:next\" \"npm:dev:saas:proxy\"",
@@ -40,7 +42,7 @@
   "dependencies": {
     "@vercel/functions": "3.10.1",
     "lucide-react": "^0.468.0",
-    "next": "^15.5.21",
+    "next": "15.5.28",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-icons": "^5.7.0",
@@ -55,11 +57,16 @@
     "concurrently": "^10.0.5",
     "cross-env": "^10.1.0",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^15.5.21",
+    "eslint-config-next": "15.5.28",
     "http-proxy": "^1.18.1",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.31",
     "react-test-renderer": "19.0.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "^8.5.31"
+    }
   }
 }

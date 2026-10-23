@@ -31,6 +31,7 @@ import { Input, Textarea } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { QuestionImageViewer } from "@/components/assessment/question-image-viewer";
 import { examAttemptService, examService } from "@/lib/assessment-api";
+import { attemptDeadlineMs, clockOffsetMs, secondsRemaining } from "@/lib/exam-clock";
 import { loadOrCreateStudentStudyAnalysis } from "@/lib/study-analysis-loader";
 import {
   QUESTION_TYPE_LABELS,
@@ -644,15 +645,15 @@ export function StudentAttemptPage() {
   const autoSubmitStartedRef = useRef(false);
   const submissionInFlightRef = useRef(false);
   const sealedRef = useRef(false);
+  // Server minus device time, so the countdown follows the clock that enforces the deadline.
+  const clockOffsetRef = useRef(0);
   useEffect(() => {
     void examAttemptService
       .getAttempt(params.id)
       .then((loaded) => {
-        const expiresAt = loaded.expiresAt
-          ? new Date(loaded.expiresAt).getTime()
-          : new Date(loaded.startedAt).getTime() +
-            loaded.exam.settings.durationMinutes * 60_000;
-        setSecondsLeft(Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000)));
+        clockOffsetRef.current = clockOffsetMs(loaded.serverNow, Date.now());
+        const expiresAt = attemptDeadlineMs({ ...loaded, durationMinutes: loaded.exam.settings.durationMinutes });
+        setSecondsLeft(secondsRemaining(expiresAt, Date.now(), clockOffsetRef.current));
         setAttempt(loaded);
         const mapped: Record<string, ExamAnswer> = {};
         loaded.answers.forEach((answer) => {
@@ -677,7 +678,7 @@ export function StudentAttemptPage() {
         answersRef.current = mapped;
         clientSequenceRef.current = Math.max(0, ...Object.values(mapped).map((answer) => answer.clientSequence ?? 0));
         setAnswers(mapped);
-        if (loaded.status === "IN_PROGRESS" && loaded.canResume !== false && expiresAt > Date.now() && Object.keys(mapped).length && navigator.onLine) {
+        if (loaded.status === "IN_PROGRESS" && loaded.canResume !== false && expiresAt > Date.now() + clockOffsetRef.current && Object.keys(mapped).length && navigator.onLine) {
           setSyncStatus("saving");
           void syncAllAnswers();
         }
@@ -703,12 +704,9 @@ export function StudentAttemptPage() {
   const currentQuestion = orderedQuestions[index];
   useEffect(() => {
     if (!attempt || attempt.status === "SUBMITTED") return;
-    const expiresAt = attempt.expiresAt
-      ? new Date(attempt.expiresAt).getTime()
-      : new Date(attempt.startedAt).getTime() +
-        attempt.exam.settings.durationMinutes * 60_000;
+    const expiresAt = attemptDeadlineMs({ ...attempt, durationMinutes: attempt.exam.settings.durationMinutes });
     const updateCountdown = () =>
-      setSecondsLeft(Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000)));
+      setSecondsLeft(secondsRemaining(expiresAt, Date.now(), clockOffsetRef.current));
     updateCountdown();
     const timer = window.setInterval(updateCountdown, 1000);
     document.addEventListener("visibilitychange", updateCountdown);

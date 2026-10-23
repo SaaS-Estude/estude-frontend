@@ -97,10 +97,18 @@ export class ApiError extends Error {
     message: string,
     readonly status: number,
     readonly details: string[] = [],
+    readonly code?: string,
+    readonly retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = "ApiError";
   }
+}
+
+/** Retry-After in whole seconds, or undefined when absent or not a plain number. */
+export function parseRetryAfter(value: string | null): number | undefined {
+  if (!value || !/^\d{1,5}$/.test(value.trim())) return undefined;
+  return Number(value.trim());
 }
 
 async function readResponse<T>(response: Response): Promise<T> {
@@ -114,6 +122,8 @@ async function readResponse<T>(response: Response): Promise<T> {
         "Không thể kết nối đến máy chủ. Vui lòng thử lại.",
       response.status,
       errorPayload?.errors ?? [],
+      errorPayload?.code,
+      parseRetryAfter(response.headers.get("retry-after")),
     );
   }
 

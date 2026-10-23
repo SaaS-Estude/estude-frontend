@@ -2,6 +2,8 @@ import { upgradeWebSocket } from "@vercel/functions";
 import { WebSocket } from "ws";
 import { GoProxyError, goProxyFailure, goProxyTarget } from "@/lib/go-api-proxy";
 
+import { portalProxyHeaders } from "./portal-proxy-headers";
+
 const maxPayload = 64 * 1024;
 const maxBuffered = 2 * maxPayload;
 
@@ -33,11 +35,14 @@ export async function forwardGoChat(request: Request): Promise<Response> {
   if (upstream.pathname !== "/api/v1/class-chat/ws" || upstream.search) {
     return goProxyFailure(400, "Đường dẫn chat không hợp lệ.");
   }
+  let routing: Record<string, string>;
+  try { routing = portalProxyHeaders(request, upstream, host); }
+  catch { return goProxyFailure(503, "Chưa cấu hình PORTAL_PROXY_SECRET cho proxy API."); }
   const secure = upstream.protocol === "https:";
   const servername = upstream.hostname;
   upstream.protocol = secure ? "wss:" : "ws:";
   const backend = new WebSocket(upstream, {
-    headers: { host, origin: origin! },
+    headers: { ...routing, origin: origin! },
     ...(secure ? { servername } : {}),
     handshakeTimeout: 8000,
     maxPayload,

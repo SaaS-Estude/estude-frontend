@@ -639,6 +639,8 @@ export interface ExamAttempt {
   status: AttemptStatus;
   startedAt: string;
   expiresAt: string | null;
+  /** Server clock when the attempt was read; used to correct local clock skew. */
+  serverNow?: string;
   submittedAt: string | null;
   answers: ExamAnswer[];
   manualGrades?: ExamManualGrade[];
@@ -993,7 +995,13 @@ export interface ExamListAiAnalysis extends ExamClassAiAnalysis {
 }
 
 export type StudySourceType =
-  "COURSE_MATERIAL" | "EXTERNAL_KNOWLEDGE" | "SOURCE_UNAVAILABLE";
+  | "COURSE_MATERIAL"
+  | "EXTERNAL_KNOWLEDGE"
+  | "SOURCE_UNAVAILABLE"
+  // Written by AI from the exam alone (no course material to check it against).
+  | "EXAM_REVIEW"
+  // The student's own wrong question, with the teacher's answer key.
+  | "EXAM_MISTAKE";
 
 export interface StudyLearningProfile {
   objectiveId?: string;
@@ -1031,6 +1039,8 @@ export interface StudyWeakArea {
   reviewSummary: string;
   keyPoints: string[];
   sourceReferences: Array<{ documentName: string; page: number }>;
+  /** Wrong questions of the exam this area was built from. */
+  questionIds?: string[];
 }
 
 export type StudyPerformanceLevel =
@@ -1071,7 +1081,7 @@ export interface StudyAnalysisReport {
   learningProfile?: StudyLearningProfile[];
   historyAnalysisCount?: number;
   aiStatus: "READY" | "FALLBACK" | "SKIPPED_NO_MATERIAL";
-  analysisScope?: "MATERIAL_GROUNDED" | "ASSESSMENT_ONLY";
+  analysisScope?: "MATERIAL_GROUNDED" | "ASSESSMENT_ONLY" | "EXAM_GROUNDED";
   materialContext?: {
     available: boolean;
     readyMaterialCount: number;

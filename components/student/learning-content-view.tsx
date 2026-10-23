@@ -9,6 +9,7 @@ import { academicDataService } from '@/lib/assessment-api';
 import type { ClassTopic, LessonResource, StudentCourseTopic, StudentCourseMaterial } from '@/types/assessment';
 import type { StudentCourseProgress, ProgressStatus } from '@/types/progress';
 import { StudentAssignmentList } from '@/components/assignments/student-assignment';
+import { DocumentQaPanel } from '@/components/student/document-qa-panel';
 import { BookOpen, FileAudio, FileImage, FileText, Film, Link2 } from 'lucide-react';
 
 const statusText: Record<ProgressStatus, string> = {
@@ -22,6 +23,10 @@ const resourceLabel: Record<LessonResource['type'], string> = {
 const resourceAction = (type: LessonResource['type']) => type === 'VIDEO' ? 'Xem video' : type === 'AUDIO' ? 'Nghe bài' : type === 'IMAGE' ? 'Xem ảnh' : type === 'LINK' ? 'Mở liên kết' : 'Xem tài liệu';
 const resourceIcon = (type: LessonResource['type']) => type === 'VIDEO' ? Film : type === 'AUDIO' ? FileAudio : type === 'IMAGE' ? FileImage : type === 'LINK' ? Link2 : FileText;
 
+// Only a student's own, current course PDFs can be asked about; legacy files and previews cannot.
+const canAsk = (resource: LessonResource, teacherPreview: boolean) =>
+  !teacherPreview && !resource.legacy && resource.material?.status === 'READY' && resource.material.mimeType === 'application/pdf';
+
 export function LearningContentView({ topics, teacherPreview = false, progress, onProgressChange }: {
   topics: Array<StudentCourseTopic | ClassTopic>; teacherPreview?: boolean;
   progress?: StudentCourseProgress | null; onProgressChange?: () => void;
@@ -29,6 +34,7 @@ export function LearningContentView({ topics, teacherPreview = false, progress, 
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
   const [assignmentLessonId, setAssignmentLessonId] = useState('');
+  const [askingResourceId, setAskingResourceId] = useState('');
   const [activeMedia, setActiveMedia] = useState<{ id: string; url: string; kind: 'IMAGE' | 'VIDEO' | 'AUDIO' } | null>(null);
   async function open(resource?: LessonResource, material?: StudentCourseMaterial) {
     const id = resource?.id ?? material?.id ?? '';
@@ -84,7 +90,9 @@ export function LearningContentView({ topics, teacherPreview = false, progress, 
                       <p className="mt-1 text-xs text-slate-500">{resourceLabel[resource.type]}{resource.requiredForCompletion === false ? ' · Đọc thêm' : ' · Cần xem'}
                         {activity?.status === 'COMPLETED' ? ' · Đã mở' : ''}</p>
                       {resource.description ? <p className="mt-1 whitespace-pre-wrap text-xs text-slate-600">{resource.description}</p> : null}</div>
-                    </div><Button variant="outline" size="sm" className="shrink-0 self-start sm:self-center" disabled={busy === resource.id || resource.material?.status === 'PENDING'} onClick={() => void open(resource)}>{resourceAction(resource.type)}</Button></div>
+                    </div><div className="flex shrink-0 flex-wrap gap-2 self-start sm:self-center"><Button variant="outline" size="sm" disabled={busy === resource.id || resource.material?.status === 'PENDING'} onClick={() => void open(resource)}>{resourceAction(resource.type)}</Button>
+                      {canAsk(resource, teacherPreview) ? <Button variant="outline" size="sm" aria-expanded={askingResourceId === resource.id} onClick={() => setAskingResourceId(askingResourceId === resource.id ? '' : resource.id)}>Hỏi đáp</Button> : null}</div></div>
+                    {canAsk(resource, teacherPreview) && askingResourceId === resource.id ? <div className="mt-3"><DocumentQaPanel kind="course" documentId={resource.material!.id} /></div> : null}
                     {activeMedia?.id === resource.id && activeMedia.kind === 'VIDEO' ? <video className="mt-3 max-h-[70vh] w-full rounded-lg" controls preload="metadata" src={activeMedia.url}>Trình duyệt không hỗ trợ video.</video> : null}
                     {activeMedia?.id === resource.id && activeMedia.kind === 'AUDIO' ? <audio className="mt-3 w-full" controls preload="metadata" src={activeMedia.url}>Trình duyệt không hỗ trợ audio.</audio> : null}
                     {activeMedia?.id === resource.id && activeMedia.kind === 'IMAGE' ? <img className="mt-3 max-h-[70vh] max-w-full rounded-lg object-contain" src={activeMedia.url} alt={resource.title} /> : null}

@@ -9,6 +9,7 @@ test('SaaS portal selection supports the configured school domain in production'
     const { getPortalFromHost } = loadTypeScript('lib/portal.ts');
     for (const portal of ['admin','teacher','student','parent']) {
       assert.equal(getPortalFromHost(`${portal}.school.example.edu:443`), portal);
+      assert.equal(getPortalFromHost(`${portal}-school.estude.io.vn:443`), portal);
     }
     assert.equal(getPortalFromHost('admin.estude.io.vn'), 'admin');
     for (const host of ['platform.school.example.edu','school.example.edu','127.0.0.1:3000','localhost:3000']) assert.equal(getPortalFromHost(host), null);

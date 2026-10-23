@@ -2,6 +2,8 @@ import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { Readable } from "node:stream";
 
+import { portalProxyHeaders } from "./portal-proxy-headers";
+
 const prefix = "/api/v1/";
 const maxBody = 1024 * 1024;
 const deadlineMs = 150_000;
@@ -30,13 +32,13 @@ export function goProxyTarget(request: Request) {
   const hostname = new URL(`http://${host}`).hostname;
   const labels = hostname.split(".");
   if (
-    !["admin", "teacher", "student", "parent"].includes(labels[0]) ||
-    labels.length < 3 ||
+    !["admin", "teacher", "student", "parent"].includes(labels[0].split("-",1)[0]) ||
+    labels.length < (labels[0].includes("-") ? 2 : 3) ||
     labels.some((label) => !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(label))
   ) {
     throw new GoProxyError(
       404,
-      "Vui lòng mở cổng đăng nhập của trường, ví dụ student.<trường>.saas.estude.io.vn.",
+      "Vui lòng mở cổng đăng nhập của trường, ví dụ student-<trường>.estude.io.vn.",
     );
   }
   const configured = process.env.GO_API_URL;
@@ -104,8 +106,11 @@ export async function forwardGoApi(request: Request): Promise<Response> {
   }
   const body = Buffer.concat(parts);
   const { upstream, host } = target;
+  let routing: Record<string, string>;
+  try { routing = portalProxyHeaders(request, upstream, host); }
+  catch { return goProxyFailure(503, "Chưa cấu hình PORTAL_PROXY_SECRET cho proxy API."); }
   const headers: Record<string, string> = {
-    host,
+    ...routing,
     "content-length": String(body.length),
     "accept-encoding": "identity",
   };
@@ -122,7 +127,7 @@ export async function forwardGoApi(request: Request): Promise<Response> {
     const outgoing = send(upstream, {
       method: request.method,
       headers,
-      // HTTP Host identifies the school; TLS verifies the configured API host.
+      // HTTP Host and TLS verify the API; school identity is signed.
       ...(upstream.protocol === "https:" ? { servername: upstream.hostname } : {}),
     });
     const cleanup = () => {
