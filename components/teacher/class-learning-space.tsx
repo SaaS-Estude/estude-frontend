@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { courseWorkspaceHref } from "@/lib/course-workspace";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import {
   BookOpenCheck,
   BrainCircuit,

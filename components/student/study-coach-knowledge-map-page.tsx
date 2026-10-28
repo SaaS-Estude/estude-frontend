@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, BrainCircuit, ChevronDown, Layers, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "@/lib/portal-navigation";
 import { StudentShell } from "@/components/student/student-shell";
 import { Button } from "@/components/ui/button";
 import { studyCoachService } from "@/lib/study-coach-api";

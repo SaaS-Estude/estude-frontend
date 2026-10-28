@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { courseWorkspaceHref } from "@/lib/course-workspace";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/portal-navigation";
 import { useEffect, useState } from "react";
 import { StudentShell } from "@/components/student/student-shell";
 import { PracticeSection } from "@/components/assessment/study-analysis-page";

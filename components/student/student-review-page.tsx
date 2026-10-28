@@ -9,7 +9,7 @@ import {
   Target,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ComponentType } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { ErrorPanel, LoadingPanel } from "@/components/assessment/assessment-shell";
 import { StudentShell } from "@/components/student/student-shell";
 import { Button } from "@/components/ui/button";

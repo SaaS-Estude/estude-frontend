@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "@/components/ui/portal-link";
 import { authApi } from "@/lib/auth-api";
 import { newPasswordError } from "@/lib/account-security";
 import { BrandLogo } from "@/components/brand-logo";
@@ -206,12 +207,12 @@ export function PasswordRecoveryPage({
             ) : null}
           </form>
         )}
-        <a
+        <Link
           className="mt-6 block text-center text-sm font-bold text-brand-600"
           href={`/${role.toLowerCase()}/login`}
         >
           ← Đăng nhập
-        </a>
+        </Link>
       </section>
     </main>
   );

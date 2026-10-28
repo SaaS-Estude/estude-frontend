@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { LoaderCircle } from "lucide-react";
 import { MonthCalendar } from "@/components/dashboard/month-calendar";
 import { CustomSelect } from "@/components/ui/form-control";

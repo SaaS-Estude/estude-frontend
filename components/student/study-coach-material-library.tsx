@@ -2,7 +2,7 @@
 
 import { FileText, LoaderCircle, Plus, RotateCcw, Trash2, UploadCloud, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { Button } from "@/components/ui/button";
 import { Select, FileInput } from "@/components/ui/form-control";
 import { useActionNotification } from "@/components/ui/action-notification";

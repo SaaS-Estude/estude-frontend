@@ -4,7 +4,7 @@ import { FEATURES } from "@/lib/features";
 
 import { BarChart3, LoaderCircle, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { ReportOverviewDashboard } from "@/components/assessment/submissions-page";
 import { Button } from "@/components/ui/button";
 import { usePermissions } from "@/context/permissions-context";

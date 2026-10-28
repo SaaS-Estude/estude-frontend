@@ -2,7 +2,7 @@
 import { assessmentPurposeLabels, type AssessmentPurpose } from "@/lib/internal-results";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { gradebookService } from "@/lib/gradebook-api";
 import type { GradebookView, GradeItem, StudentGrade } from "@/types/gradebook";
 import { Input, Select } from "@/components/ui/form-control";

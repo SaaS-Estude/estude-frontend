@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { BookOpenCheck, ChevronRight, LoaderCircle } from "lucide-react";
 import { courseOfferingApi, type CourseOffering } from "@/lib/course-offering-api";
 import { courseWorkspaceHref } from "@/lib/course-workspace";

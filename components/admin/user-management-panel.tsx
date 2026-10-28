@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { Eye, LoaderCircle, Pencil, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuditActor } from "@/components/admin/audit-actor";

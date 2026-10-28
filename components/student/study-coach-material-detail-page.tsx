@@ -2,7 +2,7 @@
 
 import { ArrowLeft, BookOpen, BrainCircuit, Layers, LoaderCircle, Map, RotateCcw, Sparkles, Trash2, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "@/lib/portal-navigation";
 import { StudentShell } from "@/components/student/student-shell";
 import { DocumentQaPanel } from "@/components/student/document-qa-panel";
 import { Button } from "@/components/ui/button";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { AtSign, LoaderCircle, LockKeyhole } from "lucide-react";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { AuthNotice } from "@/components/auth/auth-notice";

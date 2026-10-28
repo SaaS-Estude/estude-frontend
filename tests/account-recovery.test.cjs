@@ -47,6 +47,7 @@ function mocks(api, auth = {}, router = {}) {
     "@/lib/portal": { getCurrentPortal: () => "student" },
     "@/context/auth-context": { useAuth: () => auth },
     "next/navigation": { useRouter: () => router },
+    "next/link": { default: ({ children, ...props }) => React.createElement("a", props, children) },
     "@/components/ui/form-control": { ...require("./helpers/register-ui.cjs").formControls,
       Input: (props) => React.createElement("input", props),
     },

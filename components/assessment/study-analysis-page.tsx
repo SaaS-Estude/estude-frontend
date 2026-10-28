@@ -17,7 +17,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "@/lib/portal-navigation";
 import { ErrorPanel } from "@/components/assessment/assessment-shell";
 import { StudentShell } from "@/components/student/student-shell";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ import { examAttemptService, learningPlanService } from "@/lib/assessment-api";
 import { loadOrCreateStudentStudyAnalysis } from "@/lib/study-analysis-loader";
 import { PracticeAttemptHistory } from "@/components/assessment/practice-attempt-history";
 import { StudyActivityDashboard } from "@/components/assessment/study-activity-dashboard";
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import {
   StudyAnalysisDetails,
   ReviewLabel,

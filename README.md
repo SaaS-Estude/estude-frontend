@@ -67,6 +67,25 @@ local; `BASE_DOMAIN` trong env chỉ là mặc định khi chưa lưu cấu hìn
 Hostname cũ dạng `admin.demo-school.localhost` vẫn dùng được nếu database đang
 đăng ký địa chỉ đó; lấy đúng link trong chi tiết trường.
 
+URL trang trong portal dùng đường dẫn gọn theo hostname. Ví dụ:
+
+```text
+http://admin-lequydonlequy.localhost:8091/accounts
+https://admin-lequydonlequy.estude.io.vn/accounts
+https://teacher-lequydonlequy.estude.io.vn/courses
+https://student-lequydonlequy.estude.io.vn/courses
+https://parent-lequydonlequy.estude.io.vn/dashboard
+```
+
+Đường dẫn cũ như `/admin/accounts` được chuyển hướng 308 sang `/accounts`, giữ
+nguyên query và fragment. Middleware ánh xạ URL gọn về nhóm trang nội bộ theo
+portal của hostname. Các đường dẫn API `/api/v1/...` giữ nguyên.
+
+Khi thêm giao diện, dùng `Link` từ `@/components/ui/portal-link` và `useRouter`
+từ `@/lib/portal-navigation` để menu, nút điều hướng và liên kết động cùng tạo
+URL gọn. Dùng `useWorkspacePathname` khi so khớp menu hoặc kiểm tra quyền với
+đường dẫn nội bộ hiện có. Không bỏ prefix trong các khóa RBAC hoặc API.
+
 `DOMAIN_AUTO_ENABLED` là công tắc ở backend để tự thiết lập DNS Cloudflare và
 domain Vercel. Worker bỏ qua hostname `.localhost` ngay cả khi công tắc là
 `true`; chạy trường local không cần gọi hai nhà cung cấp.

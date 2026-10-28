@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { ArrowRight, BellRing, CheckCircle2, GraduationCap, Image, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 

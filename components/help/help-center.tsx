@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { ArrowLeft, BookOpen, ChevronRight, Search } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { Input } from "@/components/ui/form-control";

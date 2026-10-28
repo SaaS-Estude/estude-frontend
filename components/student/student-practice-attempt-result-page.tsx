@@ -8,7 +8,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "@/lib/portal-navigation";
 import { assistanceLabel } from "@/components/assessment/practice-attempt-history";
 import { StudentShell } from "@/components/student/student-shell";
 import { Button } from "@/components/ui/button";

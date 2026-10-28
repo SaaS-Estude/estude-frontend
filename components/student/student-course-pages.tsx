@@ -24,7 +24,7 @@ import {
   MessagesSquare,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "@/lib/portal-navigation";
 import { ErrorPanel, LoadingPanel } from "@/components/assessment/assessment-shell";
 import { StudentExamList } from "@/components/assessment/student-exam-pages";
 import { StudentShell } from "@/components/student/student-shell";

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { LoaderCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/portal-navigation';
 import { useAuth } from '@/context/auth-context';
 import { getRoleHome } from '@/lib/role-routes';
 

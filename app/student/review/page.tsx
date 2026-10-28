@@ -1,6 +1,6 @@
 import { FEATURES } from "@/lib/features";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { portalRedirect as redirect } from "@/lib/portal-redirect";
 import { RoleGate } from "@/components/auth/role-gate";
 
 export const metadata: Metadata = {
@@ -16,7 +16,6 @@ export default function StudentReviewRoute() {
   );
 }
 
-function ReviewRedirect() {
-  redirect(FEATURES.examAnalysis ? "/student/study-coach#exam-review" : "/student/study-coach");
-  return null;
+async function ReviewRedirect() {
+  return redirect(FEATURES.examAnalysis ? "/student/study-coach#exam-review" : "/student/study-coach");
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Mail,

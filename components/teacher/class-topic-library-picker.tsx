@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { useEffect, useMemo, useState } from "react";
 import { FileText, FolderInput, LoaderCircle, Search, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";

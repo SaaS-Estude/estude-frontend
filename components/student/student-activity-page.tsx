@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { BellRing, CalendarCheck2, Check, CircleAlert, LoaderCircle } from "lucide-react";
 import { AssessmentShell, ErrorPanel, PageHeading } from "@/components/assessment/assessment-shell";
 import { attendanceService, NOTIFICATIONS_CHANGED_EVENT, notificationService } from "@/lib/engagement-api";

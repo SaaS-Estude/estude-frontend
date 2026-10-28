@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { useState } from "react";
 import { LayoutGrid } from "lucide-react";
 import { useAuth } from "@/context/auth-context";

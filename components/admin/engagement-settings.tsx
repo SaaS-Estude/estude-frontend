@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "@/components/ui/portal-link";
 import { notificationService } from "@/lib/engagement-api";
 import { Button } from "@/components/ui/button";
 import { Select, Input, Textarea } from "@/components/ui/form-control";
@@ -16,7 +17,7 @@ export function AttendancePolicyPanel() {
       <li>Dữ liệu thay đổi ở tab khác yêu cầu tải lại trước khi lưu.</li>
       <li>Không thể hoàn thành hoặc khóa học kỳ khi còn buổi chưa chốt. Học kỳ đã khóa không nhận chỉnh sửa.</li>
     </ul>
-    <a className="inline-block text-blue-700 underline" href="/admin/course-offerings">Quản lý phân công giáo viên</a>
+    <Link className="inline-block text-blue-700 underline" href="/admin/course-offerings">Quản lý phân công giáo viên</Link>
   </section>;
 }
 

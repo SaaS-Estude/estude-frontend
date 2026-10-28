@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { BookOpen, ChevronRight } from "lucide-react";
 import { StudentOverviewSummary } from "@/components/dashboard/student-overview-summary";
 import { StudentShell } from "@/components/student/student-shell";

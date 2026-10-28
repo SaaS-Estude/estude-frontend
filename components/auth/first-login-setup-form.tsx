@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { useAuth } from "@/context/auth-context";
 import { authApi } from "@/lib/auth-api";
 import { newPasswordError } from "@/lib/account-security";

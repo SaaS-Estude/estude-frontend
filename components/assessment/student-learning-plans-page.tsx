@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import Link from "@/components/ui/portal-link";
+import { useParams, useRouter } from "@/lib/portal-navigation";
 import { useEffect, useState } from "react";
 import {
   AlertTriangle, ArrowLeft, BookOpenCheck, BrainCircuit, CalendarDays,

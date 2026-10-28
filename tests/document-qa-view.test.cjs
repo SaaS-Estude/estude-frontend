@@ -84,7 +84,7 @@ test('the question limit and other failures are never retried', async () => {
   }
 });
 
-const msg = (conversationId, minutesAgo) => ({ id: conversationId + minutesAgo, conversationId, createdAt: new Date(Date.now() - minutesAgo * 60_000).toISOString() });
+const msg = (conversationId, minutesAgo, now = Date.now()) => ({ id: conversationId + minutesAgo, conversationId, createdAt: new Date(now - minutesAgo * 60_000).toISOString() });
 
 test('conversation breaks are marked where the topic changes', () => {
   assert.deepEqual(view.conversationBreaks([]), []);
@@ -94,8 +94,8 @@ test('conversation breaks are marked where the topic changes', () => {
 test('a conversation continues for two hours after the last answer', () => {
   const now = Date.now();
   assert.equal(view.continuesConversation([], now), false);
-  assert.equal(view.continuesConversation([msg('a', 119)], now), true);
-  assert.equal(view.continuesConversation([msg('a', 120)], now), false);
+  assert.equal(view.continuesConversation([msg('a', 119, now)], now), true);
+  assert.equal(view.continuesConversation([msg('a', 120, now)], now), false);
   assert.equal(view.continuesConversation([{ conversationId: 'a', createdAt: 'không phải ngày' }], now), false);
 });
 

@@ -4,7 +4,11 @@ const fs = require('node:fs');
 
 const types = fs.readFileSync('types/assessment.ts', 'utf8');
 const details = fs.readFileSync('components/assessment/study-analysis-details.tsx', 'utf8');
-const backend = fs.readFileSync('../estude-saas-backend/internal/modules/learning/exam_study.go', 'utf8');
+const backendPath = ['../estude-backend', '../estude-saas-backend']
+  .map(root => `${root}/internal/modules/learning/exam_study.go`)
+  .find(file => fs.existsSync(file));
+assert.ok(backendPath, 'backend learning source not found beside the frontend');
+const backend = fs.readFileSync(backendPath, 'utf8');
 
 function unionMembers(source, name) {
   const block = source.match(new RegExp(`export type ${name} =([^;]+);`));

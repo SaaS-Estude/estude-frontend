@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { Eye, Filter, LoaderCircle, Pencil, Plus, RotateCcw, Search } from "lucide-react";
 import { CourseOfferingEditor } from "./course-offering-editor";
 import { CourseOfferingDetails } from "./course-offering-details";

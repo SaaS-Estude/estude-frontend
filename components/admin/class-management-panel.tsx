@@ -14,7 +14,7 @@ import { matchesSearchKeyword } from "@/lib/search-keyword";
 import { ApiError } from "@/lib/auth-api";
 import type { AcademicYear, SchoolClass } from "@/types/assessment";
 import { ClassStudentAssignmentContent } from "@/components/admin/class-assignment-panel";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 
 const statusOptions = [
   { value: "", label: "Tất cả trạng thái" },

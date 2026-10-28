@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link from '@/components/ui/portal-link';
+import { useRouter } from '@/lib/portal-navigation';
 import {
   AtSign,
   Check,

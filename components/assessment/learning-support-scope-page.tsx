@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "@/lib/portal-navigation";
 import { ArrowLeft } from "lucide-react";
 import { AssessmentShell } from "@/components/assessment/assessment-shell";
 import { SubjectSupportDetail } from "@/components/assessment/subject-support-page";

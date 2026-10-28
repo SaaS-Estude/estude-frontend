@@ -26,8 +26,8 @@ import {
   Video,
   X,
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "@/components/ui/portal-link";
+import { useWorkspacePathname, useRouter } from "@/lib/portal-navigation";
 import { requestWorkspaceNavigation } from "@/lib/workspace-navigation";
 import { BrandLogo, TenantName } from "@/components/brand-logo";
 import { ProfileModal } from "@/components/auth/profile-modal";
@@ -63,7 +63,7 @@ export function AssessmentShell({
 
 function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = useWorkspacePathname();
   const { user, signOut } = useAuth();
   const { canVisit } = usePermissions();
   const [isMenuOpen, setIsMenuOpen] = useState(false);

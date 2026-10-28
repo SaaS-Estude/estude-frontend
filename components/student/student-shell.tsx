@@ -2,7 +2,7 @@
 
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useWorkspacePathname, useRouter } from "@/lib/portal-navigation";
 import {
   BarChart3,
   Bell,
@@ -104,7 +104,7 @@ function StudentShellLoading() {
 
 export function StudentShell({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = useWorkspacePathname();
   const { user, signOut } = useAuth();
   const { canVisit } = usePermissions();
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);

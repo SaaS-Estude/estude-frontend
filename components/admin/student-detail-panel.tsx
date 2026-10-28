@@ -2,7 +2,7 @@
 import { GradeReports } from "@/components/assessment/grade-reports";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "@/lib/portal-navigation";
 import {
   AlertTriangle,
   BookOpen,

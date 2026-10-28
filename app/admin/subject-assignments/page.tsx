@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { portalRedirect as redirect } from "@/lib/portal-redirect";
 
-export default function SubjectAssignmentsPage() {
-  redirect("/admin/course-offerings");
+export default async function SubjectAssignmentsPage() {
+  return redirect("/admin/course-offerings");
 }

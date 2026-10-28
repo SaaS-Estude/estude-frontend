@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPortalFromHost, type AuthPortal } from "./lib/portal";
+import { publicPortalPath, workspacePortalPath } from "./lib/portal-routes";
 
 const LOGIN_PATH = "/login";
 
@@ -41,29 +42,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(LOGIN_PATH, request.url));
   }
 
-  const internalLoginPath = portal === "student" ? LOGIN_PATH : `/${portal}/login`;
-  if (request.nextUrl.pathname === internalLoginPath && internalLoginPath !== LOGIN_PATH) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = LOGIN_PATH;
-    return NextResponse.redirect(loginUrl);
+  const publicPath = publicPortalPath(request.nextUrl.pathname, portal);
+  if (publicPath !== request.nextUrl.pathname) {
+    const canonicalUrl = request.nextUrl.clone();
+    canonicalUrl.pathname = publicPath;
+    return NextResponse.redirect(canonicalUrl, 308);
   }
 
-  if (request.nextUrl.pathname === LOGIN_PATH) {
-    if (portal === "student") {
-      return NextResponse.next({
-        request: { headers: withPortalHeader(request, portal) },
-      });
-    }
+  const internalPath = workspacePortalPath(request.nextUrl.pathname, portal);
+  if (!isPortalPath(internalPath, portal)) {
+    return NextResponse.redirect(new URL(LOGIN_PATH, request.url));
+  }
 
+  if (internalPath !== request.nextUrl.pathname) {
     const rewriteUrl = request.nextUrl.clone();
-    rewriteUrl.pathname = internalLoginPath;
+    rewriteUrl.pathname = internalPath;
     return NextResponse.rewrite(rewriteUrl, {
       request: { headers: withPortalHeader(request, portal) },
     });
-  }
-
-  if (!isPortalPath(request.nextUrl.pathname, portal)) {
-    return NextResponse.redirect(new URL(LOGIN_PATH, request.url));
   }
 
   return NextResponse.next({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "@/lib/portal-navigation";
 import { ExamPracticeWorkspace } from "@/components/student/exam-practice-workspace";
 import { StudentShell } from "@/components/student/student-shell";
 

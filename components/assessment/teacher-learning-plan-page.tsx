@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import Link from "@/components/ui/portal-link";
+import { useParams } from "@/lib/portal-navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,

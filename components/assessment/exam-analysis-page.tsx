@@ -11,7 +11,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/portal-navigation";
 import { AssessmentShell } from "@/components/assessment/assessment-shell";
 import { ExamDetailTabs } from "@/components/assessment/exam-detail-tabs";
 import { Button } from "@/components/ui/button";

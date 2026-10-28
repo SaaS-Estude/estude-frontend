@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, BarChart3, BookOpenCheck, BrainCircuit, CheckCircle2, CircleAlert, Layers, Lightbulb, LoaderCircle, RotateCcw, ShieldCheck, Sparkles, Target, TrendingUp } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "@/lib/portal-navigation";
 import { StudentShell } from "@/components/student/student-shell";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form-control";

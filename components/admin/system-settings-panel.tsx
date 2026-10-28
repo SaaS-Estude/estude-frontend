@@ -15,7 +15,7 @@ import {
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/form-control";
 import { useActionNotification } from "@/components/ui/action-notification";

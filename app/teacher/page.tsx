@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { portalRedirect as redirect } from '@/lib/portal-redirect';
 
-export default function TeacherPage() {
-  redirect('/teacher/dashboard');
+export default async function TeacherPage() {
+  return redirect('/teacher/dashboard');
 }

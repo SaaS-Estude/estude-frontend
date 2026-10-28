@@ -2,7 +2,7 @@
 import { assessmentPurposeLabels, type AssessmentPurpose } from "@/lib/internal-results";
 import { answerReleaseLabel } from "@/lib/exam-answer-release";
 
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import {courseOfferingApi,type CourseOffering} from "@/lib/course-offering-api";
 import {currentCourseId,courseWorkspaceHref} from "@/lib/course-workspace";
 import {
@@ -29,7 +29,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "@/lib/portal-navigation";
 import {
   AssessmentShell,
   ErrorPanel,

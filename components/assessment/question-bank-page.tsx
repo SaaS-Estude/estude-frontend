@@ -2,7 +2,7 @@
 
 import { FEATURES } from "@/lib/features";
 
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import {
   FileQuestion,
   FolderInput,

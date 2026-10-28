@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/portal-link";
 import { useEffect, useState } from "react";
 import { learningPlanService } from "@/lib/assessment-api";
 import type { LearningImprovementProfile } from "@/types/assessment";

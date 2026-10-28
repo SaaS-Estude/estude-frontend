@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { LoaderCircle } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useWorkspacePathname, useRouter } from '@/lib/portal-navigation';
 import { usePermissions } from '@/context/permissions-context';
 import { useAuth } from '@/context/auth-context';
 import { getRoleLogin, getRoleSessionSettings } from '@/lib/role-routes';
@@ -40,7 +40,7 @@ export function RoleGate({
   loadingFallback?: ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = useWorkspacePathname();
   const { user, isInitializing, signOut } = useAuth();
   const { canVisit, loading } = usePermissions();
   const isAllowed = Boolean(

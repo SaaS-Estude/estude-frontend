@@ -2,7 +2,7 @@
 
 import { Eye, FileCheck2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { usePermissions } from "@/context/permissions-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form-control";

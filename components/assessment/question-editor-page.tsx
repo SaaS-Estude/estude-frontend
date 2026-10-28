@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Save } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "@/lib/portal-navigation";
 import { useEffect, useState } from "react";
 import {
   AssessmentShell,

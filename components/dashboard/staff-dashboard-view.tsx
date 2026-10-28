@@ -5,7 +5,7 @@ import {
 } from "@/components/admin/engagement-settings";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useWorkspacePathname, useRouter } from "@/lib/portal-navigation";
 import {
   Bell,
   BellRing,
@@ -154,7 +154,7 @@ const userSubItems = [
 
 export function StaffDashboardView() {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = useWorkspacePathname();
   const { user, signOut } = useAuth();
   const { canVisit } = usePermissions();
   const [isMenuOpen, setIsMenuOpen] = useState(false);

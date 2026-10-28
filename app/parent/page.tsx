@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { portalRedirect as redirect } from "@/lib/portal-redirect";
 
-export default function ParentPage() {
-  redirect("/parent/dashboard");
+export default async function ParentPage() {
+  return redirect("/parent/dashboard");
 }

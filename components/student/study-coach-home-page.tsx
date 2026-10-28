@@ -4,7 +4,7 @@ import { FEATURES } from "@/lib/features";
 
 import { ArrowRight, BookOpenCheck, BrainCircuit, Layers, Lightbulb, LoaderCircle, Map as MapIcon, RotateCcw, Sparkles, Target } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/portal-navigation";
 import { StudentShell } from "@/components/student/student-shell";
 import { StudentExamReviewPanel } from "@/components/student/student-review-page";
 import { StudyCoachMaterialLibrary } from "@/components/student/study-coach-material-library";

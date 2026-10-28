@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "@/lib/portal-navigation";
 import { ArrowLeft, CalendarClock, ExternalLink, Video } from "lucide-react";
 import { StudentShell } from "@/components/student/student-shell";
 import { Button } from "@/components/ui/button";
