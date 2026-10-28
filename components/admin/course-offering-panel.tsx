@@ -13,10 +13,10 @@ import { Table, TableBody, TableCell, TableEmptyRow, TableHead, TableHeader, Tab
 import { DataTableFooter } from "@/components/ui/data-table-footer";
 import { matchesSearchKeyword, normalizeSearchKeyword } from "@/lib/search-keyword";
 import { academicDataService } from "@/lib/assessment-api";
-import { ApiError, authenticatedRequest } from "@/lib/auth-api";
+import { ApiError } from "@/lib/auth-api";
 import { courseOfferingApi, type CourseMembers, type CourseOffering, type CourseTeacherRole } from "@/lib/course-offering-api";
 import type { AcademicYear, ClassRoster, SchoolClass, Subject, Term } from "@/types/assessment";
-import type { UsersPage } from "@/types/users";
+import { loadAccountDirectory } from "@/lib/account-directory";
 import type { User } from "@/types/auth";
 import type { GradePolicy } from "@/types/gradebook";
 
@@ -142,12 +142,12 @@ export function CourseOfferingPanel() {
       academicDataService.getTerms(undefined, true),
       academicDataService.getClasses(undefined, true),
       academicDataService.getSubjects(true),
-      authenticatedRequest<UsersPage>("/users?role=TEACHER&status=ACTIVE&limit=100"),
+      loadAccountDirectory("TEACHER"),
       courseOfferingApi.readiness(),
     ]).then(([yearRows, termRows, classRows, subjectRows, teacherPage, courseReadiness]) => {
       if (!active) return;
       setYears(yearRows); setTerms(termRows); setClasses(classRows); setSubjects(subjectRows);
-      setTeachers(teacherPage.items);
+      setTeachers(teacherPage);
       setReadiness(courseReadiness);
       setYearId(yearRows.find((year) => year.status !== "COMPLETED")?.id ?? yearRows[0]?.id ?? "");
     }).catch((cause: unknown) => { if (active) setError(errorText(cause)); });

@@ -134,7 +134,7 @@ test("recovery awaits the server, validates passwords and keeps the form on an i
   assert.equal(ui.root.findAllByType("input").length, 0);
 });
 
-for (const role of ["STUDENT", "TEACHER"]) {
+for (const role of ["STUDENT", "TEACHER", "PARENT"]) {
   test(`${role} optional first-login password change works without email or OTP and logs out only on success`, async (t) => {
     const completions = [], redirects = [];
     let logouts = 0, fail = true;
@@ -170,7 +170,7 @@ for (const role of ["STUDENT", "TEACHER"]) {
 }
 
 for (const role of ["STUDENT", "TEACHER", "PARENT"]) {
-test(`restoring ${role} session only gates teacher/student accounts when the school requires a password change`, async (t) => {
+test(`restoring ${role} session honors the server password-change requirement`, async (t) => {
   for (const pending of [true, false]) {
     let dataLoads = 0;
     const { AuthProvider, useAuth } = load("context/auth-context.tsx", {
@@ -200,7 +200,7 @@ test(`restoring ${role} session only gates teacher/student accounts when the sch
     const ui = await render(t, AuthProvider, {
       children: React.createElement(Workspace),
     });
-    const blocked = pending && role !== "PARENT";
+    const blocked = pending;
     assert.equal(ui.root.findAllByType("dialog").length, blocked ? 1 : 0);
     assert.equal(dataLoads, blocked ? 0 : 1);
     await act(async () => ui.unmount());
@@ -269,4 +269,26 @@ test("school admin self-change serializes double submissions while the server is
   assert.equal(writes, 1);
   assert.equal(ui.root.findByType("fieldset").props.disabled, true);
   await act(async () => { finish(); await saving; });
+});
+
+
+test("login pages honor parent recovery requirements before navigating home", async (t) => {
+  const previousLocation=global.window.location;
+  global.window.location={search:""};
+  t.after(()=>{global.window.location=previousLocation});
+  for (const [file,name] of [["components/auth/login-form.tsx","LoginForm"],["components/auth/admin-login-form.tsx","StaffLoginForm"]]) {
+    for (const pending of [true,false]) {
+      const redirects=[];
+      const mocked=mocks({}, {user:{role:"PARENT",requiresFirstLoginSetup:pending},isInitializing:false}, {replace:url=>redirects.push(url)});
+      mocked["@/lib/auth-api"]={ApiError:Error};
+      mocked["@/lib/role-routes"]={getRoleHome:role=>`/${role.toLowerCase()}/dashboard`};
+      mocked["@/components/auth/auth-heading"]={AuthHeading:()=>null};
+      mocked["@/components/auth/auth-notice"]={AuthNotice:()=>null};
+      mocked["@/components/auth/form-field"]={FormField:()=>null};
+      const Component=load(file,mocked)[name];
+      const ui=await render(t,Component,{role:"PARENT"});
+      assert.deepEqual(redirects,pending?[]:["/parent/dashboard"]);
+      await act(async()=>ui.unmount());
+    }
+  }
 });

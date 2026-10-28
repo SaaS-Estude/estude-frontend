@@ -5,6 +5,7 @@ import { LoaderCircle, Search } from "lucide-react";
 import { usePermissions } from "@/context/permissions-context";
 import { academicDataService } from "@/lib/assessment-api";
 import { courseOfferingApi, type CourseConfigurationInput, type CourseMembers, type CourseOffering, type CourseStatus, type CourseTeacherRole } from "@/lib/course-offering-api";
+import { ApiError } from "@/lib/auth-api";
 import { gradebookService } from "@/lib/gradebook-api";
 import { matchesSearchKeyword, normalizeSearchKeyword } from "@/lib/search-keyword";
 import type { ClassRoster } from "@/types/assessment";
@@ -107,7 +108,7 @@ export function CourseOfferingEditor({ course, teachers, yearName, termName, sub
       const updated = await courseOfferingApi.configure(current.id, input);
       onSaved(updated);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không lưu được môn học");
+      setError(cause instanceof ApiError && cause.details.length ? cause.details.join("\n") : cause instanceof Error ? cause.message : "Không lưu được môn học");
     } finally { setSaving(false); }
   }
 
@@ -115,7 +116,7 @@ export function CourseOfferingEditor({ course, teachers, yearName, termName, sub
     <Button variant="outline" disabled={saving} onClick={onClose}>Hủy</Button>
     <Button permission="course_offerings.update" type="submit" form="course-offering-edit-form" disabled={!valid}>{saving && <LoaderCircle className="size-4 animate-spin" />}{saving ? "Đang lưu..." : "Xác nhận"}</Button>
   </>}>
-    {error && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+    {error && <p role="alert" className="mb-4 whitespace-pre-line rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
     {loading ? <p className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" />Đang tải thông tin môn học...</p> : members && <form id="course-offering-edit-form" onSubmit={(event) => void submit(event)} className="space-y-5">
       <fieldset disabled={saving} className="grid gap-4 sm:grid-cols-2">
         <CustomSelect label="Năm học" disabled value={current.academicYearId} options={[{ value: current.academicYearId, label: yearName }]} onValueChange={() => {}} />

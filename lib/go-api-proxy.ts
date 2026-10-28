@@ -5,7 +5,7 @@ import { Readable } from "node:stream";
 import { portalProxyHeaders } from "./portal-proxy-headers";
 
 const prefix = "/api/v1/";
-const maxBody = 1024 * 1024;
+const defaultMaxBody = 1024 * 1024;
 const deadlineMs = 150_000;
 
 export class GoProxyError extends Error {
@@ -69,6 +69,11 @@ export function goProxyTarget(request: Request) {
 }
 
 export async function forwardGoApi(request: Request): Promise<Response> {
+  // Avatar remains a bounded multipart upload; learning files use signed URLs.
+  const avatarUpload = request.method === "POST" &&
+    new URL(request.url).pathname === "/api/v1/auth/profile/avatar" &&
+    request.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data");
+  const maxBody = avatarUpload ? 2 * 1024 * 1024 + 64 * 1024 : defaultMaxBody;
   let target: ReturnType<typeof goProxyTarget>;
   try {
     target = goProxyTarget(request);
@@ -81,7 +86,7 @@ export async function forwardGoApi(request: Request): Promise<Response> {
     return goProxyFailure(400, "Đường dẫn này không hỗ trợ nâng cấp kết nối.");
   }
   if (Number(request.headers.get("content-length")) > maxBody) {
-    return goProxyFailure(413, "Dữ liệu vượt giới hạn 1 MiB. Tệp cần tải qua URL S3 được cấp.");
+    return goProxyFailure(413, avatarUpload ? "Ảnh đại diện vượt giới hạn 2 MiB." : "Dữ liệu vượt giới hạn 1 MiB. Tệp cần tải qua URL S3 được cấp.");
   }
   const parts: Uint8Array[] = [];
   let length = 0;
@@ -94,7 +99,7 @@ export async function forwardGoApi(request: Request): Promise<Response> {
         length += value.byteLength;
         if (length > maxBody) {
           await reader.cancel();
-          return goProxyFailure(413, "Dữ liệu vượt giới hạn 1 MiB.");
+          return goProxyFailure(413, avatarUpload ? "Ảnh đại diện vượt giới hạn 2 MiB." : "Dữ liệu vượt giới hạn 1 MiB.");
         }
         parts.push(value);
       }

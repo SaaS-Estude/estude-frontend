@@ -240,3 +240,10 @@ G11 mở phân tích bài làm, luyện tập/kết quả, evidence/baseline, k�
 Dashboard admin/teacher, tổng quan kết quả học sinh, trang chi tiết con của phụ huynh và ngưỡng cảnh báo đã nối Go. Trang phụ huynh nhận UUID PostgreSQL; điểm nháp không xuất hiện, revoked link ngăn đọc lại dữ liệu. Root tenant provider lấy tên/màu qua `/api/v1/tenant` cùng origin và áp dụng cho 104 route shells. Không thêm env hoặc giữ cache/token của trường trong browser storage. Khởi động lại dev Next để nhận thay đổi root provider/Tailwind; lệnh vẫn `npm run dev:saas`.
 
 [Hồ sơ G12](../estude-backend-go/docs/g12/README.md) có 9 trang G12, hồi quy 101 route identity/nghiệp vụ, 104 tenant shells và tenant thứ hai. SaaS job operations nằm trong project `estude-saas-admin` riêng. G13 tiếp tục nghiệm thu production.
+
+
+### Khôi phục tài khoản do trường cấp
+
+Tại **Tài khoản**, admin trường có quyền **Đặt lại mật khẩu** dùng nút chìa khóa để cấp mật khẩu tạm cho học sinh, giáo viên hoặc phụ huynh không có email/mất email. Xác nhận mới gửi yêu cầu; phiên cũ bị thu hồi và người nhận phải đổi mật khẩu trước khi vào hệ thống. Khóa tài khoản giữ nguyên. Admin trường quên mật khẩu tiếp tục được SaaS admin hỗ trợ qua console.
+
+Cần backend đã migrate tenant **025_account_password_recovery.sql**. Nhóm ADMIN tùy chỉnh cần được gán `accounts.reset_password`; backend vẫn bắt buộc vai trò ADMIN. Giao diện dùng cùng popup đổi mật khẩu cho cả ba vai trò khi server yêu cầu khôi phục, không bắt phụ huynh thông thường đổi mật khẩu mặc định.

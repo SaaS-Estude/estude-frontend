@@ -41,7 +41,7 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
   }, []);
 
   useEffect(() => {
-    if (!isInitializing && user && (user.role === "PARENT" || !user.requiresFirstLoginSetup)) {
+    if (!isInitializing && user && !user.requiresFirstLoginSetup) {
       router.replace(getRoleHome(user.role));
     }
   }, [isInitializing, router, user]);
@@ -67,7 +67,7 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
     setIsSubmitting(true);
     try {
       const signedInUser = await signIn({ accountName, password });
-      if (signedInUser.role === "PARENT" || !signedInUser.requiresFirstLoginSetup) router.replace(getRoleHome(role));
+      if (!signedInUser.requiresFirstLoginSetup) router.replace(getRoleHome(role));
     } catch (error) {
       setApiError(
         error instanceof ApiError && error.status === 403

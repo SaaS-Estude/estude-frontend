@@ -18,6 +18,8 @@ import {
   UserRoundCheck,
   XCircle,
 } from "lucide-react";
+import { loadAccountDirectory } from "@/lib/account-directory";
+import { AccountPasswordResetPanel } from "./account-password-reset-panel";
 import { Button } from "@/components/ui/button";
 import { AuditActor } from "@/components/admin/audit-actor";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -121,6 +123,7 @@ export function AccountManagementPanel() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
+  const [resetUser, setResetUser] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editFullName, setEditFullName] = useState("");
   const [editAccountName, setEditAccountName] = useState("");
@@ -375,12 +378,12 @@ export function AccountManagementPanel() {
     try {
       const [linked, studentsPage] = await Promise.all([
         authenticatedRequest<User[]>(`/users/${encodeURIComponent(parentId)}/children`),
-        authenticatedRequest<UsersPage>("/users?role=STUDENT&status=ACTIVE&page=1&limit=100"),
+        loadAccountDirectory("STUDENT"),
       ]);
       setParentChildren(linked);
-      setStudentCandidates(studentsPage.items);
+      setStudentCandidates(studentsPage);
       const linkedIds = new Set(linked.map((student) => student.id));
-      setSelectedStudentId(studentsPage.items.find((student) => !linkedIds.has(student.id))?.id ?? "");
+      setSelectedStudentId(studentsPage.find((student) => !linkedIds.has(student.id))?.id ?? "");
     } catch (error) {
       setEditError(getErrorMessage(error, "Không thể tải quan hệ phụ huynh - học sinh"));
     } finally {
@@ -604,7 +607,7 @@ export function AccountManagementPanel() {
                 <TableHead>Lần đăng nhập cuối</TableHead>
                 <TableHead>Người thực hiện</TableHead>
                 <TableHead>Đang hoạt động</TableHead>
-                <TableHead className="w-20 text-right">Thao tác</TableHead>
+                <TableHead className="w-28 text-right">Thao tác</TableHead>
               </tr>
             </TableHeader>
             <TableBody>
@@ -668,6 +671,7 @@ export function AccountManagementPanel() {
                       />
                     </TableCell>
                     <TableCell className="text-center">
+                      {user.role !== "ADMIN" && can("accounts.reset_password") && <Button permission="accounts.reset_password" variant="ghost" size="sm" onClick={() => setResetUser(user)} aria-label={`Đặt lại mật khẩu ${user.fullName}`} title="Đặt lại mật khẩu"><KeyRound size={18} strokeWidth={2.5} /></Button>}
                       <Button permission="accounts.update"
                         variant="ghost"
                         size="sm"
@@ -701,6 +705,7 @@ export function AccountManagementPanel() {
         />
       </section>
 
+      {resetUser && <AccountPasswordResetPanel key={resetUser.id} user={resetUser} onClose={() => setResetUser(null)} onSaved={() => {setResetUser(null); notify("Đã đặt lại mật khẩu. Người nhận phải đổi mật khẩu khi đăng nhập lại.", {key:"account-password-reset"});}} />}
       <ConfirmationDialog
         open={statusConfirmationUser !== null}
         title="ĐỔI TRẠNG THÁI"

@@ -9,6 +9,8 @@ const React = require("react");
 const { create, act } = require("react-test-renderer");
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
+class TestApiError extends Error { constructor(message,details=[]) {super(message);this.details=details;} }
+
 const initialCourse = { id: "course", revision: 7, displayName: "Toán - 10A - HK1", displayNameOverride: null, status: "DRAFT", academicYearId: "year", termId: "term", subjectId: "math", primaryClassId: "class", enrollmentMode: "CLASS_ROSTER", readyForOpen: true, term: { status: "ACTIVE" } };
 const initialBook = { book: { id: "book", revision: 4, resultMode: "INTERNAL", assessmentMode: "NUMERIC", annualPeriods: 35, specialized: false }, items: [], students: [], term: { status: "ACTIVE" } };
 const initialMembers = { teachers: [{ id: "assignment", teacherId: "t1", role: "PRIMARY_TEACHER", effectiveTo: null, user: { fullName: "Cô Lan" } }], enrollments: [] };
@@ -24,18 +26,19 @@ async function setup(t, overrides = {}) {
   const original = loaded.require.bind(loaded);
   loaded.require = (id) => {
     if (id === "lucide-react") return new Proxy({}, { get: () => () => React.createElement("svg") });
+    if (id === "@/lib/auth-api") return {ApiError:TestApiError};
     if (id === "@/context/permissions-context") return { usePermissions: () => ({ can: (key) => !overrides.denied?.includes(key) }) };
     if (id === "@/lib/course-offering-api") return { courseOfferingApi: {
       get: async () => course, members: async () => structuredClone(initialMembers),
-      configure: async (id, input) => { writes.push({ id, input }); if (overrides.fail) throw new Error("Sổ điểm vừa thay đổi"); return { ...course, revision: 8, ...input }; },
+      configure: async (id, input) => { writes.push({ id, input }); if (overrides.fail) throw overrides.serverError ?? new Error("Sổ điểm vừa thay đổi"); return { ...course, revision: 8, ...input }; },
     } };
     if (id === "@/lib/assessment-api") return { academicDataService: { getClassRoster: async () => ({ students: [{ id: "s1", fullName: "Nguyễn An", accountName: "an" }] }) } };
     if (id === "@/lib/gradebook-api") return { gradebookService: { get: async () => structuredClone(view) } };
     if (id === "@/lib/search-keyword") return { matchesSearchKeyword: (value, search) => value.includes(search.toLowerCase()), normalizeSearchKeyword: (value) => value.toLowerCase() };
-    if (id === "@/components/ui/button") return { Button: ({ children, permission, ...props }) => React.createElement("button", props, children) };
+    if (id === "@/components/ui/button") return { Button: ({ children, permission, ...props }) => { void permission; return React.createElement("button", props, children); } };
     if (id === "@/components/ui/modal") return { Modal: ({ children, footer, onClose }) => React.createElement("section", null, children, React.createElement("footer", null, footer), React.createElement("button", { "aria-label": "Đóng", onClick: onClose })) };
     if (id === "@/components/ui/form-control") return {
-      Input: ({ label, hint, icon, ...props }) => React.createElement("input", { "aria-label": label, ...props }),
+      Input: ({ label, hint, icon, ...props }) => { void hint; void icon; return React.createElement("input", { "aria-label": label, ...props }); },
       CustomSelect: ({ label, options, onValueChange, value, disabled }) => React.createElement("select", { "aria-label": label, value, disabled, onChange: (event) => onValueChange(event.target.value) }, options.map((option) => React.createElement("option", { key: option.value, value: option.value, disabled: option.disabled }, option.label))),
       Checkbox: (props) => React.createElement("input", { type: "checkbox", ...props }),
     };
@@ -128,4 +131,13 @@ test("editing a course preserves historical books that already have grades", asy
   await ui.change("Tên hiển thị môn học", "Tên mới");
   await ui.submit();
   assert.equal(ui.writes[0].input.gradebook, undefined);
+});
+
+test("archive blockers identify the remaining source and preserve the selected status", async (t) => {
+  const ui = await setup(t, {course:{status:"CLOSED"},fail:true,serverError:new TestApiError("Buổi điểm danh chưa chốt",["Buổi điểm danh chưa chốt: 2026-10-28"])});
+  await ui.change("Trạng thái giảng dạy","ARCHIVED");
+  await ui.submit();
+  assert.match(JSON.stringify(ui.renderer.toJSON()),/Buổi điểm danh chưa chốt: 2026-10-28/);
+  assert.equal(ui.field("Trạng thái giảng dạy").props.value,"ARCHIVED");
+  assert.equal(ui.saved.length,0);
 });

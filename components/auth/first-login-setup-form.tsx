@@ -17,7 +17,7 @@ export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
-  const needed = user?.role !== "PARENT" && user?.requiresFirstLoginSetup;
+  const needed = user?.requiresFirstLoginSetup;
   const loginPath = `/${user?.role.toLowerCase() ?? getCurrentPortal()}/login`;
   useEffect(() => {
     if (!modal && !isInitializing && !user) router.replace(loginPath);
@@ -79,7 +79,7 @@ export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
           id="setup-title"
           className="text-center text-2xl font-extrabold text-brand-600"
         >
-          Đổi mật khẩu lần đầu
+          Đổi mật khẩu được cấp
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">
           Nhà trường yêu cầu đổi mật khẩu được cấp trước khi sử dụng hệ thống.

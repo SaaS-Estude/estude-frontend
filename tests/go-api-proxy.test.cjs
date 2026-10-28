@@ -226,3 +226,29 @@ test('chat bridge preserves text auth and frames; closes both connections', asyn
   assert.equal(response.status, 204);
   await closed;
 });
+
+test('school proxy forwards a mobile avatar above 1 MiB while keeping bounded limits on other uploads', async (t) => {
+  let count = 0;
+  await listen(t, http.createServer((req, res) => {
+    assert.equal(req.url, '/api/v1/auth/profile/avatar');
+    assert.match(req.headers['content-type'], /^multipart\/form-data/);
+    let size = 0;
+    req.on('data', (chunk) => { size += chunk.length; });
+    req.on('end', () => { count++; assert.equal(size, 1536 * 1024); res.end('{"success":true,"data":{}}'); });
+  }));
+  const body = new Uint8Array(1536 * 1024);
+  const avatar = await proxy.forwardGoApi(request('/api/v1/auth/profile/avatar', {
+    method: 'POST', headers: { 'content-type': 'multipart/form-data; boundary=fixture' }, body,
+  }));
+  assert.equal(avatar.status, 200);
+  assert.equal((await avatar.json()).success, true);
+  const generic = await proxy.forwardGoApi(request('/api/v1/student/assignments/id/files', {
+    method: 'POST', headers: { 'content-type': 'multipart/form-data; boundary=fixture' }, body,
+  }));
+  assert.equal(generic.status, 413);
+  const oversized = await proxy.forwardGoApi(request('/api/v1/auth/profile/avatar', {
+    method: 'POST', headers: { 'content-type': 'multipart/form-data; boundary=fixture' }, body: new Uint8Array(2 * 1024 * 1024 + 64 * 1024 + 1),
+  }));
+  assert.equal(oversized.status, 413);
+  assert.equal(count, 1);
+});
