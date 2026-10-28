@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { tenantPalette, applyTenantFavicon } from "@/lib/tenant-branding";
+import { getPortalFromHost } from "@/lib/portal";
 type Tenant = {
   id: string;
   slug: string;
@@ -23,8 +24,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     [refresh, setRefresh] = useState(0);
   const retry = useCallback(() => setRefresh((v) => v + 1), []);
   useEffect(() => {
-    if (!/^(admin|teacher|student|parent)\./.test(window.location.hostname))
-      return;
+    if (!getPortalFromHost(window.location.host)) return;
     const controller = new AbortController();
     let active = true;
     async function load() {
